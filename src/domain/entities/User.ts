@@ -1,20 +1,20 @@
+import { ObjectId } from "mongoose"
+
 export class User {
-    name: string;
-    email: string;
-    phone: number;
-    password: string;
-    id: string;
-
-    constructor(id: string, name: string, email: string, phone: number, password: string) {
-        this.id = id
-        this.name = name
-        this.email = email
-        this.phone = phone
-        this.password = password
-    }
-
-    isValid(): boolean {
-        return this.email.includes("@") && this.password.length >= 6
-    }
-
+    constructor(
+        public _id: ObjectId | string,
+        public googleId: string,
+        public name: string,
+        public email: string,
+        public phone: number,
+        public password: string,
+        public role: string,
+        public isActive: boolean,
+        public isVerified: boolean,
+        public profilePicture: string,
+        public verifyToken: string | undefined,
+        public verifyTokenExpiry: Date | undefined,
+        public forgotPasswordToken: string | undefined,
+        public forgotPasswordTokenExpiry: Date | undefined
+    ) { }
 }
