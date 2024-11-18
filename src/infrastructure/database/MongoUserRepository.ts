@@ -1,32 +1,37 @@
 import { User } from "../../domain/entities/User";
 import { IUserRepository } from "../../domain/repositories/IUserRepository";
-import mongoose, { Document, Schema } from "mongoose";
+import { ErrorResponse } from "../../utils/errors";
+import UserModel from "./models/UserModel";
 
-type UserDocument = mongoose.Document & {
-    _id: mongoose.Types.ObjectId;
-    name: string;
-    email: string;
-    phone: number;
-    password: string;
-};
-
-const UserSchema = new Schema<UserDocument>({
-    name: String,
-    email: String,
-    phone: Number,
-    password: String
-})
-
-
-const UserModel = mongoose.model<UserDocument>("Clean-User", UserSchema)
 
 export class MongoUserRepository implements IUserRepository {
     async findByEmail(email: string): Promise<User | null> {
-        const userDoc = await UserModel.findOne({ email }) as UserDocument
-        return userDoc ? new User(userDoc._id.toString(), userDoc.name, userDoc.email, userDoc.phone, userDoc.password) : null
+        try {
+            const userDoc = await UserModel.findOne({ email })
+            return userDoc ? userDoc : null
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
     }
     async create(user: User): Promise<User> {
-        const userDoc = await new UserModel(user).save()
-        return new User(userDoc._id.toString(), userDoc.name, userDoc.email, userDoc.phone, userDoc.password)
+        try {
+            const userDoc = new UserModel(user)
+            await userDoc.save()
+            return userDoc
+
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+    async update(id: string, value: any): Promise<User | null> {
+        try {
+            const updatedUser = await UserModel.findByIdAndUpdate(id, value, {
+                new: true,
+            });
+
+            return updatedUser;
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
     }
 }

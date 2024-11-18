@@ -1,19 +1,90 @@
 import { User } from "../entities/User";
 import { IUserRepository } from "../repositories/IUserRepository"
+import { IEmailService } from "../repositories/IEmailService";
+import { ErrorResponse } from "../../utils/errors";
+import { generateHashPassword } from "../../infrastructure/services/PasswordService";
+import { IUserUseCase } from "../../app/interfaces/usecases/user/IUserUseCase";
+import { AuthService } from "../../infrastructure/services/AuthService";
+// import { IUserUseCase } from "../../app/usecases/IUserUseCase";
+AuthService
 
 
-export class UserUseCase {
-    constructor(private userRepository: IUserRepository) { }
+export class UserUseCase implements IUserUseCase {
+    constructor(private userRepository: IUserRepository, private mailService: IEmailService) { }
 
-    async RegisterUser(data: { id: string, name: string, email: string, phone: number, password: string }): Promise<User> {
+    async RegisterUser(data: User): Promise<User> {
+        try {
+            const existingUser = await this.userRepository.findByEmail(data.email)
 
-        const existingUser = await this.userRepository.findByEmail(data.email)
-        if (existingUser) throw new Error("User Already Exists :(");
+            if (existingUser) throw new ErrorResponse("user aldready registered", 400);
 
-        const user = new User(data.id, data.name, data.email, data.phone, data.password)
-        if (!user.isValid()) throw new Error("User data is Invalid");
+            if (data.password) {
+                const hashedPassword = await generateHashPassword(data.password);
+                data.password = hashedPassword;
+            }
 
-        return this.userRepository.create(user)
+            const newUser = await this.userRepository.create(data);
 
+            if (!newUser.googleId) {
+                await this.mailService.accountVerifyMail(newUser, "verifyEmail");
+            }
+
+            return newUser
+
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+    async verifyMail(type: string, token: string, email: string): Promise<User | null> {
+        try {
+            const user = await this.userRepository.findByEmail(email);
+
+            if (type === "verifyEmail" && user?.verifyTokenExpiry) {
+                const date = user.verifyTokenExpiry.getTime();
+
+                if (date < Date.now()) {
+                    throw new ErrorResponse("Token expired", 400);
+                }
+
+                if (user.verifyToken === token) {
+                    const data = {
+                        isVerified: true,
+                        verifyToken: "",
+                        verifyTokenExpiry: "",
+                    };
+
+                    let updatedUser = await this.userRepository.update(
+                        user._id.toString(),
+                        data
+                    );
+
+                    return updatedUser;
+                }
+            } else if (type === "forgotPassword" && user?.forgotPasswordTokenExpiry) {
+                const date = user.forgotPasswordTokenExpiry.getTime();
+
+                if (date < Date.now()) {
+                    throw new ErrorResponse("Token expired", 400);
+                }
+
+                if (user.forgotPasswordToken === token) {
+                    const data = {
+                        isVerified: true,
+                        forgotPasswordToken: "",
+                        verifyTokenExforgotPasswordTokenExpirypiry: "",
+                    };
+
+                    let updatedUser = await this.userRepository.update(
+                        user._id.toString(),
+                        data
+                    );
+
+                    return updatedUser;
+                }
+            }
+            return user;
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
     }
 }
