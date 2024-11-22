@@ -59,6 +59,8 @@ export class UserUseCase implements IUserUseCase {
                     );
 
                     return updatedUser;
+                } else {
+                    throw new ErrorResponse("Invalid verification token", 400);
                 }
             } else if (type === "forgotPassword" && user?.forgotPasswordTokenExpiry) {
                 const date = user.forgotPasswordTokenExpiry.getTime();
@@ -78,8 +80,9 @@ export class UserUseCase implements IUserUseCase {
                         user._id.toString(),
                         data
                     );
-
                     return updatedUser;
+                } else {
+                    throw new ErrorResponse("Invalid password reset token", 400);
                 }
             }
             return user;
@@ -87,4 +90,16 @@ export class UserUseCase implements IUserUseCase {
             throw new ErrorResponse(error.message, error.status);
         }
     }
+
+    async updateProfileImage(_id: string, url: string): Promise<User | null> {
+        try {
+            const data = { profilePicture: url };
+            const user = await this.userRepository.update(_id, data);
+            return user;
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
+
 }
