@@ -8,6 +8,8 @@ import { VerifyOtp } from "../../domain/useCases/VerifyOtp";
 import { MongoOtpRepository } from "../../infrastructure/database/MongoOtpRepository";
 import { MailService } from "../../infrastructure/services/EmailService";
 import { AuthService } from "../../infrastructure/services/AuthService";
+import { uploadMiddleware } from "../../infrastructure/multer/multerConfig";
+uploadMiddleware
 MongoOtpRepository
 RegisterUser
 SendOtp
@@ -26,5 +28,11 @@ const userController = new AppUserController(userUseCase, authService)
 
 router.post("/auth/signup", (req: Request, res: Response) => userController.registersUser(req, res))
 router.get("/auth/verifyemail", (req: Request, res: Response) => userController.verifyAccount(req, res))
+router.patch(
+    "/profile/upload-image/:userId",
+    uploadMiddleware.single("profileImage"),
+    (req: Request, res: Response) => userController.updateProfileImage(req, res)
+);
+
 
 export { router as userRoute }
