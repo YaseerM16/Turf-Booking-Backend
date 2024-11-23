@@ -27,9 +27,9 @@ export class MongoUserRepository implements IUserRepository {
         try {
             const updatedUser = await UserModel.findByIdAndUpdate(id, value, {
                 new: true,
+                fields: "-password"
             });
-
-            return updatedUser;
+            return updatedUser
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
         }

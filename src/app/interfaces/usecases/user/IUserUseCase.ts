@@ -8,4 +8,5 @@ export interface IUserUseCase {
         email: string
     ): Promise<User | null>;
     updateProfileImage(_id: string, url: string): Promise<User | null>
+    userLogin(email: string, password: string): Promise<User | null>
 }

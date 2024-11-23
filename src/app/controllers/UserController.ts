@@ -5,6 +5,7 @@ import { IUserUseCase } from "../usecases/IUserUseCase";
 import { IAuthService } from "../interfaces/services/IAuthService";
 import { ErrorResponse } from "../../utils/errors";
 import { config } from "../../config/config";
+import { validationResult } from "express-validator"
 
 SendOtp
 VerifyOtp
@@ -14,6 +15,12 @@ export class UserController {
 
     async registersUser(req: Request, res: Response): Promise<void> {
         try {
+            const errors = validationResult(req);
+
+            if (!errors.isEmpty()) {
+                throw new ErrorResponse("Invalid email or password", 401);
+            }
+
             const user = await this.userUseCase.RegisterUser(req.body)
 
             const newUser = {
@@ -27,6 +34,29 @@ export class UserController {
             res.status(400).json({ message: (error as Error).message });
         }
     }
+    async userLogin(req: Request, res: Response): Promise<void> {
+        try {
+            const errors = validationResult(req);
+
+            if (!errors.isEmpty()) {
+                throw new ErrorResponse("Invalid email or password", 401);
+            }
+
+            const user = await this.userUseCase.RegisterUser(req.body)
+
+            const data = {
+                ...JSON.parse(JSON.stringify(user)),
+                password: undefined,
+            };
+
+            res.status(200).json({ success: true, user: data });
+
+        } catch (error) {
+            res.status(400).json({ message: (error as Error).message });
+        }
+    }
+
+
 
     async verifyAccount(req: Request, res: Response) {
         try {
@@ -48,9 +78,7 @@ export class UserController {
 
                 res.cookie("refreshToken", refreshToken, {
                     httpOnly: true,
-                    secure: config.MODE !== "development", // Use `true` in production
-                    // sameSite: "strict", // Prevent CSRF
-                    // path: "/refresh-token", // Restrict endpoint for token refresh
+                    secure: config.MODE !== "development",
                     sameSite: "lax"
                 });
 
@@ -66,26 +94,6 @@ export class UserController {
             }
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
-        }
-    }
-
-    async refreshAccessToken(req: Request, res: Response): Promise<void> {
-        try {
-            const refreshToken = req.cookies.refreshToken;
-
-            if (!refreshToken) {
-                res.status(401).json({ message: "Refresh token not found" });
-            }
-
-            // Verify refresh token
-            const userData = this.authService.verifyRefreshToken(refreshToken);
-
-            // Generate a new access token
-            const newAccessToken = this.authService.generateToken(userData);
-
-            res.status(200).json({ success: true, accessToken: newAccessToken });
-        } catch (error) {
-            res.status(403).json({ message: (error as Error).message });
         }
     }
 
@@ -106,7 +114,28 @@ export class UserController {
     }
 
     async updateDetails(req: Request, res: Response): Promise<void> {
+        try {
+            const { userId } = req.params
 
+            const user = await this.userUseCase.updateProfileDetails(userId, req.body)
+            res.status(200).send({ success: true, user });
+
+        } catch (error) {
+            res.status(403).json({ message: (error as Error).message });
+        }
     }
+
+    async logout(req: Request, res: Response) {
+        try {
+            res.clearCookie('token');
+            res.clearCookie('refreshToken');
+
+            res.status(200).json({ message: 'Logged out successfully', loggedOut: true });
+
+        } catch (error) {
+            console.error('Error during logout:', error);
+            res.status(500).json({ message: 'Something went wrong during logout' });
+        }
+    };
 
 }

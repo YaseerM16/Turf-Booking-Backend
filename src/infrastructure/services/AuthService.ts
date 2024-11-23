@@ -6,8 +6,10 @@ import { User } from "../../domain/entities/User";
 export class AuthService implements IAuthService {
     generateToken(user: any): string {
         try {
+            console.log("token generating :");
+
             const token = jwt.sign(user, config.JWT_SECRET!, {
-                expiresIn: "5m",
+                expiresIn: "1h",
             });
             return token;
         } catch (error: any) {
@@ -15,12 +17,37 @@ export class AuthService implements IAuthService {
             throw new Error(JSON.stringify({ message: "error in generating token", error }));
         }
     }
-    verifyToken(token: string): User {
+    verifyToken(token: string): User | object {
         try {
-            const data = jwt.verify(token, config.JWT_SECRET!) as any;
+            // Try to decode the token without throwing an error
+            const data = jwt.verify(token, config.JWT_SECRET!) as User;
 
-            return data;
+            // Check if the user is verified
+            if (!data.isVerified) {
+                return { error: "User not verified", notVerified: true }; // Return custom error if not verified
+            }
+
+            // Return the user data if valid and verified
+            return { user: data };
+        } catch (error: any) {
+            // Return custom error messages without throwing exceptions
+            if (error instanceof jwt.TokenExpiredError) {
+                return { error: "Token expired", expired: true }; // Token expired case
+            } else if (error instanceof jwt.JsonWebTokenError) {
+                return { error: "Invalid token" }; // Invalid token case
+            } else {
+                return { error: "User not authorized" }; // Other errors
+            }
+        }
+    }
+
+    isTokenExpired(token: string): boolean {
+        try {
+            const decodedToken: any = jwt.decode(token)
+            const currentTime = Math.floor(Date.now() / 1000);
+            return decodedToken.exp < currentTime
         } catch (error) {
+            console.log("Error in token expiry Check :", error);
             throw new Error("user not authorised");
         }
     }
