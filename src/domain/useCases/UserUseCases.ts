@@ -2,7 +2,7 @@ import { User } from "../entities/User";
 import { IUserRepository } from "../repositories/IUserRepository"
 import { IEmailService } from "../repositories/IEmailService";
 import { ErrorResponse } from "../../utils/errors";
-import { generateHashPassword } from "../../infrastructure/services/PasswordService";
+import { comparePassword, generateHashPassword } from "../../infrastructure/services/PasswordService";
 import { IUserUseCase } from "../../app/interfaces/usecases/user/IUserUseCase";
 import { AuthService } from "../../infrastructure/services/AuthService";
 // import { IUserUseCase } from "../../app/usecases/IUserUseCase";
@@ -14,6 +14,7 @@ export class UserUseCase implements IUserUseCase {
 
     async RegisterUser(data: User): Promise<User> {
         try {
+
             const existingUser = await this.userRepository.findByEmail(data.email)
 
             if (existingUser) throw new ErrorResponse("user aldready registered", 400);
@@ -35,6 +36,30 @@ export class UserUseCase implements IUserUseCase {
             throw new ErrorResponse(error.message, error.status);
         }
     }
+
+    async userLogin(email: string, password: string): Promise<User | null> {
+        try {
+            let user = await this.userRepository.findByEmail(email);
+
+            if (!user || !user.password) {
+                throw new ErrorResponse("user dosen't exist", 404);
+            }
+            const passwordMatch = await comparePassword(password, user.password);
+
+            if (!passwordMatch) {
+                throw new ErrorResponse("password dosen't match", 400);
+            }
+
+            if (!user.isActive) {
+                throw new ErrorResponse("user is blocked", 404);
+            }
+
+            return user;
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
     async verifyMail(type: string, token: string, email: string): Promise<User | null> {
         try {
             const user = await this.userRepository.findByEmail(email);
@@ -100,6 +125,13 @@ export class UserUseCase implements IUserUseCase {
             throw new ErrorResponse(error.message, error.status);
         }
     }
-
+    async updateProfileDetails(_id: string, data: string): Promise<User | null> {
+        try {
+            const user = await this.userRepository.update(_id, data);
+            return user;
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
 
 }
