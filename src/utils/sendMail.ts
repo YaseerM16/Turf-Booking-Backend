@@ -8,10 +8,13 @@ export const sendMail = async (
     name: string,
     email: string,
     type: string,
-    token: string
+    token: string,
+    role: string
 ) => {
     try {
         console.log("mail sending...");
+
+        const routing = role === "user" ? "/verifymail" : "/company/verifymail";
         let transporter;
         if (config.MODE === "production") {
             transporter = nodemailer.createTransport({
@@ -40,12 +43,11 @@ export const sendMail = async (
                 type === "verifyEmail" ? "Account verification" : "Reset Password",
             html: `<h2>Hi ${name}</h2><br/>
       <p>Click this <a href="${config.MAIL_LINK
-                }/verifymail?type=${type}&token=${token}&email=${email}"> link </a>to ${type === "verifyEmail" ? "verify your account " : "reset password"
+                }${routing}?type=${type}&token=${token}&email=${email}"> link </a>to ${type === "verifyEmail" ? "verify your account " : "reset password"
                 } 
       
       </p><h4> </h4>`,
         });
-        // console.log("otp successful");
         return info;
     } catch (error: any) {
         throw new ErrorResponse(error.message, error.status);

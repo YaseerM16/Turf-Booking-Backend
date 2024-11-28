@@ -1,20 +1,12 @@
 import express, { Request, Response, Router } from "express";
 import { UserController as AppUserController } from "../../app/controllers/UserController";
-import { MongoUserRepository } from "../../infrastructure/database/MongoUserRepository";
+import { MongoUserRepository } from "../../infrastructure/database/repositories/UserRepository";
 import { UserUseCase } from "../../domain/useCases/UserUseCases";
-import { RegisterUser } from "../../domain/useCases/RegisterUser";
-import { SendOtp } from "../../domain/useCases/SendOtp";
-import { VerifyOtp } from "../../domain/useCases/VerifyOtp";
-import { MongoOtpRepository } from "../../infrastructure/database/MongoOtpRepository";
 import { MailService } from "../../infrastructure/services/EmailService";
 import { AuthService } from "../../infrastructure/services/AuthService";
 import { uploadMiddleware } from "../../infrastructure/multer/multerConfig";
 import { Authenticator } from "../../infrastructure/middleware/Authenticator";
 uploadMiddleware
-MongoOtpRepository
-RegisterUser
-SendOtp
-VerifyOtp
 UserUseCase
 AuthService
 
@@ -27,7 +19,7 @@ const authService = new AuthService()
 const userController = new AppUserController(userUseCase, authService)
 
 router.post("/auth/signup", (req: Request, res: Response) => userController.registersUser(req, res))
-router.post("/auth/login")
+router.post("/auth/login", (req: Request, res: Response) => userController.userLogin(req, res))
 router.get("/auth/verifyemail", (req: Request, res: Response) => userController.verifyAccount(req, res))
 router.patch(
     "/profile/upload-image/:userId",
@@ -36,5 +28,7 @@ router.patch(
 );
 router.patch("/profile/update-details/:userId", Authenticator, (req: Request, res: Response) => userController.updateDetails(req, res))
 router.get("/logout", (req: Request, res: Response) => userController.logout(req, res))
+router.post("/auth/forgot-password", (req: Request, res: Response) => userController.forgotPassword(req, res))
+router.post("/auth/update-password", (req: Request, res: Response) => userController.passwordUpdate(req, res))
 
 export { router as userRoute }

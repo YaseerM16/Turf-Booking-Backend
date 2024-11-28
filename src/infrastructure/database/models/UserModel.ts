@@ -25,6 +25,10 @@ const UserSchema = new Schema<User>({
         type: Boolean,
         default: false,
     },
+    isDelete: {
+        type: Boolean,
+        default: false,
+    },
     profilePicture: {
         type: String,
     },
@@ -35,6 +39,9 @@ const UserSchema = new Schema<User>({
         type: String,
     },
     verifyTokenExpiry: {
+        type: Date,
+    },
+    forgotPasswordTokenExpiry: {
         type: Date,
     },
     forgotPasswordToken: {

@@ -9,6 +9,9 @@ export const Authenticator = (req: Request, res: Response, next: NextFunction): 
     try {
         const { token, refreshToken } = req.cookies
         const decodedData: any = jwt.decode(token)
+        const { userRole } = decodedData
+        console.log("userRole : ", userRole);
+
 
         const isAuthTokenExpired = authService.isTokenExpired(token)
         const isRefreshTokenExpired = authService.isTokenExpired(refreshToken)
@@ -31,11 +34,13 @@ export const Authenticator = (req: Request, res: Response, next: NextFunction): 
                     console.log("Generated the new access token Sucessfully 🐦‍🔥");
                     next();
                 }
-            } else if (isRefreshTokenExpired) res.json({
-                status: "error",
-                message: "Invalid or expired token",
-                refreshTokenExpired: true,
-            });
+            } else if (isRefreshTokenExpired) {
+                res.json({
+                    status: "error",
+                    message: "Invalid or expired token",
+                    refreshTokenExpired: true,
+                });
+            }
 
         } else if (!isAuthTokenExpired) {
             const verify: any = authService.verifyToken(token)
