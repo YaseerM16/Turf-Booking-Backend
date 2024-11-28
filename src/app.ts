@@ -4,6 +4,9 @@ import dotenv from "dotenv"
 import mongoose from "mongoose"
 import cors from "cors"
 import cookieParser from "cookie-parser";
+import { companyRoute } from "./app/routes/companyRoutes"
+import { adminRoute } from "./app/routes/adminRoutes"
+
 
 mongoose
 userRoute
@@ -33,6 +36,8 @@ app.use(
     })
 );
 app.use("/api/v1/user", userRoute)
+app.use("/api/v1/company", companyRoute)
+app.use("/api/v1/admin", adminRoute)
 
 
 export default app

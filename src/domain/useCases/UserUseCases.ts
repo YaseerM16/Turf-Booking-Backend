@@ -5,7 +5,6 @@ import { ErrorResponse } from "../../utils/errors";
 import { comparePassword, generateHashPassword } from "../../infrastructure/services/PasswordService";
 import { IUserUseCase } from "../../app/interfaces/usecases/user/IUserUseCase";
 import { AuthService } from "../../infrastructure/services/AuthService";
-// import { IUserUseCase } from "../../app/usecases/IUserUseCase";
 AuthService
 
 
@@ -63,6 +62,8 @@ export class UserUseCase implements IUserUseCase {
     async verifyMail(type: string, token: string, email: string): Promise<User | null> {
         try {
             const user = await this.userRepository.findByEmail(email);
+            // console.log("User email in VerifyMail :", user?.email);
+
 
             if (type === "verifyEmail" && user?.verifyTokenExpiry) {
                 const date = user.verifyTokenExpiry.getTime();
@@ -88,6 +89,7 @@ export class UserUseCase implements IUserUseCase {
                     throw new ErrorResponse("Invalid verification token", 400);
                 }
             } else if (type === "forgotPassword" && user?.forgotPasswordTokenExpiry) {
+
                 const date = user.forgotPasswordTokenExpiry.getTime();
 
                 if (date < Date.now()) {
@@ -98,7 +100,7 @@ export class UserUseCase implements IUserUseCase {
                     const data = {
                         isVerified: true,
                         forgotPasswordToken: "",
-                        verifyTokenExforgotPasswordTokenExpirypiry: "",
+                        forgotPasswordTokenExpiry: "",
                     };
 
                     let updatedUser = await this.userRepository.update(
@@ -120,6 +122,9 @@ export class UserUseCase implements IUserUseCase {
         try {
             const data = { profilePicture: url };
             const user = await this.userRepository.update(_id, data);
+            if (!user) {
+                throw new ErrorResponse("User not found or update failed", 404);  // Handling not found
+            }
             return user;
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
@@ -128,7 +133,39 @@ export class UserUseCase implements IUserUseCase {
     async updateProfileDetails(_id: string, data: string): Promise<User | null> {
         try {
             const user = await this.userRepository.update(_id, data);
+            if (!user) {
+                throw new ErrorResponse("User not found or update failed", 404);  // Handling not found
+            }
             return user;
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
+    async forgotPassword(email: string): Promise<void> {
+        try {
+            const user = await this.userRepository.findByEmail(email);
+
+            if (!user) {
+                throw new ErrorResponse("User not found", 404);
+            }
+            await this.mailService.accountVerifyMail(user, "forgotPassword");
+            return;
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+    async updatePassword(email: string, password: string): Promise<User | null> {
+        try {
+            const hashedPassword = await generateHashPassword(password);
+
+            const user = await this.userRepository.findByEmail(email);
+
+            const updatedUser = await this.userRepository.update(user?._id.toString()!, {
+                password: hashedPassword,
+            });
+            return updatedUser;
+
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
         }

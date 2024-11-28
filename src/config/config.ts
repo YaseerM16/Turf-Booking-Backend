@@ -17,5 +17,8 @@ export const config = {
     S3_ACCESS_KEY: process.env.S3_ACCESS_KEY,
     S3_SECRET_KEY: process.env.S3_SECRET_KEY,
     S3_BUCKET_NAME: process.env.S3_BUCKET_NAME,
-    S3_REGION: process.env.S3_REGION
+    S3_REGION: process.env.S3_REGION,
+    ADMIN_NAME: process.env.ADMIN_NAME,
+    ADMIN_EMAIL: process.env.ADMIN_EMAIL,
+    ADMIN_PASSWORD: process.env.ADMIN_PASSWORD
 };

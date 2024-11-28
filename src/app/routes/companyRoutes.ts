@@ -1,0 +1,24 @@
+import express, { Request, Response, Router } from "express";
+import { CompanyController } from "../controllers/CompanyController";
+import { CompanyRepository } from "../../infrastructure/database/repositories/CompanyRepository";
+import { CompanyUseCase } from "../../domain/useCases/CompanyUseCase";
+import { AuthService } from "../../infrastructure/services/AuthService";
+import { MailService } from "../../infrastructure/services/EmailService";
+CompanyController
+CompanyRepository
+
+const router: Router = express.Router()
+
+
+const companyRepository = new CompanyRepository()
+const emailService = new MailService(companyRepository)
+const companyUseCase = new CompanyUseCase(companyRepository, emailService)
+const authService = new AuthService()
+const companyController = new CompanyController(companyUseCase, authService)
+
+router.post("/auth/register", (req: Request, res: Response) => companyController.registerCompany(req, res))
+router.get("/auth/verifymail", (req: Request, res: Response) => companyController.verifyAccount(req, res))
+router.post("/auth/login", (req: Request, res: Response) => companyController.companyLogin(req, res))
+router.get("/logout", (req: Request, res: Response) => companyController.logout(req, res))
+
+export { router as companyRoute }

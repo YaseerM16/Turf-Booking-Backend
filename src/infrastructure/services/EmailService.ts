@@ -4,15 +4,21 @@ import { IUserRepository } from "../../domain/repositories/IUserRepository";
 import { generateHashPassword } from "./PasswordService";
 import { sendMail } from "../../utils/sendMail";
 import { IEmailService } from "../../app/interfaces/services/IEmailService";
+import { Company } from "../../domain/entities/Company";
+import { ICompanyRepository } from "../../domain/repositories/ICompanyRepository";
 User
 sendMail
+interface Recipient {
+    [key: string]: string;  // Dynamic keys with string values
+}
 export class MailService implements IEmailService {
     private repository;
-    constructor(repository: IUserRepository) {
+    constructor(repository: (IUserRepository | ICompanyRepository)) {
         this.repository = repository
     }
-    async accountVerifyMail(user: User, type: string): Promise<void> {
+    async accountVerifyMail(user: any, type: string): Promise<void> {
         try {
+
             let token = await generateHashPassword(user._id.toString());
             const currentDate = new Date();
             const twoDaysLater = new Date(currentDate);
@@ -20,16 +26,50 @@ export class MailService implements IEmailService {
             if (type === "verifyEmail") {
                 twoDaysLater.setDate(currentDate.getDate() + 2);
                 user.verifyToken = token;
-
                 user.verifyTokenExpiry = twoDaysLater;
             } else if (type === "forgotPassword") {
+                console.log("forgotPassword is attempting :-");
+
                 twoDaysLater.setDate(currentDate.getDate() + 1);
                 user.forgotPasswordToken = token;
                 user.forgotPasswordTokenExpiry = twoDaysLater;
             }
 
-            let data = await this.repository.update(user._id.toString(), user);
-            await sendMail(user.name, user.email, type, token);
+            // Ensure user is updated before proceeding
+            // console.log("User Details before update :", user.forgotPasswordTokenExpiry);
+
+            const updatedUser = await this.repository.update(user._id.toString(), user);
+
+            // Check if the update was successful and proceed only if the user has updated values
+            if (!updatedUser) {
+                throw new ErrorResponse("User update failed", 500);
+            }
+            const recipientObj: Recipient = {}
+            if (user.name) {
+                recipientObj["recipientName"] = user.name
+                recipientObj["recipientEmail"] = user.email
+                recipientObj["recipientRole"] = "user"
+            } else {
+                recipientObj["recipientName"] = user.companyname
+                recipientObj["recipientEmail"] = user.companyemail
+                recipientObj["recipientRole"] = "company"
+            }
+
+            // const recipientName = user?.name ? user.name : user.companyname;
+            // const recipientEmail = user?.email ? user.email : user.companyemail;
+
+            await sendMail(recipientObj["recipientName"], recipientObj["recipientEmail"], type, token, recipientObj["recipientRole"]);
+
+            // Ensure the updated user object has the correct email and name for sending the email
+            // if (user instanceof User) {
+            //     console.log("mail details to send -:", "name :", user.name, "email :", user.email);
+
+            //     await sendMail(user.name, user.email, type, token, "user");
+            // } else {
+            //     console.log("mail details to send -:", "company name :", user.companyname, "email :", user.companyemail);
+
+            //     await sendMail(user.companyname, user.companyemail, type, token, "company");
+            // }
 
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
