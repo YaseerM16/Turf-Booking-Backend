@@ -17,13 +17,14 @@ export class AuthService implements IAuthService {
             throw new Error(JSON.stringify({ message: "error in generating token", error }));
         }
     }
-    verifyToken(token: string): User | object {
+    verifyToken(token: string, userId: string): User | object {
         try {
             // Try to decode the token without throwing an error
-            const data = jwt.verify(token, config.JWT_SECRET!) as User;
+            const data = jwt.verify(token, config.JWT_SECRET!) as any
+            // console.log("_id in VerifyToken :-", data._id);
 
             // Check if the user is verified
-            if (!data.isVerified) {
+            if (data._id !== userId) {
                 return { error: "User not verified", notVerified: true }; // Return custom error if not verified
             }
 

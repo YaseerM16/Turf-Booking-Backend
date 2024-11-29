@@ -79,7 +79,7 @@ export class CompanyController {
                 }
             }
         } catch (error: any) {
-            throw new ErrorResponse(error.message, error.status);
+            res.status(401).json({ message: (error as Error).message });
         }
     }
 
@@ -124,7 +124,7 @@ export class CompanyController {
 
 
         } catch (error: any) {
-            throw new ErrorResponse(error.message, error.status);
+            res.status(401).json({ message: (error as Error).message });
         }
     }
 

@@ -4,6 +4,8 @@ import nodemailer from "nodemailer"
 
 config
 
+
+
 export const sendMail = async (
     name: string,
     email: string,
@@ -28,8 +30,8 @@ export const sendMail = async (
             });
         } else {
             transporter = nodemailer.createTransport({
-                host: "sandbox.smtp.mailtrap.io",
-                port: 2525,
+                host: "smtp.ethereal.email",
+                port: 587,
                 auth: {
                     user: config.NODEMAILER_USER,
                     pass: config.NODEMAILER_PASSWORD,
