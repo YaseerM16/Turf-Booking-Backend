@@ -5,5 +5,5 @@ export interface IAuthService {
     generateToken(user: any): string;
     verifyRefreshToken(refreshToken: string): User;
     isTokenExpired(token: string): boolean
-    verifyToken(token: string): User | object;
+    verifyToken(token: string, userId: string): User | object;
 }

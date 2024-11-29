@@ -10,7 +10,10 @@ export const Authenticator = (req: Request, res: Response, next: NextFunction): 
         const { token, refreshToken } = req.cookies
         const decodedData: any = jwt.decode(token)
         const { userRole } = decodedData
-        console.log("userRole : ", userRole);
+        const userId = decodedData._id
+        // console.log("userRole : ", userRole);
+        // console.log("user_id", userId);
+
 
 
         const isAuthTokenExpired = authService.isTokenExpired(token)
@@ -43,9 +46,12 @@ export const Authenticator = (req: Request, res: Response, next: NextFunction): 
             }
 
         } else if (!isAuthTokenExpired) {
-            const verify: any = authService.verifyToken(token)
+            const verify: any = authService.verifyToken(token, userId)
+            // console.log("Verify Result :- ", verify);
+
             if (verify.notVerified) {
                 res.status(401).json({ message: "Verification for token is failed !", verificationFailed: true })
+                return
             }
             console.log("Provided Access form Middlewar TOken verifd 🐦‍🔥");
             next();
