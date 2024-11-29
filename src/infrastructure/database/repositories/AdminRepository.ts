@@ -12,14 +12,24 @@ CompanyModel
 export class AdminRepository implements IAdminRepository {
 
 
-    async getAllUsers(page: number, limit: number): Promise<{ users: any[]; totalUsers: number }> {
+    async getAllUsers(page: number, limit: number, searchQry: string): Promise<{ users: any[]; totalUsers: number }> {
         try {
             const skip = (page - 1) * limit;
-            const totalUsers = await UserModel.countDocuments();
-            const users = await UserModel.find()
-                .skip(skip)   // Skip documents
-                .limit(limit) // Limit the number of documents returned
-                .exec(); // Fetches all users from the database
+
+            const searchQuery = searchQry
+                ? {
+                    $or: [
+                        { name: { $regex: searchQry, $options: "i" } }, // Search by name (case-insensitive)
+                        { email: { $regex: searchQry, $options: "i" } }, // Search by email (case-insensitive)
+                    ],
+                }
+                : {};
+
+            const totalUsers = await UserModel.countDocuments(searchQuery);
+            const users = await UserModel.find(searchQuery)
+                .skip(skip)
+                .limit(limit)
+                .exec();
             return { users: users, totalUsers };
         } catch (error: any) {
             throw new Error(`Error fetching users: ${error.message}`);

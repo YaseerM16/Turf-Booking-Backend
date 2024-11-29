@@ -28,9 +28,9 @@ export class AdminUseCase implements IAdminUseCase {
         }
     }
 
-    async getUsers(page: number, limit: number): Promise<{ users: any[]; totalUsers: number }> {
+    async getUsers(page: number, limit: number, searchQry: string): Promise<{ users: any[]; totalUsers: number }> {
         try {
-            const users = await this.adminRepository.getAllUsers(page, limit);
+            const users = await this.adminRepository.getAllUsers(page, limit, searchQry);
             const usersData = users.users
             return { users: usersData, totalUsers: users.totalUsers }
         } catch (error: any) {

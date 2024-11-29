@@ -60,8 +60,8 @@ export class AdminController {
         try {
             const page = parseInt(req.query.page as string) || 1; // Default to page 1 if not provided
             const limit = parseInt(req.query.limit as string) || 10;
-
-            const users = await this.adminUseCase.getUsers(page, limit);
+            const searchQry = req.query.searchQry as string
+            const users = await this.adminUseCase.getUsers(page, limit, searchQry);
 
             res.status(200).json({ users: users.users, success: true, message: "Fetched Users successfully ", totalUsers: users.totalUsers });
         } catch (error) {
