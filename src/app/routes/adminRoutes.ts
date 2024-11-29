@@ -22,5 +22,6 @@ router.get("/get-users", (req: Request, res: Response) => adminController.getUse
 router.get("/user-toggle-block", (req: Request, res: Response) => adminController.userToggleBlock(req, res))
 router.get("/logout", (req: Request, res: Response) => adminController.logout(req, res))
 router.get("/get-registered-companies", (req: Request, res: Response) => adminController.getRegisteredCompany(req, res))
+router.patch("/approve-company", (req: Request, res: Response) => adminController.approveCompany(req, res))
 
 export { router as adminRoute }

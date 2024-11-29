@@ -10,8 +10,6 @@ UserModel
 CompanyModel
 
 export class AdminRepository implements IAdminRepository {
-
-
     async getAllUsers(page: number, limit: number, searchQry: string): Promise<{ users: any[]; totalUsers: number }> {
         try {
             const skip = (page - 1) * limit;
@@ -52,8 +50,8 @@ export class AdminRepository implements IAdminRepository {
 
     async isBlocked(email: string, userId: string): Promise<object> {
         try {
-            if (!userId) {
-                return { success: false, message: "User ID is required" };
+            if (!userId || !email) {
+                return { success: false, message: "User ID or Email is Missing !!" };
             }
 
             const user = await UserModel.findOne({ _id: userId });
@@ -70,6 +68,25 @@ export class AdminRepository implements IAdminRepository {
             } else {
                 return { success: false, message: "Failed to update block status" };
             }
+
+        } catch (error: any) {
+            throw new Error(`Error fetching users: ${error.message}`);
+        }
+    }
+
+    async approveTheCompany(companyId: string, companyEmail: string): Promise<Company> {
+        try {
+
+            if (!companyId || !companyEmail) {
+                throw new Error("Credentials(cmpnyId and cmpnyEmail) is required but was not provided.");
+            }
+
+            const updatedCompany = await CompanyModel.findOneAndUpdate({ _id: companyId, companyemail: companyEmail }, { isApproved: true }, { new: true })
+            if (!updatedCompany) {
+                throw new Error("Company not found or update failed.");
+            }
+
+            return updatedCompany;
 
         } catch (error: any) {
             throw new Error(`Error fetching users: ${error.message}`);

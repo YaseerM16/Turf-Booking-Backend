@@ -1,6 +1,7 @@
 import { IAdminUseCase } from "../../app/interfaces/usecases/admin/IAdminUseCase";
 import { config } from "../../config/config";
 import { ErrorResponse } from "../../utils/errors";
+import { Company } from "../entities/Company";
 import { User } from "../entities/User";
 import { IAdminRepository } from "../repositories/IAdminRepository";
 // import { Admin } from "../entities/Admin";
@@ -60,6 +61,23 @@ export class AdminUseCase implements IAdminUseCase {
                 return { success: false, message: "User not found or error fetching data" };
             }
             return { success: true, message: "User block status fetched successfully" };
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
+    async approveCompany(companyId: string, companyEmail: string): Promise<Company> {
+        try {
+            if (!companyId || !companyEmail) {
+                throw new Error("Credentials(cmpnyId and cmpnyEmail) is required but was not provided.");
+            }
+
+            const isApproved = await this.adminRepository.approveTheCompany(companyId, companyEmail)
+            if (!isApproved) {
+                throw new Error("Company not found or update failed.");
+            }
+            return isApproved
+
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
         }

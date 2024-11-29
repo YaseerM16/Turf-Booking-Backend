@@ -102,6 +102,20 @@ export class AdminController {
         }
     }
 
+    async approveCompany(req: Request, res: Response) {
+        try {
+
+            const { companyId, companyEmail } = req.body
+            const isApproved = await this.adminUseCase.approveCompany(companyId, companyEmail)
+
+            res.status(200).json({ success: true, message: "Company Approved Successfully" });
+
+        } catch (error) {
+            console.error('Error during logout:', error);
+            res.status(500).json({ message: 'Something went during Approving the Company :' });
+        }
+    }
+
     async logout(req: Request, res: Response) {
         try {
             res.clearCookie('token');
@@ -114,6 +128,7 @@ export class AdminController {
             res.status(500).json({ message: 'Something went wrong during logout' });
         }
     };
+
 
 
 }
