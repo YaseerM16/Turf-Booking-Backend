@@ -131,8 +131,10 @@ export class UserController {
     ): Promise<void> {
         try {
             const { userId } = req.params
-            const imageUrl = (req.file as any)?.location
-
+            const imageUrl = (req.files as any)?.profileImage?.[0].location
+            if (!imageUrl) {
+                res.status(400).send("Profile image is required");
+            }
             const user = await this.userUseCase.updateProfileImage(userId, imageUrl);
             res.status(200).send({ success: true, user });
 

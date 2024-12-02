@@ -4,6 +4,8 @@ import { ICompanyRepository } from "../repositories/ICompanyRepository";
 import { IEmailService } from "../repositories/IEmailService";
 import { ErrorResponse } from "../../utils/errors";
 import { comparePassword, generateHashPassword } from "../../infrastructure/services/PasswordService";
+import { Turf } from "../entities/Turf";
+import { AdminRepository } from "../../infrastructure/database/repositories/AdminRepository";
 
 Company
 
@@ -11,7 +13,6 @@ Company
 export class CompanyUseCase implements ICompanyUseCase {
 
     constructor(private companyRepository: ICompanyRepository, private mailService: IEmailService) { }
-
 
     async RegisterCompany(company: Company): Promise<Company> {
         try {
@@ -114,5 +115,40 @@ export class CompanyUseCase implements ICompanyUseCase {
             throw new ErrorResponse(error.message, error.status);
         }
     }
+    // Promise<Turf | null >
 
+    async registerTurf(turfDetails: any): Promise<void> {
+        try {
+            const workingSlots = {
+                fromTime: turfDetails?.fromTime,
+                toTime: turfDetails?.toTime,
+                workingDays: JSON.parse(turfDetails?.workingDays)
+            }
+            const images = turfDetails?.images
+            const location = JSON.parse(turfDetails?.location)
+            const facilities = JSON.parse(turfDetails?.selectedFacilities)
+            const price = Number(turfDetails?.price)
+
+            // const turfDet = new Turf()
+            const turf: Turf = {
+                companyId: turfDetails.companyId,
+                turfName: turfDetails.turfName,
+                description: turfDetails.description,
+                turfSize: turfDetails.turfSize,
+                turfType: turfDetails.turfType,
+                price,
+                images,
+                facilities,
+                location,
+                workingSlots,
+            }
+            console.log("Turf Dets in CASE :-", turf)
+
+
+            const isRegistered = await this.companyRepository.registerTurf(turf)
+
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
 }

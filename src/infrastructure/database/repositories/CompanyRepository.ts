@@ -1,7 +1,9 @@
 import { Company } from "../../../domain/entities/Company";
+import { Turf } from "../../../domain/entities/Turf";
 import { ICompanyRepository } from "../../../domain/repositories/ICompanyRepository";
 import { ErrorResponse } from "../../../utils/errors";
 import CompanyModel from "../models/CompanyModel";
+import TurfModel from "../models/TurfModel";
 CompanyModel
 
 Company
@@ -32,6 +34,16 @@ export class CompanyRepository implements ICompanyRepository {
                 fields: "-password"
             });
             return updatedCompany
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+    async registerTurf(turf: Turf): Promise<Turf | null> {
+        try {
+            console.log('Details before save :', turf);
+            const newTurf = new TurfModel(turf)
+            const savedTurf = await newTurf.save();
+            return savedTurf as unknown as Turf
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
         }

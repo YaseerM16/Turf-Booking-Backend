@@ -4,6 +4,8 @@ import { CompanyRepository } from "../../infrastructure/database/repositories/Co
 import { CompanyUseCase } from "../../domain/useCases/CompanyUseCase";
 import { AuthService } from "../../infrastructure/services/AuthService";
 import { MailService } from "../../infrastructure/services/EmailService";
+import { uploadMiddleware } from "../../infrastructure/multer/multerConfig";
+uploadMiddleware
 CompanyController
 CompanyRepository
 
@@ -16,9 +18,14 @@ const companyUseCase = new CompanyUseCase(companyRepository, emailService)
 const authService = new AuthService()
 const companyController = new CompanyController(companyUseCase, authService)
 
+//Authentication
 router.post("/auth/register", (req: Request, res: Response) => companyController.registerCompany(req, res))
 router.get("/auth/verifymail", (req: Request, res: Response) => companyController.verifyAccount(req, res))
 router.post("/auth/login", (req: Request, res: Response) => companyController.companyLogin(req, res))
 router.get("/logout", (req: Request, res: Response) => companyController.logout(req, res))
+
+
+//Turf-Management
+router.post("/register-turf", uploadMiddleware, (req: Request, res: Response) => companyController.registerTurf(req, res))
 
 export { router as companyRoute }
