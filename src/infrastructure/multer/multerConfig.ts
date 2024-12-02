@@ -67,4 +67,7 @@ export const uploadMiddleware = multer({
     storage: S3storage,
     fileFilter,
     limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
-});
+}).fields([
+    { name: "profileImage", maxCount: 1 },
+    { name: "TurfImages", maxCount: 5 }
+])

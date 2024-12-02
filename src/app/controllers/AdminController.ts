@@ -58,6 +58,7 @@ export class AdminController {
 
     async getUsers(req: Request, res: Response) {
         try {
+
             const page = parseInt(req.query.page as string) || 1; // Default to page 1 if not provided
             const limit = parseInt(req.query.limit as string) || 10;
 

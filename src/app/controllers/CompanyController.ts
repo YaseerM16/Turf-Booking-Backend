@@ -33,6 +33,7 @@ export class CompanyController {
         }
 
     }
+
     async verifyAccount(req: Request, res: Response) {
         try {
             const { type, token, email } = req.query;
@@ -140,6 +141,28 @@ export class CompanyController {
             res.status(500).json({ message: 'Something went wrong during logout' });
         }
     };
+
+    async registerTurf(req: Request, res: Response) {
+        try {
+            // const imageUrl = (req.files as any)?.TurfImages?
+
+            const reqBody = req.body
+            const images = (req.files as any)?.TurfImages
+            const locations = images.map((image: any) => image.location);
+            // console.log(locations);
+
+            const isRegistered = await this.companyUseCase.registerTurf({ ...req.body, images: locations })
+            // // const 
+            // console.log("ReqBody :", reqBody);
+            // console.log("images : ", images);
+
+        } catch (error) {
+            console.error('Error during Register Turf:', error);
+            res.status(500).json({ message: 'Something went wrong during Register Turf :', error: error });
+        }
+    }
+
+
 }
 
 

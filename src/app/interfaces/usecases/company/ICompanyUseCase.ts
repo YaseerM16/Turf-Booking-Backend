@@ -1,4 +1,5 @@
 import { Company } from "../../../../domain/entities/Company";
+import { Turf } from "../../../../domain/entities/Turf";
 
 export interface ICompanyUseCase {
     RegisterCompany(company: Company): Promise<Company>;
@@ -8,6 +9,7 @@ export interface ICompanyUseCase {
         email: string
     ): Promise<Company | null>;
     companyLogin(email: string, password: string): Promise<Company | null>
+    registerTurf(turfDetails: any): void;
     // updateProfileImage(_id: string, url: string): Promise<User | null>
     // userLogin(email: string, password: string): Promise<User | null>
     // updateProfileDetails(_id: string, data: string): Promise<User | null>

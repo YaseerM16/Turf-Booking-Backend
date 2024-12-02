@@ -23,7 +23,7 @@ router.post("/auth/login", (req: Request, res: Response) => userController.userL
 router.get("/auth/verifyemail", (req: Request, res: Response) => userController.verifyAccount(req, res))
 router.patch(
     "/profile/upload-image/:userId",
-    uploadMiddleware.single("profileImage"),
+    uploadMiddleware,
     (req: Request, res: Response) => userController.updateProfileImage(req, res)
 );
 router.patch("/profile/update-details/:userId", Authenticator, (req: Request, res: Response) => userController.updateDetails(req, res))
