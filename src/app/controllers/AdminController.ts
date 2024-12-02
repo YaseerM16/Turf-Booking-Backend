@@ -61,8 +61,8 @@ export class AdminController {
 
             const page = parseInt(req.query.page as string) || 1; // Default to page 1 if not provided
             const limit = parseInt(req.query.limit as string) || 10;
-
-            const users = await this.adminUseCase.getUsers(page, limit);
+            const searchQry = req.query.searchQry as string
+            const users = await this.adminUseCase.getUsers(page, limit, searchQry);
 
             res.status(200).json({ users: users.users, success: true, message: "Fetched Users successfully ", totalUsers: users.totalUsers });
         } catch (error) {
@@ -103,6 +103,20 @@ export class AdminController {
         }
     }
 
+    async approveCompany(req: Request, res: Response) {
+        try {
+
+            const { companyId, companyEmail } = req.body
+            const isApproved = await this.adminUseCase.approveCompany(companyId, companyEmail)
+
+            res.status(200).json({ success: true, message: "Company Approved Successfully" });
+
+        } catch (error) {
+            console.error('Error during logout:', error);
+            res.status(500).json({ message: 'Something went during Approving the Company :' });
+        }
+    }
+
     async logout(req: Request, res: Response) {
         try {
             res.clearCookie('token');
@@ -115,6 +129,7 @@ export class AdminController {
             res.status(500).json({ message: 'Something went wrong during logout' });
         }
     };
+
 
 
 }
