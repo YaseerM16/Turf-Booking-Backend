@@ -40,10 +40,21 @@ export class CompanyRepository implements ICompanyRepository {
     }
     async registerTurf(turf: Turf): Promise<Turf | null> {
         try {
-            console.log('Details before save :', turf);
             const newTurf = new TurfModel(turf)
             const savedTurf = await newTurf.save();
             return savedTurf as unknown as Turf
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
+    async getTurfs(companyId: string): Promise<Turf[] | null> {
+        try {
+            if (!companyId) throw new ErrorResponse("CompanyId is not Provided :", 500);
+
+            const turfs = await TurfModel.find({ companyId })
+
+            return turfs as unknown as Turf[]
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
         }

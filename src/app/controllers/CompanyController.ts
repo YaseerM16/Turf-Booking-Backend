@@ -144,17 +144,14 @@ export class CompanyController {
 
     async registerTurf(req: Request, res: Response) {
         try {
-            // const imageUrl = (req.files as any)?.TurfImages?
 
-            const reqBody = req.body
             const images = (req.files as any)?.TurfImages
             const locations = images.map((image: any) => image.location);
-            // console.log(locations);
 
             const isRegistered = await this.companyUseCase.registerTurf({ ...req.body, images: locations })
-            // // const 
-            // console.log("ReqBody :", reqBody);
-            // console.log("images : ", images);
+
+            if (isRegistered) res.status(200).json({ success: true, turf: isRegistered });
+
 
         } catch (error) {
             console.error('Error during Register Turf:', error);
@@ -162,6 +159,33 @@ export class CompanyController {
         }
     }
 
+    async getTurfs(req: Request, res: Response) {
+        try {
+
+            const { companyId } = req.query
+            console.log("CompnayId :", companyId);
+            if (!companyId) res.status(200).json({ success: false, message: "Cannot get the Company Id :" });
+
+            const turfs = await this.companyUseCase.getTurfs(companyId as string)
+            res.status(200).json({ success: true, turfs, message: "Turfs Fetched successfully :" });
+
+        } catch (error) {
+            console.error('Error during Register Turf:', error);
+            res.status(500).json({ message: 'Something went wrong during Fetch the Turfs :', error: error });
+        }
+    }
+
+    async getTurfDetails(req: Request, res: Response) {
+        try {
+
+            const { turfId } = req.query
+            console.log("Turf Id :", turfId);
+
+        } catch (error) {
+            console.error('Error during getting Turf Details :', error);
+            res.status(500).json({ message: 'Something went wrong during Fetch the Turf Details :', error: error });
+        }
+    }
 
 }
 
