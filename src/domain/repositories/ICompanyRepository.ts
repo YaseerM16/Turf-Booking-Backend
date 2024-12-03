@@ -6,4 +6,5 @@ export interface ICompanyRepository {
     create(company: Company): Promise<Company>;
     update(id: string, value: any): Promise<Company | null>;
     registerTurf(turf: Turf): Promise<Turf | null>;
+    getTurfs(companyId: string): Promise<Turf[] | null>;
 }

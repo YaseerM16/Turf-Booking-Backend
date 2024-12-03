@@ -23,6 +23,8 @@ router.post("/auth/register", (req: Request, res: Response) => companyController
 router.get("/auth/verifymail", (req: Request, res: Response) => companyController.verifyAccount(req, res))
 router.post("/auth/login", (req: Request, res: Response) => companyController.companyLogin(req, res))
 router.get("/logout", (req: Request, res: Response) => companyController.logout(req, res))
+router.get("/get-turfs", (req: Request, res: Response) => companyController.getTurfs(req, res))
+router.get("/get-turf-details", (req: Request, res: Response) => companyController.getTurfDetails(req, res))
 
 
 //Turf-Management
