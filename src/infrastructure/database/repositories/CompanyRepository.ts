@@ -59,4 +59,18 @@ export class CompanyRepository implements ICompanyRepository {
             throw new ErrorResponse(error.message, error.status);
         }
     }
+
+    async getTurfById(turfId: string): Promise<Turf | null> {
+        try {
+            if (!turfId) throw new ErrorResponse("TurfId is not Provided in Repository :", 500);
+
+            const turf = await TurfModel.findById(turfId);
+            if (!turf) throw new ErrorResponse("Turf not found", 404);
+
+            return turf as unknown as Turf
+
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
 } 

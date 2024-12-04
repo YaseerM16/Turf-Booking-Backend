@@ -119,6 +119,8 @@ export class CompanyUseCase implements ICompanyUseCase {
 
     async registerTurf(turfDetails: any): Promise<Turf | null> {
         try {
+            // console.log("Turf Details in UseCases :", turfDetails);
+
             const workingSlots = {
                 fromTime: turfDetails?.fromTime,
                 toTime: turfDetails?.toTime,
@@ -128,6 +130,9 @@ export class CompanyUseCase implements ICompanyUseCase {
             const location = JSON.parse(turfDetails?.location)
             const facilities = JSON.parse(turfDetails?.selectedFacilities)
             const price = Number(turfDetails?.price)
+            const supportedGames = JSON.parse(turfDetails?.games)
+            console.log("Supported Games :", supportedGames);
+
 
             const turf: Turf = {
                 companyId: turfDetails.companyId,
@@ -140,6 +145,7 @@ export class CompanyUseCase implements ICompanyUseCase {
                 facilities,
                 location,
                 workingSlots,
+                supportedGames
             }
 
             const isRegistered = await this.companyRepository.registerTurf(turf)
@@ -156,6 +162,19 @@ export class CompanyUseCase implements ICompanyUseCase {
             if (!companyId) throw new ErrorResponse("CompanyId is not Provided :", 500);
             const turfs = await this.companyRepository.getTurfs(companyId)
             return turfs
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
+    async getTurfById(turfId: string): Promise<Turf | null> {
+        try {
+            if (!turfId) throw new ErrorResponse("TurfId is not Provided :", 500);
+
+            const turfObject = await this.companyRepository.getTurfById(turfId)
+
+            return turfObject as unknown as Turf
+
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
         }

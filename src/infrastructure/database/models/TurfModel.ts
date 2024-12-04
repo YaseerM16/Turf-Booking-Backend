@@ -63,6 +63,14 @@ const TurfSchema = new Schema(
                 message: turfValidators.facilities.message,
             },
         },
+        supportedGames: {
+            type: [String],
+            required: true,
+            validate: {
+                validator: turfValidators.gameValidator.validator,
+                message: turfValidators.gameValidator.message,
+            },
+        },
         location: {
             latitude: {
                 type: Number,

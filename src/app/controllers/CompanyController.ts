@@ -163,7 +163,6 @@ export class CompanyController {
         try {
 
             const { companyId } = req.query
-            console.log("CompnayId :", companyId);
             if (!companyId) res.status(200).json({ success: false, message: "Cannot get the Company Id :" });
 
             const turfs = await this.companyUseCase.getTurfs(companyId as string)
@@ -179,7 +178,10 @@ export class CompanyController {
         try {
 
             const { turfId } = req.query
-            console.log("Turf Id :", turfId);
+            if (!turfId) res.status(200).json({ success: false, message: "Cannot get the Turf Id :" });
+
+            const getTurf = await this.companyUseCase.getTurfById(turfId as string)
+            res.status(200).json({ success: true, turf: getTurf, message: "Turf Fetched successfully :" });
 
         } catch (error) {
             console.error('Error during getting Turf Details :', error);

@@ -10,6 +10,7 @@ export class Turf {
         public price: number,
         public images: string[],
         public facilities: string[],
+        public supportedGames: string[],
         public location: { latitude: number; longitude: number },
         public workingSlots: {
             fromTime: string;
