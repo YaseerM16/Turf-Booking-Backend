@@ -13,6 +13,7 @@ const turfValidationMessages = {
     fromTime: "Invalid time format for fromTime",
     toTime: "Invalid time format for toTime",
     workingDays: "Invalid day provided in workingDays",
+    supportedGames: "At least one supported Game must be specified"
 };
 
 const turfNameValidator = (value: string) => validator.isLength(value, { min: 3, max: 50 });
@@ -26,11 +27,16 @@ const turfTypeValidator = (value: string) =>
     ["Open", "Closed"].includes(value);
 
 const turfGameValidator = (value: string) =>
-    ["Football", "Cricket", "Multi-purpose", "Basketball",
+    [
+        "Cricket",
+        "Football",
+        "Multi-purpose",
+        "Basketball",
         "Tennis",
         "Badminton",
         "Hockey",
-        "Volleyball"].includes(value);
+        "Volleyball",
+    ].includes(value);
 
 const priceValidator = (value: number) => value > 0;
 
@@ -64,4 +70,5 @@ export const turfValidators = {
     fromTime: { validator: timeValidator, message: turfValidationMessages.fromTime },
     toTime: { validator: timeValidator, message: turfValidationMessages.toTime },
     workingDays: { validator: workingDaysValidator, message: turfValidationMessages.workingDays },
+    gameValidator: { validator: turfGameValidator, message: turfValidationMessages.supportedGames }
 };
