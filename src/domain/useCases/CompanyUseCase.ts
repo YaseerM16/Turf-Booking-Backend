@@ -119,7 +119,6 @@ export class CompanyUseCase implements ICompanyUseCase {
 
     async registerTurf(turfDetails: any): Promise<Turf | null> {
         try {
-            // console.log("Turf Details in UseCases :", turfDetails);
 
             const workingSlots = {
                 fromTime: turfDetails?.fromTime,
@@ -131,8 +130,6 @@ export class CompanyUseCase implements ICompanyUseCase {
             const facilities = JSON.parse(turfDetails?.selectedFacilities)
             const price = Number(turfDetails?.price)
             const supportedGames = JSON.parse(turfDetails?.games)
-            console.log("Supported Games :", supportedGames);
-
 
             const turf: Turf = {
                 companyId: turfDetails.companyId,
@@ -143,10 +140,11 @@ export class CompanyUseCase implements ICompanyUseCase {
                 price,
                 images,
                 facilities,
+                supportedGames,
                 location,
                 workingSlots,
-                supportedGames
             }
+
 
             const isRegistered = await this.companyRepository.registerTurf(turf)
             return isRegistered
@@ -178,5 +176,19 @@ export class CompanyUseCase implements ICompanyUseCase {
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
         }
+    }
+
+    async deleteTurfImage(turfId: string, index: number): Promise<String[] | null> {
+        try {
+            if (!turfId || index) throw new ErrorResponse("TurfId or Index is not Provided :", 500);
+
+            const resultantArr = await this.companyRepository.deleteTurfImage(turfId, index)
+
+            return resultantArr
+
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+        throw new Error("Method not implemented.");
     }
 }

@@ -163,7 +163,7 @@ export class CompanyController {
         try {
 
             const { companyId } = req.query
-            if (!companyId) res.status(200).json({ success: false, message: "Cannot get the Company Id :" });
+            if (!companyId) res.status(400).json({ success: false, message: "Cannot get the Company Id :" });
 
             const turfs = await this.companyUseCase.getTurfs(companyId as string)
             res.status(200).json({ success: true, turfs, message: "Turfs Fetched successfully :" });
@@ -186,6 +186,19 @@ export class CompanyController {
         } catch (error) {
             console.error('Error during getting Turf Details :', error);
             res.status(500).json({ message: 'Something went wrong during Fetch the Turf Details :', error: error });
+        }
+    }
+
+    async deleteTurfImage(req: Request, res: Response) {
+        try {
+            const { turfId, index } = req.body
+            if (!turfId || index) res.status(500).json({ success: false, message: "Cannot get the Turf Id or Index values :" });
+
+            const resultArr = await this.companyUseCase.deleteTurfImage(turfId, index)
+            res.status(200).json({ success: true, images: resultArr, message: "Turf Image Deleted successfully :" });
+
+        } catch (error) {
+            res.status(500).json({ message: 'Something went wrong during Deleting the Turf Image :', error: error });
         }
     }
 

@@ -73,4 +73,28 @@ export class CompanyRepository implements ICompanyRepository {
             throw new ErrorResponse(error.message, error.status);
         }
     }
+    async deleteTurfImage(turfId: string, index: number): Promise<String[] | null> {
+        try {
+            if (!turfId || index) throw new ErrorResponse("TurfId or Index not Provided in Repository :", 500);
+
+            const turf = await TurfModel.findById(turfId);
+
+            if (!turf) {
+                throw new Error("Turf not found");
+            }
+
+            if (index < 0 || index >= turf.images.length) {
+                throw new Error("Invalid index");
+            }
+
+            turf.images.splice(index, 1);
+
+            await turf.save();
+
+            return turf.images;
+
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
 } 
