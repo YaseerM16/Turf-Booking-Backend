@@ -11,7 +11,8 @@ export interface ICompanyUseCase {
     companyLogin(email: string, password: string): Promise<Company | null>
     registerTurf(turfDetails: any): Promise<Turf | null>;
     getTurfs(companyId: string): Promise<Turf[] | null>;
-    getTurfById(turfId: string): Promise<Turf | null>
+    getTurfById(turfId: string): Promise<Turf | null>;
+    deleteTurfImage(turfId: string, index: number): Promise<String[] | null>
     // updateProfileImage(_id: string, url: string): Promise<User | null>
     // userLogin(email: string, password: string): Promise<User | null>
     // updateProfileDetails(_id: string, data: string): Promise<User | null>

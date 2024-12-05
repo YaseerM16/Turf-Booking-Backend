@@ -26,17 +26,7 @@ const turfSizeValidator = (value: string) =>
 const turfTypeValidator = (value: string) =>
     ["Open", "Closed"].includes(value);
 
-const turfGameValidator = (value: string) =>
-    [
-        "Cricket",
-        "Football",
-        "Multi-purpose",
-        "Basketball",
-        "Tennis",
-        "Badminton",
-        "Hockey",
-        "Volleyball",
-    ].includes(value);
+const turfGameValidator = (value: string[]) => value.length > 0;
 
 const priceValidator = (value: number) => value > 0;
 
