@@ -30,5 +30,6 @@ router.get("/get-turf-details", (req: Request, res: Response) => companyControll
 //Turf-Management
 router.post("/register-turf", uploadMiddleware, (req: Request, res: Response) => companyController.registerTurf(req, res))
 router.patch("/delete-turf-image", (req: Request, res: Response) => companyController.deleteTurfImage(req, res))
+router.put("/edit-turf", (req: Request, res: Response) => companyController.editTurf(req, res))
 
 export { router as companyRoute }

@@ -75,7 +75,7 @@ export class CompanyRepository implements ICompanyRepository {
     }
     async deleteTurfImage(turfId: string, index: number): Promise<String[] | null> {
         try {
-            if (!turfId || index) throw new ErrorResponse("TurfId or Index not Provided in Repository :", 500);
+            if (!turfId || !index) throw new ErrorResponse("TurfId or Index not Provided in Repository :", 500);
 
             const turf = await TurfModel.findById(turfId);
 

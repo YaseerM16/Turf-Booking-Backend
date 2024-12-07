@@ -152,7 +152,6 @@ export class CompanyController {
 
             if (isRegistered) res.status(200).json({ success: true, turf: isRegistered });
 
-
         } catch (error) {
             console.error('Error during Register Turf:', error);
             res.status(500).json({ message: 'Something went wrong during Register Turf :', error: error });
@@ -192,13 +191,32 @@ export class CompanyController {
     async deleteTurfImage(req: Request, res: Response) {
         try {
             const { turfId, index } = req.body
-            if (!turfId || index) res.status(500).json({ success: false, message: "Cannot get the Turf Id or Index values :" });
+            if (!turfId || !index) res.status(500).json({ success: false, message: "Cannot get the Turf Id or Index values :" });
 
             const resultArr = await this.companyUseCase.deleteTurfImage(turfId, index)
             res.status(200).json({ success: true, images: resultArr, message: "Turf Image Deleted successfully :" });
 
         } catch (error) {
+            console.error('Error during delete Turf Image :', error);
             res.status(500).json({ message: 'Something went wrong during Deleting the Turf Image :', error: error });
+        }
+    }
+
+    async editTurf(req: Request, res: Response) {
+        try {
+            // const { turfId, index } = req.body
+            console.log("Req file :", req.file);
+            console.log("Req files :", req.files);
+            console.log("Body :", req.body);
+
+            // if (!turfId || !index) res.status(500).json({ success: false, message: "Cannot get the Turf Id or Index values :" });
+
+            // const resultArr = await this.companyUseCase.deleteTurfImage(turfId, index)
+            // res.status(200).json({ success: true, images: resultArr, message: "Turf Image Deleted successfully :" });
+
+        } catch (error) {
+            console.error('Error during Edit Turf Details :', error);
+            res.status(500).json({ message: 'Something went wrong during Edit the Turf Details :', error: error });
         }
     }
 
