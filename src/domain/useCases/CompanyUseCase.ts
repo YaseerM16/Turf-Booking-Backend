@@ -180,7 +180,7 @@ export class CompanyUseCase implements ICompanyUseCase {
 
     async deleteTurfImage(turfId: string, index: number): Promise<String[] | null> {
         try {
-            if (!turfId || index) throw new ErrorResponse("TurfId or Index is not Provided :", 500);
+            if (!turfId || !index) throw new ErrorResponse("TurfId or Index is not Provided :", 500);
 
             const resultantArr = await this.companyRepository.deleteTurfImage(turfId, index)
 
@@ -189,6 +189,5 @@ export class CompanyUseCase implements ICompanyUseCase {
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
         }
-        throw new Error("Method not implemented.");
     }
 }
