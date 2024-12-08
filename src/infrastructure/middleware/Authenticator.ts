@@ -5,15 +5,18 @@ import jwt from "jsonwebtoken";
 
 const authService = new AuthService();
 
-export const Authenticator = (req: Request, res: Response, next: NextFunction): void => {
+export interface CustomRequest extends Request {
+    user?: { id: string; role?: string };
+}
+
+export const Authenticator = (req: CustomRequest, res: Response, next: NextFunction): void => {
     try {
         const { token, refreshToken } = req.cookies
         const decodedData: any = jwt.decode(token)
         const { userRole } = decodedData
         const userId = decodedData._id
-        // console.log("userRole : ", userRole);
-        // console.log("user_id", userId);
 
+        console.log("UserRole :", userRole);
 
 
         const isAuthTokenExpired = authService.isTokenExpired(token)
@@ -21,20 +24,19 @@ export const Authenticator = (req: Request, res: Response, next: NextFunction): 
 
         if (isAuthTokenExpired) {
             if (!isRefreshTokenExpired) {
-                console.log("Acess token is expired and Intialized :");
 
                 const data = authService.verifyRefreshToken(refreshToken)
                 if (data) {
                     const userId = decodedData?._id
                     const email = decodedData.email
-                    const newAccessToken = authService.generateToken({ userId, email })
-                    res.clearCookie("token"); // This will attempt to clear the cookie with the default path
+                    const newAccessToken = authService.generateToken({ userId, email, userRole })
+                    res.clearCookie("token");
                     res.cookie("token", newAccessToken, {
                         httpOnly: false,
                         secure: false,
                         sameSite: "lax",
                     });
-                    console.log("Generated the new access token Sucessfully 🐦‍🔥");
+                    req.user = { id: decodedData?._id, role: decodedData?.userRole }
                     next();
                 }
             } else if (isRefreshTokenExpired) {
@@ -47,13 +49,13 @@ export const Authenticator = (req: Request, res: Response, next: NextFunction): 
 
         } else if (!isAuthTokenExpired) {
             const verify: any = authService.verifyToken(token, userId)
-            // console.log("Verify Result :- ", verify);
 
             if (verify.notVerified) {
                 res.status(401).json({ message: "Verification for token is failed !", verificationFailed: true })
                 return
             }
-            console.log("Provided Access form Middlewar TOken verifd 🐦‍🔥");
+            // console.log("Provided Access form Middlewar TOken verifd 🐦‍🔥");
+            req.user = { id: decodedData._id, role: decodedData.userRole };
             next();
         }
     } catch (error: any) {

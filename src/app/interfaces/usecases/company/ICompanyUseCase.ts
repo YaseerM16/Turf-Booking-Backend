@@ -9,6 +9,10 @@ export interface ICompanyUseCase {
         email: string
     ): Promise<Company | null>;
     companyLogin(email: string, password: string): Promise<Company | null>
+    updateProfileImage(companyId: string, imageUrl: string): Promise<Company | null>
+    updateProfileDetails(companyId: string, data: string): Promise<Company | null>
+
+    //Turf
     registerTurf(turfDetails: any): Promise<Turf | null>;
     getTurfs(companyId: string): Promise<Turf[] | null>;
     getTurfById(turfId: string): Promise<Turf | null>;

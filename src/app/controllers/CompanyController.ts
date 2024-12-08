@@ -158,6 +158,42 @@ export class CompanyController {
         }
     }
 
+    async updateDetails(req: Request, res: Response): Promise<void> {
+        try {
+            const { companyId } = req.params
+
+            const company = await this.companyUseCase.updateProfileDetails(companyId, req.body)
+            if (!company) {
+                res.status(404).json({ success: false, message: "User not found or update failed" });
+                return
+            }
+
+            res.status(200).send({ success: true, company });
+            return
+
+        } catch (error) {
+            res.status(500).json({ message: "Internal server error" });
+        }
+    }
+
+    async updateProfileImage(
+        req: Request,
+        res: Response,
+    ): Promise<void> {
+        try {
+            const { companyId } = req.params
+            const imageUrl = (req.files as any)?.profileImage?.[0].location
+            if (!imageUrl) {
+                res.status(400).send("Profile image is required");
+            }
+            const company = await this.companyUseCase.updateProfileImage(companyId, imageUrl);
+            res.status(200).send({ success: true, company });
+
+        } catch (error) {
+            res.status(403).json({ message: (error as Error).message });
+        }
+    }
+
     async getTurfs(req: Request, res: Response) {
         try {
 

@@ -5,9 +5,12 @@ import { CompanyUseCase } from "../../domain/useCases/CompanyUseCase";
 import { AuthService } from "../../infrastructure/services/AuthService";
 import { MailService } from "../../infrastructure/services/EmailService";
 import { uploadMiddleware } from "../../infrastructure/multer/multerConfig";
+import { Authenticator } from "../../infrastructure/middleware/Authenticator";
+import AccessControl from "../../infrastructure/middleware/AccessControl";
 uploadMiddleware
 CompanyController
 CompanyRepository
+AccessControl
 
 const router: Router = express.Router()
 
@@ -23,12 +26,26 @@ router.post("/auth/register", (req: Request, res: Response) => companyController
 router.get("/auth/verifymail", (req: Request, res: Response) => companyController.verifyAccount(req, res))
 router.post("/auth/login", (req: Request, res: Response) => companyController.companyLogin(req, res))
 router.get("/logout", (req: Request, res: Response) => companyController.logout(req, res))
-router.get("/get-turfs", (req: Request, res: Response) => companyController.getTurfs(req, res))
-router.get("/get-turf-details", (req: Request, res: Response) => companyController.getTurfDetails(req, res))
+
+
+//Profile
+router.patch("/profile/upload-image/:companyId",
+    Authenticator,
+    AccessControl.isCompanyBlocked,
+    uploadMiddleware,
+    (req: Request, res: Response) => companyController.updateProfileImage(req, res)
+)
+router.patch("/profile/update-details/:companyId",
+    Authenticator,
+    AccessControl.isCompanyBlocked,
+    (req: Request, res: Response) => companyController.updateDetails(req, res)
+)
 
 
 //Turf-Management
 router.post("/register-turf", uploadMiddleware, (req: Request, res: Response) => companyController.registerTurf(req, res))
+router.get("/get-turfs", (req: Request, res: Response) => companyController.getTurfs(req, res))
+router.get("/get-turf-details", (req: Request, res: Response) => companyController.getTurfDetails(req, res))
 router.patch("/delete-turf-image", (req: Request, res: Response) => companyController.deleteTurfImage(req, res))
 router.put("/edit-turf", (req: Request, res: Response) => companyController.editTurf(req, res))
 

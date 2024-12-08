@@ -108,9 +108,35 @@ export class CompanyUseCase implements ICompanyUseCase {
             }
 
             if (!company.isActive) {
-                throw new ErrorResponse("user is blocked", 404);
+                throw new ErrorResponse("Your Company Account is Blocked...!", 404);
             }
 
+            return company;
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
+    async updateProfileImage(companyId: string, imageUrl: string): Promise<Company | null> {
+        try {
+            const data = { profilePicture: imageUrl };
+            const company = await this.companyRepository.update(companyId, data);
+            if (!company) {
+                throw new ErrorResponse("Company not found or update failed", 404);  // Handling not found
+            }
+            return company;
+        } catch (error) {
+
+        }
+        throw new Error("Method not implemented.");
+    }
+
+    async updateProfileDetails(companyId: string, data: string): Promise<Company | null> {
+        try {
+            const company = await this.companyRepository.update(companyId, data);
+            if (!company) {
+                throw new ErrorResponse("User not found or update failed", 404);  // Handling not found
+            }
             return company;
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);

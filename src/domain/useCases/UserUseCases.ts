@@ -41,16 +41,16 @@ export class UserUseCase implements IUserUseCase {
             let user = await this.userRepository.findByEmail(email);
 
             if (!user || !user.password) {
-                throw new ErrorResponse("user dosen't exist", 404);
+                throw new ErrorResponse("user dosen't exist", 400);
             }
             const passwordMatch = await comparePassword(password, user.password);
 
             if (!passwordMatch) {
-                throw new ErrorResponse("password dosen't match", 400);
+                throw new ErrorResponse("password dosen't match", 401);
             }
 
             if (!user.isActive) {
-                throw new ErrorResponse("user is blocked", 404);
+                throw new ErrorResponse("Your Account is Blocked..!!", 403);
             }
 
             return user;

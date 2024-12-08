@@ -151,13 +151,13 @@ export class UserController {
             if (!user) {
                 res.status(404).json({ success: false, message: "User not found or update failed" });
                 return
-            } else {
-                res.status(200).send({ success: true, user });
-                return
             }
 
+            res.status(200).send({ success: true, user });
+            return
+
         } catch (error) {
-            res.status(403).json({ message: (error as Error).message });
+            res.status(500).json({ message: "Internal server error" });
         }
     }
 
