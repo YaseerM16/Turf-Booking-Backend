@@ -62,7 +62,9 @@ export class AdminController {
             const page = parseInt(req.query.page as string) || 1; // Default to page 1 if not provided
             const limit = parseInt(req.query.limit as string) || 10;
             const searchQry = req.query.searchQry as string
-            const users = await this.adminUseCase.getUsers(page, limit, searchQry);
+            const filter = req.query.filter as string || "all";
+
+            const users = await this.adminUseCase.getUsers(page, limit, searchQry, filter);
 
             res.status(200).json({ users: users.users, success: true, message: "Fetched Users successfully ", totalUsers: users.totalUsers });
         } catch (error) {
@@ -86,20 +88,59 @@ export class AdminController {
             res.status(400).json({ message: (error as Error).message });
         }
     }
+    async companyToggleBlock(req: Request, res: Response) {
+        try {
+            const { email, companyId } = req.query
+
+            if (!email || !companyId) {
+                throw new Error("Email or companyId was not provided.");
+            }
+
+            const response: any = await this.adminUseCase.companyBlockToggle(email as string, companyId as string)
+
+            if (!response.success) {
+                res.status(500).json({ success: false, message: "something went wrong while toggle the company status :(" });
+                return
+            }
+
+            res.status(200).json({ success: true, message: "Company Block Status Toggled Successfully" });
+
+        } catch (error) {
+            res.status(400).json({ message: (error as Error).message });
+        }
+    }
 
     async getRegisteredCompany(req: Request, res: Response) {
         try {
 
             const page = parseInt(req.query.page as string) || 1; // Default to page 1 if not provided
             const limit = parseInt(req.query.limit as string) || 10;
+            const searchQry = req.query.searchQry as string
 
-            const companies = await this.adminUseCase.getRegisteredCompanies(page, limit);
+            const companies = await this.adminUseCase.getRegisteredCompanies(page, limit, searchQry);
 
-            res.status(200).json({ companies: companies.companies, success: true, message: "Fetched Users successfully ", totalCompany: companies.totalCompanies });
-
+            res.status(200).json({ companies: companies.companies, success: true, message: "Fetched Registered companies successfully ", totalCompany: companies.totalCompanies });
 
         } catch (error) {
             res.status(500).json({ message: 'Something went wrong during Fetch Verified Companies :' });
+        }
+    }
+
+    async getApprovedCompany(req: Request, res: Response) {
+        try {
+            const page = parseInt(req.query.page as string) || 1; // Default to page 1 if not provided
+            const limit = parseInt(req.query.limit as string) || 10;
+            const searchQry = req.query.searchQry as string
+            const filter = req.query.filter as string || "all";
+
+            // console.log("Query in Controller :", searchQry);
+
+            const companies = await this.adminUseCase.getApprovedCompanies(page, limit, searchQry, filter);
+
+            res.status(200).json({ companies: companies.companies, success: true, message: "Fetched Approved companies successfully ", totalCompany: companies.totalCompanies });
+
+        } catch (error) {
+            res.status(500).json({ message: 'Something went wrong during Fetch Approved Companies :' });
         }
     }
 

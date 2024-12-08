@@ -25,8 +25,6 @@ export class MongoUserRepository implements IUserRepository {
     }
     async update(id: string, value: any): Promise<User | null> {
         try {
-            console.log("User Value in update :", value.forgotPasswordTokenExpiry);
-
             const updatedUser = await UserModel.findByIdAndUpdate(id, value, {
                 new: true,
                 fields: "-password"

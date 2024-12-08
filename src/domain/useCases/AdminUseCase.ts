@@ -11,6 +11,7 @@ config
 
 export class AdminUseCase implements IAdminUseCase {
     constructor(private adminRepository: IAdminRepository) { }
+
     async adminLogin(email: string, password: string): Promise<object | null> {
         try {
             if (!email || !password) {
@@ -29,9 +30,9 @@ export class AdminUseCase implements IAdminUseCase {
         }
     }
 
-    async getUsers(page: number, limit: number, searchQry: string): Promise<{ users: any[]; totalUsers: number }> {
+    async getUsers(page: number, limit: number, searchQry: string, filter: string): Promise<{ users: any[]; totalUsers: number }> {
         try {
-            const users = await this.adminRepository.getAllUsers(page, limit, searchQry);
+            const users = await this.adminRepository.getAllUsers(page, limit, searchQry, filter);
             const usersData = users.users
             return { users: usersData, totalUsers: users.totalUsers }
         } catch (error: any) {
@@ -39,9 +40,20 @@ export class AdminUseCase implements IAdminUseCase {
         }
     }
 
-    async getRegisteredCompanies(page: number, limit: number): Promise<{ companies: any[]; totalCompanies: number }> {
+    async getRegisteredCompanies(page: number, limit: number, searchQry: string): Promise<{ companies: any[]; totalCompanies: number }> {
         try {
-            const companies = await this.adminRepository.getRegisteredCompany(page, limit)
+            const companies = await this.adminRepository.getRegisteredCompany(page, limit, searchQry)
+            const companiesDet = companies.companies
+            return { companies: companiesDet, totalCompanies: companies.totalCompany }
+
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
+    async getApprovedCompanies(page: number, limit: number, searchQry: string, filter: string): Promise<{ companies: any[]; totalCompanies: number; }> {
+        try {
+            const companies = await this.adminRepository.getApprovedCompany(page, limit, searchQry, filter)
             const companiesDet = companies.companies
             return { companies: companiesDet, totalCompanies: companies.totalCompany }
 
@@ -61,6 +73,24 @@ export class AdminUseCase implements IAdminUseCase {
                 return { success: false, message: "User not found or error fetching data" };
             }
             return { success: true, message: "User block status fetched successfully" };
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
+    async companyBlockToggle(email: string, companyId: string): Promise<object> {
+        try {
+            if (!email || !companyId) {
+                throw new Error("Email or companyId is required but was not provided.");
+            }
+
+
+            const response: any = await this.adminRepository.companyBlockToggle(companyId, email);
+            if (!response.success) {
+                return { success: false, message: "Company not found or error fetching data" };
+            }
+            return { success: true, message: "Company block status Toggled successfully" };
+
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
         }
