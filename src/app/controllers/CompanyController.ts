@@ -227,7 +227,11 @@ export class CompanyController {
     async deleteTurfImage(req: Request, res: Response) {
         try {
             const { turfId, index } = req.body
-            if (!turfId || !index) res.status(500).json({ success: false, message: "Cannot get the Turf Id or Index values :" });
+
+            if (!turfId || index === undefined || index === null) {
+                res.status(500).json({ success: false, message: "Cannot get the Turf Id or Index values :" });
+                return
+            }
 
             const resultArr = await this.companyUseCase.deleteTurfImage(turfId, index)
             res.status(200).json({ success: true, images: resultArr, message: "Turf Image Deleted successfully :" });
@@ -240,15 +244,17 @@ export class CompanyController {
 
     async editTurf(req: Request, res: Response) {
         try {
-            // const { turfId, index } = req.body
-            console.log("Req file :", req.file);
-            console.log("Req files :", req.files);
-            console.log("Body :", req.body);
 
-            // if (!turfId || !index) res.status(500).json({ success: false, message: "Cannot get the Turf Id or Index values :" });
+            const images = (req.files as any)?.TurfImages
+            let locations: string[] | undefined;
 
-            // const resultArr = await this.companyUseCase.deleteTurfImage(turfId, index)
-            // res.status(200).json({ success: true, images: resultArr, message: "Turf Image Deleted successfully :" });
+            if (images && images.length > 0) {
+                locations = images.map((image: any) => image.location);
+            }
+
+            const isUpdated = await this.companyUseCase.editTurf({ ...req.body, ...(locations && { images: locations }) })
+
+            if (isUpdated) res.status(200).json({ success: true, turf: isUpdated });
 
         } catch (error) {
             console.error('Error during Edit Turf Details :', error);
