@@ -9,4 +9,5 @@ export interface ICompanyRepository {
     getTurfs(companyId: string): Promise<Turf[] | null>;
     getTurfById(turfId: string): Promise<Turf | null>;
     deleteTurfImage(turfId: string, index: number): Promise<String[] | null>;
+    editTurfById(turfId: string, turf: Turf): Promise<Turf | null>
 }

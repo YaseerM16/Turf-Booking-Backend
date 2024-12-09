@@ -180,6 +180,36 @@ export class CompanyUseCase implements ICompanyUseCase {
         }
     }
 
+    async editTurf(turfDetails: any): Promise<Turf | null> {
+        try {
+            const facilities = JSON.parse(turfDetails?.selectedFacilities)
+            const price = Number(turfDetails?.price)
+            const supportedGames = JSON.parse(turfDetails?.games)
+            const turfId = JSON.parse(turfDetails.turfId)
+
+
+            const images = turfDetails?.images && turfDetails.images.length > 0
+                ? turfDetails.images
+                : undefined;
+
+            const turf: any = {
+                companyId: turfDetails.companyId,
+                turfName: turfDetails.turfName,
+                description: turfDetails.description,
+                turfSize: turfDetails.turfSize,
+                turfType: turfDetails.turfType,
+                price,
+                ...(images && { images }),
+                facilities,
+                supportedGames,
+            }
+            const isUpdated = await this.companyRepository.editTurfById(turfId, turf)
+            return isUpdated
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
     async getTurfs(companyId: string): Promise<Turf[] | null> {
         try {
 
@@ -206,7 +236,8 @@ export class CompanyUseCase implements ICompanyUseCase {
 
     async deleteTurfImage(turfId: string, index: number): Promise<String[] | null> {
         try {
-            if (!turfId || !index) throw new ErrorResponse("TurfId or Index is not Provided :", 500);
+
+            if (!turfId || index === undefined || index === null) throw new ErrorResponse("TurfId or Index is not Provided :", 500);
 
             const resultantArr = await this.companyRepository.deleteTurfImage(turfId, index)
 
@@ -216,4 +247,5 @@ export class CompanyUseCase implements ICompanyUseCase {
             throw new ErrorResponse(error.message, error.status);
         }
     }
+
 }
