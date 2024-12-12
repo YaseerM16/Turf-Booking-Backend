@@ -2,6 +2,7 @@ import { Company } from "../../../domain/entities/Company";
 import { Turf } from "../../../domain/entities/Turf";
 import { ICompanyRepository } from "../../../domain/repositories/ICompanyRepository";
 import { ErrorResponse } from "../../../utils/errors";
+import TurfService from "../../services/TurfService";
 import CompanyModel from "../models/CompanyModel";
 import TurfModel from "../models/TurfModel";
 CompanyModel
@@ -41,8 +42,7 @@ export class CompanyRepository implements ICompanyRepository {
     }
     async registerTurf(turf: Turf): Promise<Turf | null> {
         try {
-            const newTurf = new TurfModel(turf)
-            const savedTurf = await newTurf.save();
+            const savedTurf = await TurfService.registerTurf(turf)
             return savedTurf as unknown as Turf
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
@@ -130,4 +130,5 @@ export class CompanyRepository implements ICompanyRepository {
         }
         throw new Error("Method not implemented.");
     }
-} 
+}
+

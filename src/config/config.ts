@@ -20,5 +20,6 @@ export const config = {
     S3_REGION: process.env.S3_REGION,
     ADMIN_NAME: process.env.ADMIN_NAME,
     ADMIN_EMAIL: process.env.ADMIN_EMAIL,
-    ADMIN_PASSWORD: process.env.ADMIN_PASSWORD
+    ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
+    GEOCODE_API: process.env.GEOCODE_API
 };

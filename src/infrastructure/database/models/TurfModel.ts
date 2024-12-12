@@ -16,6 +16,14 @@ const TurfSchema = new Schema(
                 message: turfValidators.turfName.message,
             },
         },
+        address: {
+            type: String,
+            required: true,
+            validate: {
+                validator: turfValidators.addressValidator.validator,
+                message: turfValidators.addressValidator.message,
+            },
+        },
         description: {
             type: String,
             required: true,
