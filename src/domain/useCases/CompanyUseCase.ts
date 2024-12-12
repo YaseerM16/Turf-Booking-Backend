@@ -6,6 +6,8 @@ import { ErrorResponse } from "../../utils/errors";
 import { comparePassword, generateHashPassword } from "../../infrastructure/services/PasswordService";
 import { Turf } from "../entities/Turf";
 import { AdminRepository } from "../../infrastructure/database/repositories/AdminRepository";
+import { config } from "../../config/config";
+import axios from "axios";
 
 Company
 
@@ -151,15 +153,27 @@ export class CompanyUseCase implements ICompanyUseCase {
                 toTime: turfDetails?.toTime,
                 workingDays: JSON.parse(turfDetails?.workingDays)
             }
+
             const images = turfDetails?.images
             const location = JSON.parse(turfDetails?.location)
             const facilities = JSON.parse(turfDetails?.selectedFacilities)
             const price = Number(turfDetails?.price)
             const supportedGames = JSON.parse(turfDetails?.games)
 
+            const response: any = await axios.get(`https://api.opencagedata.com/geocode/v1/json?q=${location.latitude}%2C${location.longitude}&key=${config.GEOCODE_API}`)
+            console.log("Response ;", response.status);
+
+            if (response.status !== 200) {
+                throw new Error(`Failed to fetch data: ${response.statusText}`);
+            }
+            const address = String(response.data.results[0].formatted)
+            console.log("REgtrived Address :", address);
+
+
             const turf: Turf = {
                 companyId: turfDetails.companyId,
                 turfName: turfDetails.turfName,
+                address,
                 description: turfDetails.description,
                 turfSize: turfDetails.turfSize,
                 turfType: turfDetails.turfType,

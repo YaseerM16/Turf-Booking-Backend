@@ -13,7 +13,8 @@ const turfValidationMessages = {
     fromTime: "Invalid time format for fromTime",
     toTime: "Invalid time format for toTime",
     workingDays: "Invalid day provided in workingDays",
-    supportedGames: "At least one supported Game must be specified"
+    supportedGames: "At least one supported Game must be specified",
+    address: "There is Validation Failed for an address in turf"
 };
 
 const turfNameValidator = (value: string) => validator.isLength(value, { min: 3, max: 50 });
@@ -27,6 +28,8 @@ const turfTypeValidator = (value: string) =>
     ["Open", "Closed"].includes(value);
 
 const turfGameValidator = (value: string[]) => value.length > 0;
+
+const turfAddressValidator = (value: string) => validator.isLength(value, { min: 10, max: 100 });
 
 const priceValidator = (value: number) => value > 0;
 
@@ -60,5 +63,6 @@ export const turfValidators = {
     fromTime: { validator: timeValidator, message: turfValidationMessages.fromTime },
     toTime: { validator: timeValidator, message: turfValidationMessages.toTime },
     workingDays: { validator: workingDaysValidator, message: turfValidationMessages.workingDays },
-    gameValidator: { validator: turfGameValidator, message: turfValidationMessages.supportedGames }
+    gameValidator: { validator: turfGameValidator, message: turfValidationMessages.supportedGames },
+    addressValidator: { validator: turfAddressValidator, message: turfValidationMessages.address }
 };

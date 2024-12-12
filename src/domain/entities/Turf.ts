@@ -4,6 +4,7 @@ export class Turf {
     constructor(
         public companyId: ObjectId | string,
         public turfName: string,
+        public address: string,
         public description: string,
         public turfSize: string,
         public turfType: string,
