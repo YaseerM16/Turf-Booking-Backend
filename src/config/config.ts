@@ -21,5 +21,7 @@ export const config = {
     ADMIN_NAME: process.env.ADMIN_NAME,
     ADMIN_EMAIL: process.env.ADMIN_EMAIL,
     ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
-    GEOCODE_API: process.env.GEOCODE_API
+    GEOCODE_API: process.env.GEOCODE_API,
+    PAYU_SALT: process.env.PAYU_SALT,
+    PAYU_MERCHANT_KEY: process.env.PAYU_MERCHANT_KEY
 };

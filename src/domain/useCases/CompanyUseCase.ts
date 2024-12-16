@@ -8,6 +8,7 @@ import { Turf } from "../entities/Turf";
 import { AdminRepository } from "../../infrastructure/database/repositories/AdminRepository";
 import { config } from "../../config/config";
 import axios from "axios";
+import { Slot } from "../entities/Slot";
 
 Company
 
@@ -235,6 +236,33 @@ export class CompanyUseCase implements ICompanyUseCase {
         }
     }
 
+    async blockTurf(turfId: string): Promise<object> {
+        try {
+            if (!turfId) throw new ErrorResponse("turfId is not Provided :", 500);
+            const isBlocked: any = await this.companyRepository.blockTurf(turfId)
+            if (isBlocked.success) {
+                return isBlocked
+            }
+
+            return { success: false }
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+    async unBlockTurf(turfId: string): Promise<object> {
+        try {
+            if (!turfId) throw new ErrorResponse("turfId is not Provided :", 500);
+            const isBlocked: any = await this.companyRepository.unBlockTurf(turfId)
+            if (isBlocked.success) {
+                return isBlocked
+            }
+
+            return { success: false }
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
     async getTurfById(turfId: string): Promise<Turf | null> {
         try {
             if (!turfId) throw new ErrorResponse("TurfId is not Provided :", 500);
@@ -257,6 +285,44 @@ export class CompanyUseCase implements ICompanyUseCase {
 
             return resultantArr
 
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
+    async getSlotsByDay(turfId: string, day: string): Promise<Slot[] | null> {
+        try {
+            const slots = await this.companyRepository.getSlotByDay(turfId, day)
+            return slots
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
+    async makeSlotUnavail(slotId: string, turfId: string): Promise<object> {
+        try {
+            if (!turfId || !slotId) throw new ErrorResponse("TurfId or SlotId is not Provided :", 500);
+
+            const isUnavailed: any = await this.companyRepository.makeSlotUnavail(slotId, turfId)
+            if (isUnavailed.success) {
+                return isUnavailed
+            }
+
+            return { success: false }
+
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
+    async makeSlotAvail(slotId: string, turfId: string): Promise<object> {
+        try {
+            if (!turfId || !slotId) throw new ErrorResponse("TurfId or SlotId is not Provided :", 500);
+            const isAvailed: any = await this.companyRepository.makeSlotAvail(slotId, turfId)
+            if (isAvailed.success) {
+                return isAvailed
+            }
+            return { success: false }
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
         }

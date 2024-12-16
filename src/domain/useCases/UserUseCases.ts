@@ -5,6 +5,9 @@ import { ErrorResponse } from "../../utils/errors";
 import { comparePassword, generateHashPassword } from "../../infrastructure/services/PasswordService";
 import { IUserUseCase } from "../../app/interfaces/usecases/user/IUserUseCase";
 import { AuthService } from "../../infrastructure/services/AuthService";
+import { Turf } from "../entities/Turf";
+import { Slot } from "../entities/Slot";
+import UserModel from "../../infrastructure/database/models/UserModel";
 AuthService
 
 
@@ -130,6 +133,7 @@ export class UserUseCase implements IUserUseCase {
             throw new ErrorResponse(error.message, error.status);
         }
     }
+
     async updateProfileDetails(_id: string, data: string): Promise<User | null> {
         try {
             const user = await this.userRepository.update(_id, data);
@@ -155,6 +159,7 @@ export class UserUseCase implements IUserUseCase {
             throw new ErrorResponse(error.message, error.status);
         }
     }
+
     async updatePassword(email: string, password: string): Promise<User | null> {
         try {
             const hashedPassword = await generateHashPassword(password);
@@ -166,6 +171,73 @@ export class UserUseCase implements IUserUseCase {
             });
             return updatedUser;
 
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
+    async getAllTurfs(): Promise<Turf[] | null> {
+        try {
+            const turfs = await this.userRepository.getAllTurfs()
+            return turfs
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
+    async getTurfById(turfId: string): Promise<Turf | null> {
+        try {
+            const turf = await this.userRepository.getTurfById(turfId)
+            return turf
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
+    async getSlotsByDay(turfId: string, day: string): Promise<Slot[] | null> {
+        try {
+            const slots = await this.userRepository.getSlotByDay(turfId, day)
+            return slots
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
+    async bookTheSlots(fullDetails: any): Promise<object> {
+        try {
+            const { udf1, udf2, udf3, udf4, amount, slots, addedon, status, txnid, mode } = fullDetails
+            const bookingData = {
+                userId: udf1,
+                companyId: udf2,
+                turfId: udf4,
+                selectedSlots: slots,
+                totalAmount: amount,
+                status: "completed",
+                paymentStatus: 'completed',
+                paymentMethod: mode,
+                paymentTransactionId: txnid,
+                paymentDate: null,
+                bookingDate: new Date(),
+                isRefunded: false,
+                isActive: true,
+            };
+
+            const isBooked: any = await this.userRepository.bookTheSlots(bookingData)
+
+            if (isBooked?.success) {
+                return isBooked
+            }
+
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+        throw new Error("Method not implemented.");
+    }
+
+    async getBookingOfUser(userId: string): Promise<[] | null> {
+        try {
+            const userBookings = await this.userRepository.getBookingByUserId(userId)
+            return userBookings
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
         }

@@ -48,5 +48,14 @@ router.get("/get-turfs", (req: Request, res: Response) => companyController.getT
 router.get("/get-turf-details", (req: Request, res: Response) => companyController.getTurfDetails(req, res))
 router.patch("/delete-turf-image", (req: Request, res: Response) => companyController.deleteTurfImage(req, res))
 router.put("/edit-turf", uploadMiddleware, (req: Request, res: Response) => companyController.editTurf(req, res))
+router.patch("/block-turf", (req: Request, res: Response) => companyController.blockTurf(req, res))
+router.patch("/Un-block-turf", (req: Request, res: Response) => companyController.unBlockTurf(req, res))
+
+
+//Slot-Management
+router.get("/get-slots-by-day", (req: Request, res: Response) => companyController.getSlots(req, res))
+router.get("/make-slot-unavailable", (req: Request, res: Response) => companyController.makeSlotUnavail(req, res))
+router.get("/make-slot-available", (req: Request, res: Response) => companyController.makeSlotAvail(req, res))
+
 
 export { router as companyRoute }

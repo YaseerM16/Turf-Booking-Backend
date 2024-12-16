@@ -1,8 +1,9 @@
 import { Company } from "../../../domain/entities/Company";
+import { Slot } from "../../../domain/entities/Slot";
 import { Turf } from "../../../domain/entities/Turf";
 import { ICompanyRepository } from "../../../domain/repositories/ICompanyRepository";
 import { ErrorResponse } from "../../../utils/errors";
-import TurfService from "../../services/TurfService";
+import TurfService, { SlotModel } from "../../services/TurfService";
 import CompanyModel from "../models/CompanyModel";
 import TurfModel from "../models/TurfModel";
 CompanyModel
@@ -56,6 +57,54 @@ export class CompanyRepository implements ICompanyRepository {
             const turfs = await TurfModel.find({ companyId })
 
             return turfs as unknown as Turf[]
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
+    async blockTurf(turfId: string): Promise<object> {
+        try {
+            if (!turfId) throw new ErrorResponse("turfId is not Provided", 400);
+
+            const updatedTurf = await TurfModel.findByIdAndUpdate(
+                turfId,
+                { isBlocked: true },
+                { new: true }
+            );
+
+            if (!updatedTurf) {
+                throw new ErrorResponse("Turf not found", 404);
+            }
+
+            return {
+                success: true,
+                message: "Turf successfully blocked",
+                data: updatedTurf,
+            };
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
+    async unBlockTurf(turfId: string): Promise<object> {
+        try {
+            if (!turfId) throw new ErrorResponse("turfId is not Provided", 400);
+
+            const updatedTurf = await TurfModel.findByIdAndUpdate(
+                turfId,
+                { isBlocked: false },
+                { new: true }
+            );
+
+            if (!updatedTurf) {
+                throw new ErrorResponse("Turf not found", 404);
+            }
+
+            return {
+                success: true,
+                message: "Turf successfully Un-blocked",
+                data: updatedTurf,
+            };
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
         }
@@ -129,6 +178,53 @@ export class CompanyRepository implements ICompanyRepository {
 
         }
         throw new Error("Method not implemented.");
+    }
+
+    async getSlotByDay(turfId: string, day: string): Promise<Slot[] | null> {
+        try {
+            const slots = await SlotModel.find({ turfId, day }).populate('userId').exec();
+            return slots as unknown as Slot[]
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
+    async makeSlotUnavail(slotId: string, turfId: string): Promise<object> {
+        try {
+            if (!turfId || !slotId) throw new ErrorResponse("TurfId or SlotId not Provided in Repository :", 400);
+            const updatedSlot = await SlotModel.findOneAndUpdate(
+                { _id: slotId, turfId },
+                { isUnavail: true },
+                { new: true }
+            );
+
+            if (!updatedSlot) {
+                throw new ErrorResponse("Slot not found", 404);
+            }
+
+            return { success: true, updatedSlot } as object
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+    async makeSlotAvail(slotId: string, turfId: string): Promise<object> {
+        try {
+            if (!turfId || !slotId) throw new ErrorResponse("TurfId or SlotId not Provided in Repository :", 400);
+            const updatedSlot = await SlotModel.findOneAndUpdate(
+                { _id: slotId, turfId },  // Find slot by slotId and turfId
+                { isUnavail: false },       // Update the slot to make it unavailable
+                { new: true }              // Return the updated slot after modification
+            );
+
+            // If no slot was found, return an error
+            if (!updatedSlot) {
+                throw new ErrorResponse("Slot not found", 404);
+            }
+
+            return { success: true, updatedSlot } as object
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
     }
 }
 
