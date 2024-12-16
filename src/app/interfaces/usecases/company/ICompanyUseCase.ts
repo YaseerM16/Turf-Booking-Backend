@@ -1,4 +1,5 @@
 import { Company } from "../../../../domain/entities/Company";
+import { Slot } from "../../../../domain/entities/Slot";
 import { Turf } from "../../../../domain/entities/Turf";
 
 export interface ICompanyUseCase {
@@ -18,7 +19,11 @@ export interface ICompanyUseCase {
     getTurfById(turfId: string): Promise<Turf | null>;
     deleteTurfImage(turfId: string, index: number): Promise<String[] | null>
     editTurf(turfDetails: any): Promise<Turf | null>
-
+    getSlotsByDay(turfId: string, day: string): Promise<Slot[] | null>
+    makeSlotUnavail(slotId: string, turfId: string): Promise<object>
+    makeSlotAvail(slotId: string, turfId: string): Promise<object>
+    blockTurf(turfId: string): Promise<object>
+    unBlockTurf(turfId: string): Promise<object>
     // updateProfileImage(_id: string, url: string): Promise<User | null>
     // userLogin(email: string, password: string): Promise<User | null>
     // updateProfileDetails(_id: string, data: string): Promise<User | null>

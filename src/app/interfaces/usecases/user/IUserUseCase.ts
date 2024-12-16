@@ -1,3 +1,5 @@
+import { Slot } from "../../../../domain/entities/Slot";
+import { Turf } from "../../../../domain/entities/Turf";
 import { User } from "../../../../domain/entities/User";
 
 export interface IUserUseCase {
@@ -12,4 +14,9 @@ export interface IUserUseCase {
     updateProfileDetails(_id: string, data: string): Promise<User | null>
     forgotPassword(email: string): Promise<void>
     updatePassword(email: string, password: string): Promise<User | null>
+    getAllTurfs(): Promise<Turf[] | null>
+    getTurfById(turfId: string): Promise<Turf | null>
+    getSlotsByDay(turfId: string, day: string): Promise<Slot[] | null>
+    bookTheSlots(fullDetails: any): Promise<object>;
+    getBookingOfUser(userId: string): Promise<[] | null>
 }

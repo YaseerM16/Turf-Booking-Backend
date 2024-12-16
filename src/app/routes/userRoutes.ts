@@ -45,4 +45,20 @@ router.patch(
     (req: Request, res: Response) => userController.updateProfileImage(req, res)
 );
 
+
+//Guest experience
+
+router.get("/get-turfs", (req: Request, res: Response) => userController.getTurfs(req, res))
+router.get("/get-turf-details/:turfId", (req: Request, res: Response) => userController.getTurfDetails(req, res))
+router.get("/get-slots-by-day", (req: Request, res: Response) => userController.getSlots(req, res))
+
+
+//Booking Slots
+router.post("/payment/hashing", (req: Request, res: Response) => userController.getPaymentHash(req, res))
+router.post("/payment/save-booking", (req: Request, res: Response) => userController.saveBooking(req, res))
+//My-Bookings 
+
+router.get("/my-booking", (req: Request, res: Response) => userController.getBookings(req, res))
+
+
 export { router as userRoute }

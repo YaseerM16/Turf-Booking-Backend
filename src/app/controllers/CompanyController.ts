@@ -209,6 +209,31 @@ export class CompanyController {
         }
     }
 
+    async blockTurf(req: Request, res: Response) {
+        try {
+            const { turfId } = req.query
+            if (!turfId) res.status(400).json({ success: false, message: "Cannot get the Company Id :" });
+
+            const isBlocked = await this.companyUseCase.blockTurf(turfId as string)
+            res.status(200).json({ success: true, isBlocked, message: "Turfs Fetched successfully :" });
+        } catch (error) {
+            console.error('Error Block the Turf:', error);
+            res.status(500).json({ message: 'Something went wrong during Block the Turf :', error: error });
+        }
+    }
+    async unBlockTurf(req: Request, res: Response) {
+        try {
+            const { turfId } = req.query
+            if (!turfId) res.status(400).json({ success: false, message: "Cannot get the Company Id :" });
+
+            const isBlocked = await this.companyUseCase.unBlockTurf(turfId as string)
+            res.status(200).json({ success: true, isBlocked, message: "Turfs Fetched successfully :" });
+        } catch (error) {
+            console.error('Error Block the Turf:', error);
+            res.status(500).json({ message: 'Something went wrong during Block the Turf :', error: error });
+        }
+    }
+
     async getTurfDetails(req: Request, res: Response) {
         try {
 
@@ -259,6 +284,48 @@ export class CompanyController {
         } catch (error) {
             console.error('Error during Edit Turf Details :', error);
             res.status(500).json({ message: 'Something went wrong during Edit the Turf Details :', error: error });
+        }
+    }
+
+    async getSlots(req: Request, res: Response) {
+        try {
+            const { turfId, day } = req.query
+
+            const slots = await this.companyUseCase.getSlotsByDay(turfId as string, day as string)
+            res.status(200).json({ success: true, slots, message: "Turf Slots by Day Fetched successfully :" });
+
+        } catch (error: any) {
+            res.status(500).json({ message: error?.message });
+        }
+    }
+
+    async makeSlotUnavail(req: Request, res: Response) {
+        try {
+            const { slotId, turfId } = req.query
+
+            const isUnavailed: any = await this.companyUseCase.makeSlotUnavail(slotId as string, turfId as string)
+            if (isUnavailed.success) {
+                res.status(200).json({ success: true, result: isUnavailed, message: "Slot Unavailed successfully :" });
+            }
+            // console.log("From the makeSlotUnavail :", slotId, turfId);
+
+        } catch (error: any) {
+            res.status(500).json({ message: error?.message });
+        }
+    }
+
+    async makeSlotAvail(req: Request, res: Response) {
+        try {
+            const { slotId, turfId } = req.query
+
+            const isAvailed: any = await this.companyUseCase.makeSlotAvail(slotId as string, turfId as string)
+            if (isAvailed.success) {
+                res.status(200).json({ success: true, result: isAvailed, message: "Slot Unavailed successfully :" });
+            }
+            // console.log("From the makeSlotUnavail :", slotId, turfId);
+
+        } catch (error: any) {
+            res.status(500).json({ message: error?.message });
         }
     }
 

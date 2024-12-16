@@ -1,4 +1,5 @@
 import { Company } from "../entities/Company";
+import { Slot } from "../entities/Slot";
 import { Turf } from "../entities/Turf";
 
 export interface ICompanyRepository {
@@ -9,5 +10,10 @@ export interface ICompanyRepository {
     getTurfs(companyId: string): Promise<Turf[] | null>;
     getTurfById(turfId: string): Promise<Turf | null>;
     deleteTurfImage(turfId: string, index: number): Promise<String[] | null>;
-    editTurfById(turfId: string, turf: Turf): Promise<Turf | null>
+    editTurfById(turfId: string, turf: Turf): Promise<Turf | null>;
+    getSlotByDay(turfId: string, day: string): Promise<Slot[] | null>;
+    makeSlotUnavail(slotId: string, turfId: string): Promise<object>;
+    makeSlotAvail(slotId: string, turfId: string): Promise<object>;
+    blockTurf(turfId: string): Promise<object>;
+    unBlockTurf(turfId: string): Promise<object>;
 }
