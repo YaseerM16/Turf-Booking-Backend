@@ -7,9 +7,12 @@ export interface IUserRepository {
     update(id: string, value: any): Promise<User | null>;
     create(user: User): Promise<User>;
     update(id: string, value: any): Promise<User | null>;
-    getAllTurfs(): Promise<Turf[] | null>;
+    googleRegister(email: string, username: string): Promise<User | null>
+
+    /// <- Turf -> ///
+    getAllTurfs(queryobj: object): Promise<{ turfs: Turf[]; totalTurfs: number }>;
     getTurfById(turfId: string): Promise<Turf | null>;
-    getSlotByDay(turfId: string, day: string): Promise<Slot[] | null>;
+    getSlotByDay(turfId: string, day: string, date: string): Promise<Slot[] | null>;
     bookTheSlots(bookingDets: object): Promise<object>;
     getBookingByUserId(userId: string): Promise<[] | null>;
 }

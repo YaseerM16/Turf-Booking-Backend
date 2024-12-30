@@ -8,6 +8,7 @@ import { User } from "../../domain/entities/User";
 import { generatePaymentHash } from "../../../src/infrastructure/services/BookingService"
 import he from "he"
 import multer from "multer";
+import { GetBucketInventoryConfigurationOutputFilterSensitiveLog } from "@aws-sdk/client-s3";
 const upload = multer()
 
 export class UserController {
@@ -80,7 +81,85 @@ export class UserController {
         }
     }
 
+    async googleSingUp(req: Request, res: Response): Promise<void> {
+        try {
+            const { email, displayName } = req.body
+            const user: User | null = await this.userUseCase.googleRegister(email, displayName)
 
+            const newUser = {
+                ...JSON.parse(JSON.stringify(user)),
+                password: undefined,
+            };
+            // console.log("Google supg ", req.body);
+            const det: any = {
+                _id: user?._id,
+                email: user?.email,
+                userRole: "user"
+            };
+            const token = this.authService.generateToken(det);
+            const refreshToken = this.authService.generateRefreshToken(det)
+
+            res.cookie("refreshToken", refreshToken, {
+                httpOnly: true,
+                secure: config.MODE !== "development",
+                sameSite: "lax"
+            });
+
+            res.cookie("token", token, {
+                httpOnly: false,
+                secure: false,
+                sameSite: "lax",
+            });
+
+            // res
+            //     .status(200)
+            //     .json({ success: true, message: "account verified", user, token });
+
+            res.status(200).json({ success: true, user: newUser, message: "account verified" });
+
+        } catch (error) {
+            res.status(403).json({ message: (error as Error).message });
+        }
+    }
+
+    async googleLogin(req: Request, res: Response) {
+        try {
+            const { email } = req.body
+            const user: User | null = await this.userUseCase.googleLogin(email)
+            const newUser = {
+                ...JSON.parse(JSON.stringify(user)),
+                password: undefined,
+            };
+            // console.log("Google supg ", req.body);
+            const det: any = {
+                _id: user?._id,
+                email: user?.email,
+                userRole: "user"
+            };
+            const token = this.authService.generateToken(det);
+            const refreshToken = this.authService.generateRefreshToken(det)
+
+            res.cookie("refreshToken", refreshToken, {
+                httpOnly: true,
+                secure: config.MODE !== "development",
+                sameSite: "lax"
+            });
+
+            res.cookie("token", token, {
+                httpOnly: false,
+                secure: false,
+                sameSite: "lax",
+            });
+
+            // res
+            //     .status(200)
+            //     .json({ success: true, message: "account verified", user, token });
+
+            res.status(200).json({ success: true, user: newUser, message: "account verified" });
+        } catch (error) {
+            res.status(403).json({ message: (error as Error).message });
+        }
+    }
 
     async verifyAccount(req: Request, res: Response) {
         try {
@@ -211,9 +290,11 @@ export class UserController {
 
     async getTurfs(req: Request, res: Response) {
         try {
+            const query = req.query
+            // console.log("Queries in getTurfsofUser :", query);
 
-            const turfs = await this.userUseCase.getAllTurfs()
-            res.status(200).json({ success: true, turfs, message: "Turfs Fetched successfully :" });
+            const turfs = await this.userUseCase.getAllTurfs(query)
+            res.status(200).json({ success: true, turfs: turfs.turfs, totalTurfs: turfs.totalTurfs, message: "Turfs Fetched successfully :" });
 
         } catch (error: any) {
             res.status(500).json({ message: error?.message });
@@ -232,9 +313,10 @@ export class UserController {
 
     async getSlots(req: Request, res: Response) {
         try {
-            const { turfId, day } = req.query
+            const { turfId, day, date } = req.query
+            // console.log("by Date :", date);
 
-            const slots = await this.userUseCase.getSlotsByDay(turfId as string, day as string)
+            const slots = await this.userUseCase.getSlotsByDay(turfId as string, day as string, date as string)
             res.status(200).json({ success: true, slots, message: "Turf Slots by Day Fetched successfully :" });
 
         } catch (error: any) {
@@ -245,7 +327,7 @@ export class UserController {
     async getPaymentHash(req: Request, res: Response) {
         try {
             // console.log("GET PYMENT HASH ");
-            // console.log("REQuest BODY :", req.body);
+            // console.log("REQuest BODY in getPaymntHash :", req.body);
             const { txnid, amount, productinfo, name: username, email, udf1, udf2, udf3, udf4, udf5, udf6, udf7 } = req.body;
             if (
                 !txnid ||
@@ -277,13 +359,17 @@ export class UserController {
 
     async saveBooking(req: Request, res: Response) {
         try {
+            console.log("Save Bookiing is Aprochec*)");
 
-            const isBooked = await this.userUseCase.bookTheSlots(req.body)
+            const isBooked: any = await this.userUseCase.bookTheSlots(req.body)
 
             console.log("Sending BOOKeD Dets ;", isBooked);
 
-            res.status(200).json({ success: true, isBooked, message: "Turf Slots was Booked successfully :" });
-
+            if (isBooked.success) {
+                res.status(200).json({ success: true, isBooked, message: "Turf Slots was Booked successfully :" });
+            } else {
+                res.status(500).json({ success: false, message: "Something went wrong while booking the slots !! :" });
+            }
 
         } catch (error: any) {
             console.log("THRowing Error from SaveBooking :", error);

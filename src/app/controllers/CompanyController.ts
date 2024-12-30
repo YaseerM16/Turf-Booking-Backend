@@ -198,6 +198,8 @@ export class CompanyController {
         try {
 
             const { companyId } = req.query
+            console.log("Gettinh Turfs : ", companyId);
+
             if (!companyId) res.status(400).json({ success: false, message: "Cannot get the Company Id :" });
 
             const turfs = await this.companyUseCase.getTurfs(companyId as string)
@@ -221,6 +223,7 @@ export class CompanyController {
             res.status(500).json({ message: 'Something went wrong during Block the Turf :', error: error });
         }
     }
+
     async unBlockTurf(req: Request, res: Response) {
         try {
             const { turfId } = req.query
@@ -289,9 +292,9 @@ export class CompanyController {
 
     async getSlots(req: Request, res: Response) {
         try {
-            const { turfId, day } = req.query
+            const { turfId, day, date } = req.query
 
-            const slots = await this.companyUseCase.getSlotsByDay(turfId as string, day as string)
+            const slots = await this.companyUseCase.getSlotsByDay(turfId as string, day as string, date as string)
             res.status(200).json({ success: true, slots, message: "Turf Slots by Day Fetched successfully :" });
 
         } catch (error: any) {
@@ -323,6 +326,23 @@ export class CompanyController {
                 res.status(200).json({ success: true, result: isAvailed, message: "Slot Unavailed successfully :" });
             }
             // console.log("From the makeSlotUnavail :", slotId, turfId);
+
+        } catch (error: any) {
+            res.status(500).json({ message: error?.message });
+        }
+    }
+
+    async addWorkingDays(req: Request, res: Response) {
+        try {
+            const { turfId } = req.params;
+
+            const isDaysUpdated: any = await this.companyUseCase.addWorkingDays(turfId as string, req.body)
+
+            if (isDaysUpdated.success) {
+                res.status(200).json({ success: true, result: isDaysUpdated, message: "Updated Working day successfully :" });
+            } else {
+                res.status(200).json({ success: false, message: "Failed to Updat the Working day !!! :" });
+            }
 
         } catch (error: any) {
             res.status(500).json({ message: error?.message });

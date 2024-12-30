@@ -28,7 +28,8 @@ router.get("/logout", (req: Request, res: Response) => userController.logout(req
 router.post("/auth/login",
     (req: Request, res: Response) => userController.userLogin(req, res)
 )
-
+router.post("/auth/google-sign-up", (req: Request, res: Response) => userController.googleSingUp(req, res))
+router.post("/auth/google-login", (req: Request, res: Response) => userController.googleLogin(req, res))
 
 
 //Profile
@@ -54,11 +55,14 @@ router.get("/get-slots-by-day", (req: Request, res: Response) => userController.
 
 
 //Booking Slots
-router.post("/payment/hashing", (req: Request, res: Response) => userController.getPaymentHash(req, res))
-router.post("/payment/save-booking", (req: Request, res: Response) => userController.saveBooking(req, res))
+router.post("/payment/hashing", Authenticator,
+    AccessControl.isUserBlocked, (req: Request, res: Response) => userController.getPaymentHash(req, res))
+router.post("/payment/save-booking", Authenticator,
+    AccessControl.isUserBlocked, (req: Request, res: Response) => userController.saveBooking(req, res))
 //My-Bookings 
 
-router.get("/my-booking", (req: Request, res: Response) => userController.getBookings(req, res))
+router.get("/my-booking", Authenticator,
+    AccessControl.isUserBlocked, (req: Request, res: Response) => userController.getBookings(req, res))
 
 
 export { router as userRoute }

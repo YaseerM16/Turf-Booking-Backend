@@ -146,6 +146,9 @@ export class CompanyUseCase implements ICompanyUseCase {
         }
     }
 
+
+    ///   <-   Turf    ->   ///
+
     async registerTurf(turfDetails: any): Promise<Turf | null> {
         try {
 
@@ -161,20 +164,20 @@ export class CompanyUseCase implements ICompanyUseCase {
             const price = Number(turfDetails?.price)
             const supportedGames = JSON.parse(turfDetails?.games)
 
-            const response: any = await axios.get(`https://api.opencagedata.com/geocode/v1/json?q=${location.latitude}%2C${location.longitude}&key=${config.GEOCODE_API}`)
-            console.log("Response ;", response.status);
+            // const response: any = await axios.get(`https://api.opencagedata.com/geocode/v1/json?q=${location.latitude}%2C${location.longitude}&key=${config.GEOCODE_API}`)
+            // console.log("Response ;", response.status);
 
-            if (response.status !== 200) {
-                throw new Error(`Failed to fetch data: ${response.statusText}`);
-            }
-            const address = String(response.data.results[0].formatted)
-            console.log("REgtrived Address :", address);
+            // if (response.status !== 200) {
+            //     throw new Error(`Failed to fetch data: ${response.statusText}`);
+            // }
+            // const address = String(response.data.results[0].formatted)
+            // console.log("REgtrived Address :", address);
 
 
             const turf: Turf = {
                 companyId: turfDetails.companyId,
                 turfName: turfDetails.turfName,
-                address,
+                address: turfDetails.address,
                 description: turfDetails.description,
                 turfSize: turfDetails.turfSize,
                 turfType: turfDetails.turfType,
@@ -249,6 +252,7 @@ export class CompanyUseCase implements ICompanyUseCase {
             throw new ErrorResponse(error.message, error.status);
         }
     }
+
     async unBlockTurf(turfId: string): Promise<object> {
         try {
             if (!turfId) throw new ErrorResponse("turfId is not Provided :", 500);
@@ -290,9 +294,13 @@ export class CompanyUseCase implements ICompanyUseCase {
         }
     }
 
-    async getSlotsByDay(turfId: string, day: string): Promise<Slot[] | null> {
+
+
+    ///   <-  Slot  ->   ///
+
+    async getSlotsByDay(turfId: string, day: string, date: string): Promise<Slot[] | null> {
         try {
-            const slots = await this.companyRepository.getSlotByDay(turfId, day)
+            const slots = await this.companyRepository.getSlotByDay(turfId, day, date)
             return slots
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
@@ -323,6 +331,27 @@ export class CompanyUseCase implements ICompanyUseCase {
                 return isAvailed
             }
             return { success: false }
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
+    async addWorkingDays(turfId: string, payload: any): Promise<object> {
+        try {
+            const { workingDays, fromTime, toTime } = payload;
+
+            if (!workingDays || !fromTime || !toTime || !turfId) {
+                throw new ErrorResponse("Payload data for adding days is missing  :", 500);
+            }
+
+            const isDaysAdded: any = await this.companyRepository.addWorkingDays(turfId, payload)
+
+            if (isDaysAdded?.success) {
+                return isDaysAdded
+            }
+
+            throw new ErrorResponse("Something Went Wrong While Updating Add Working Days  :", 500);
+
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
         }

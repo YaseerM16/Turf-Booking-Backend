@@ -6,11 +6,9 @@ import { ErrorResponse } from "../../../utils/errors";
 import TurfService, { SlotModel } from "../../services/TurfService";
 import CompanyModel from "../models/CompanyModel";
 import TurfModel from "../models/TurfModel";
-CompanyModel
-
-Company
 
 export class CompanyRepository implements ICompanyRepository {
+
 
     async findByEmail(email: string): Promise<Company | null> {
         try {
@@ -20,6 +18,7 @@ export class CompanyRepository implements ICompanyRepository {
             throw new ErrorResponse(error.message, error.status);
         }
     }
+
     async create(company: Company): Promise<Company> {
         try {
             const companyDoc = new CompanyModel(company)
@@ -30,6 +29,7 @@ export class CompanyRepository implements ICompanyRepository {
             throw new ErrorResponse(error.message, error.status);
         }
     }
+
     async update(id: string, value: any): Promise<Company | null> {
         try {
             const updatedCompany = await CompanyModel.findByIdAndUpdate(id, value, {
@@ -41,9 +41,14 @@ export class CompanyRepository implements ICompanyRepository {
             throw new ErrorResponse(error.message, error.status);
         }
     }
+
+
+    /// <-  Turf Repo  -> ///
+
     async registerTurf(turf: Turf): Promise<Turf | null> {
         try {
             const savedTurf = await TurfService.registerTurf(turf)
+            await TurfService.markExpiredSlots()
             return savedTurf as unknown as Turf
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
@@ -123,6 +128,7 @@ export class CompanyRepository implements ICompanyRepository {
             throw new ErrorResponse(error.message, error.status);
         }
     }
+
     async deleteTurfImage(turfId: string, index: number): Promise<String[] | null> {
         try {
             if (!turfId || index === undefined || index === null) throw new ErrorResponse("TurfId or Index not Provided in Repository :", 500);
@@ -147,6 +153,7 @@ export class CompanyRepository implements ICompanyRepository {
             throw new ErrorResponse(error.message, error.status);
         }
     }
+
     async editTurfById(turfId: string, turf: Turf): Promise<Turf | null> {
         try {
             if (!turfId) throw new ErrorResponse("TurfId or Index not Provided in Repository :", 400);
@@ -180,9 +187,11 @@ export class CompanyRepository implements ICompanyRepository {
         throw new Error("Method not implemented.");
     }
 
-    async getSlotByDay(turfId: string, day: string): Promise<Slot[] | null> {
+
+    ///   <-   Slot   ->  ///
+    async getSlotByDay(turfId: string, day: string, date: string): Promise<Slot[] | null> {
         try {
-            const slots = await SlotModel.find({ turfId, day }).populate('userId').exec();
+            const slots = await SlotModel.find({ turfId, day, date, isExpired: false }).populate('userId').exec();
             return slots as unknown as Slot[]
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
@@ -207,6 +216,7 @@ export class CompanyRepository implements ICompanyRepository {
             throw new ErrorResponse(error.message, error.status);
         }
     }
+
     async makeSlotAvail(slotId: string, turfId: string): Promise<object> {
         try {
             if (!turfId || !slotId) throw new ErrorResponse("TurfId or SlotId not Provided in Repository :", 400);
@@ -226,5 +236,59 @@ export class CompanyRepository implements ICompanyRepository {
             throw new ErrorResponse(error.message, error.status);
         }
     }
+
+    async addWorkingDays(turfId: string, payload: any): Promise<object> {
+        try {
+            const { workingDays, fromTime, toTime } = payload;
+
+            if (!workingDays || !fromTime || !toTime || !turfId) {
+                throw new ErrorResponse("Payload data for adding days is missing  :", 500);
+            }
+
+            const slots = TurfService.generateSlotsForUpdate(turfId, fromTime, toTime, workingDays);
+
+            // Save the new slots to the Slot collection and store the result
+            const insertedSlots = await SlotModel.insertMany(slots);
+
+            // Double-check if all intended slots were successfully inserted
+            if (insertedSlots.length !== slots.length) {
+                throw new ErrorResponse(
+                    `Mismatch in inserted slots. Expected: ${slots.length}, Actual: ${insertedSlots.length}`,
+                    500
+                );
+            }
+
+            // Update the working days in the Turf collection
+            const updatedTurf = await TurfModel.findByIdAndUpdate(
+                turfId,
+                {
+                    $set: {
+                        "workingSlots.fromTime": fromTime,
+                        "workingSlots.toTime": toTime,
+                    },
+                    $addToSet: {
+                        "workingSlots.workingDays": { $each: workingDays },
+                    },
+                },
+                { new: true } // Return the updated document
+            );
+
+            if (!updatedTurf) {
+                throw new ErrorResponse(`Failed to update working days for turfId: ${turfId}`, 500);
+            }
+
+            // Return a success message with the count of inserted slots
+            return {
+                success: true,
+                message: `${insertedSlots.length} slots added successfully and working days updated for turfId: ${turfId}`,
+                insertedSlotIds: insertedSlots.map(slot => slot._id),
+                updatedTurf,
+            };
+
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
 }
 

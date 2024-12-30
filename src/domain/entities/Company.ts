@@ -17,6 +17,7 @@ export class Company {
         public verifyTokenExpiry: Date | undefined,
         public forgotPasswordToken: string | undefined,
         public forgotPasswordTokenExpiry: Date | undefined,
-        public location: { latitude: number; longitude: number }
+        public location: { latitude: number; longitude: number },
+        public address: string
     ) { }
 }
