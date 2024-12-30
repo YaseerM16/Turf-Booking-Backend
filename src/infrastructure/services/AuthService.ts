@@ -6,7 +6,7 @@ import { User } from "../../domain/entities/User";
 export class AuthService implements IAuthService {
     generateToken(user: any): string {
         try {
-            console.log("token generating :");
+            console.log("(Auth Service) token generating :");
 
             const token = jwt.sign(user, config.JWT_SECRET!, {
                 expiresIn: "1h",
@@ -44,6 +44,7 @@ export class AuthService implements IAuthService {
 
     isTokenExpired(token: string): boolean {
         try {
+            if (!token) return true
             const decodedToken: any = jwt.decode(token)
             const currentTime = Math.floor(Date.now() / 1000);
             return decodedToken.exp < currentTime

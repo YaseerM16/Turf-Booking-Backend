@@ -10,6 +10,7 @@ const UserSchema = new Schema<User>({
     email: {
         type: String,
         required: true,
+        unique: true
     },
     phone: {
         type: Number,

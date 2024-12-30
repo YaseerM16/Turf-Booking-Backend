@@ -29,7 +29,7 @@ const turfTypeValidator = (value: string) =>
 
 const turfGameValidator = (value: string[]) => value.length > 0;
 
-const turfAddressValidator = (value: string) => validator.isLength(value, { min: 10, max: 100 });
+const turfAddressValidator = (value: string) => validator.isLength(value, { min: 5, max: 200 });
 
 const priceValidator = (value: number) => value > 0;
 

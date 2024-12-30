@@ -51,6 +51,9 @@ const CompanySchema = new Schema<Company>({
     forgotPasswordTokenExpiry: {
         type: Date,
     },
+    address: {
+        type: String,
+    },
     location: {
         latitude: {
             type: Number,

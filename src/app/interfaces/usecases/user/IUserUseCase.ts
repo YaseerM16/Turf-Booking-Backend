@@ -14,9 +14,13 @@ export interface IUserUseCase {
     updateProfileDetails(_id: string, data: string): Promise<User | null>
     forgotPassword(email: string): Promise<void>
     updatePassword(email: string, password: string): Promise<User | null>
-    getAllTurfs(): Promise<Turf[] | null>
+    googleRegister(email: string, username: string): Promise<User | null>
+    googleLogin(email: string): Promise<User | null>
+
+    /// <-   Turf   ->  ///
+    getAllTurfs(queryobj: object): Promise<{ turfs: Turf[], totalTurfs: number }>
     getTurfById(turfId: string): Promise<Turf | null>
-    getSlotsByDay(turfId: string, day: string): Promise<Slot[] | null>
+    getSlotsByDay(turfId: string, day: string, date: string): Promise<Slot[] | null>
     bookTheSlots(fullDetails: any): Promise<object>;
     getBookingOfUser(userId: string): Promise<[] | null>
 }

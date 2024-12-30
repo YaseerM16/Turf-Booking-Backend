@@ -14,6 +14,32 @@ AuthService
 export class UserUseCase implements IUserUseCase {
     constructor(private userRepository: IUserRepository, private mailService: IEmailService) { }
 
+    async googleRegister(email: string, username: string): Promise<User | null> {
+        try {
+            const existingUser = await this.userRepository.findByEmail(email)
+
+            if (existingUser) throw new ErrorResponse("user aldready registered", 400);
+
+            const newUser = await this.userRepository.googleRegister(email, username)
+
+            return newUser
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
+    async googleLogin(email: string): Promise<User | null> {
+        try {
+            const existingUser = await this.userRepository.findByEmail(email)
+
+            if (!existingUser) throw new ErrorResponse("user not found", 400);
+
+            return existingUser
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
     async RegisterUser(data: User): Promise<User> {
         try {
 
@@ -176,10 +202,24 @@ export class UserUseCase implements IUserUseCase {
         }
     }
 
-    async getAllTurfs(): Promise<Turf[] | null> {
+    async getAllTurfs(queryobj: any): Promise<{ turfs: Turf[], totalTurfs: number }> {
         try {
-            const turfs = await this.userRepository.getAllTurfs()
-            return turfs
+            const page = parseInt(queryobj.page as string) || 1; // Default to page 1 if not provided
+            const limit = parseInt(queryobj.limit as string) || 10;
+            const searchQry = queryobj.searchQry as string
+            const filter = {
+                type: queryobj.type as string || "",
+                size: queryobj.size as string || "",
+                price: queryobj.price as string || ""
+            }
+            // console.log("page : ", page);
+            // console.log("limit : ", limit);
+            // console.log("searchQry : ", searchQry);
+            // console.log("filter : ", filter);
+            const query = { page, limit, searchQry, filter }
+
+            const turfs = await this.userRepository.getAllTurfs(query)
+            return { turfs: turfs.turfs, totalTurfs: turfs.totalTurfs }
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
         }
@@ -194,9 +234,9 @@ export class UserUseCase implements IUserUseCase {
         }
     }
 
-    async getSlotsByDay(turfId: string, day: string): Promise<Slot[] | null> {
+    async getSlotsByDay(turfId: string, day: string, date: string): Promise<Slot[] | null> {
         try {
-            const slots = await this.userRepository.getSlotByDay(turfId, day)
+            const slots = await this.userRepository.getSlotByDay(turfId, day, date)
             return slots
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
@@ -228,10 +268,11 @@ export class UserUseCase implements IUserUseCase {
                 return isBooked
             }
 
+            return { success: false, message: "Failed to book the Slots ..!!" }
+
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
         }
-        throw new Error("Method not implemented.");
     }
 
     async getBookingOfUser(userId: string): Promise<[] | null> {

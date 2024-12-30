@@ -12,6 +12,17 @@ import UserModel from "../models/UserModel";
 
 
 export class MongoUserRepository implements IUserRepository {
+    async googleRegister(email: string, username: string): Promise<User | null> {
+        try {
+            const user = {
+                name: username,
+                email: email,
+            }
+            return this.create(user as User)
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
 
     async findByEmail(email: string): Promise<User | null> {
         try {
@@ -43,14 +54,65 @@ export class MongoUserRepository implements IUserRepository {
         }
     }
 
-    async getAllTurfs(): Promise<Turf[] | null> {
+    async getAllTurfs(queryObj: any): Promise<{ turfs: Turf[]; totalTurfs: number }> {
         try {
-            const turfs = await TurfModel.find({ isDelete: false, isBlocked: false })
-            return turfs as unknown as Turf[]
+            // console.log("QUERYObj in UserRepo : ", queryObj);
+
+            const { page, limit, searchQry, filter } = queryObj;
+
+            // Base query
+            const query: any = {
+                isDelete: false,
+                isBlocked: false,
+            };
+
+
+            // Search query
+            if (searchQry) {
+                query.turfName = { $regex: searchQry, $options: "i" }; // Case-insensitive search
+            }
+
+            // Apply type filter
+            if (filter?.type) {
+                query.turfType = { $in: filter.type.split(",") };
+            }
+
+            // Apply size filter
+            if (filter?.size) {
+                query.turfSize = { $in: filter.size.split(",") };
+            }
+
+            // Apply price filter
+            if (filter?.price) {
+                const priceRanges = filter.price.split(",").map((range: string) => {
+                    const [min, max] = range.split("-").map(Number);
+                    return { price: { $gte: min, $lte: max } };
+                });
+
+                // Combine price ranges with $or
+                query.$or = priceRanges;
+            }
+
+            // console.log("MongoDB Query:", JSON.stringify(query, null, 2));
+
+            // Pagination options
+            const options = {
+                skip: (page - 1) * limit,
+                limit: parseInt(limit, 10),
+            };
+            const totalTurfs = await TurfModel.countDocuments(query);
+
+            const turfs = await TurfModel.find(query)
+                .skip(options.skip)
+                .limit(options.limit);
+
+            return { turfs: turfs as unknown as Turf[], totalTurfs };
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
         }
     }
+
+
 
     async getTurfById(turfId: string): Promise<Turf | null> {
         try {
@@ -61,9 +123,20 @@ export class MongoUserRepository implements IUserRepository {
         }
     }
 
-    async getSlotByDay(turfId: string, day: string): Promise<Slot[] | null> {
+    async getSlotByDay(turfId: string, day: string, date: string): Promise<Slot[] | null> {
         try {
-            const slots = await SlotModel.find({ turfId, day }).exec();
+            // console.log("HIII Hello :");
+
+            // console.log("turf id : ", turfId);
+            // console.log("day : ", day);
+            // console.log("date : ", date);
+
+            const queryDate = new Date(date);  // Assuming `date` is in 'YYYY-MM-DD' format
+
+
+            const slots = await SlotModel.find({ turfId, day, date: queryDate, isExpired: false }).exec();
+            // console.log("SLOTS : ", slots);
+
             return slots as unknown as Slot[]
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
@@ -128,6 +201,7 @@ export class MongoUserRepository implements IUserRepository {
 
             const paymentProcess = new PaymentModel(payment);
             const paymentSaved = await paymentProcess.save();
+            console.log("Returning Successful form BookingUsrRepo :)");
 
             return {
                 success: true,
@@ -144,7 +218,7 @@ export class MongoUserRepository implements IUserRepository {
         try {
             const bookings = await BookingModel.find({ userId }).populate({
                 path: 'turfId',
-                select: 'turfName address price',
+                select: 'turfName address price location images',
             });
 
             return bookings.length > 0 ? bookings as [] : null;
