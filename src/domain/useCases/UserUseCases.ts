@@ -8,6 +8,8 @@ import { AuthService } from "../../infrastructure/services/AuthService";
 import { Turf } from "../entities/Turf";
 import { Slot } from "../entities/Slot";
 import UserModel from "../../infrastructure/database/models/UserModel";
+import { Wallet } from "../entities/Wallet";
+import { BalanceCheckResult } from "../../utils/interfaces";
 AuthService
 
 
@@ -52,16 +54,37 @@ export class UserUseCase implements IUserUseCase {
                 data.password = hashedPassword;
             }
 
+            console.log("Createing NewUser :)");
             const newUser = await this.userRepository.create(data);
 
-            if (!newUser.googleId) {
-                await this.mailService.accountVerifyMail(newUser, "verifyEmail");
-            }
+            const plainUser = {
+                id: newUser._id,
+                email: newUser.email,
+                name: newUser.name,
+                // Add other fields as required
+            };
+
+            await this.mailService.accountVerifyMail(plainUser, "verifyEmail");
+            console.log("Mail Sended :) ");
 
             return newUser
 
         } catch (error: any) {
+            console.log("Error is Throwing in UserUseCase :", error);
             throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
+    async sendVerificationMail(userId: string): Promise<void> {
+        try {
+            const user = await this.userRepository.findById(userId)
+
+            if (!user) throw new ErrorResponse("User not found for creating the Wallet.", 404);
+
+            await this.mailService.accountVerifyMail(user, "verifyEmail");
+
+        } catch (error: any) {
+            console.error("Failed to send verification email:", error.message);
         }
     }
 
@@ -234,7 +257,7 @@ export class UserUseCase implements IUserUseCase {
         }
     }
 
-    async getSlotsByDay(turfId: string, day: string, date: string): Promise<Slot[] | null> {
+    async getSlotsByDay(turfId: string, day: string, date: string): Promise<{ slots: Slot[]; price: number | null }> {
         try {
             const slots = await this.userRepository.getSlotByDay(turfId, day, date)
             return slots
@@ -262,6 +285,7 @@ export class UserUseCase implements IUserUseCase {
                 isActive: true,
             };
 
+
             const isBooked: any = await this.userRepository.bookTheSlots(bookingData)
 
             if (isBooked?.success) {
@@ -275,12 +299,84 @@ export class UserUseCase implements IUserUseCase {
         }
     }
 
-    async getBookingOfUser(userId: string): Promise<[] | null> {
+    async getBookingOfUser(userId: string, page: number, limit: number): Promise<{ bookings: any[], totalBookings: number } | null> {
         try {
-            const userBookings = await this.userRepository.getBookingByUserId(userId)
+            const userBookings = await this.userRepository.getBookingByUserId(userId, page, limit)
             return userBookings
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
+    async createWallet(userId: string): Promise<object> {
+        try {
+
+            const wallet = this.userRepository.createWallet(userId)
+
+            if (wallet) {
+                return {
+                    success: true,
+                    data: wallet,
+                    message: "Wallet created successfully.",
+                };
+            }
+
+            return {
+                success: false,
+                message: "Failed to create wallet. Please try again.",
+                status: 500,
+            };
+
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
+    async getWalletbyId(userId: string): Promise<Wallet | null> {
+        try {
+            const wallet = await this.userRepository.getWalletById(userId)
+            return wallet
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
+    async cancelTheSlot(userId: string, slotId: string, bookingId: string): Promise<object> {
+        try {
+            const isCancelled: any = await this.userRepository.cancleTheSlot(userId, slotId, bookingId)
+
+            if (isCancelled.success) {
+                return isCancelled
+            }
+            return { success: false, message: "Failed to Cancel the Slots ..!!" }
+
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
+    async checkBalance(userId: string, total: number): Promise<BalanceCheckResult> {
+        try {
+            if (!userId || total <= 0) {
+                throw new ErrorResponse("Invalid input parameters.", 400);
+            }
+            const balanceCheckResult = await this.userRepository.checkWalletBalance(userId, total);
+            return balanceCheckResult;
+        } catch (error: any) {
+            console.error("Error checking balance for user:", userId, error);
+            throw new ErrorResponse(error.message || "Error checking balance.", error.status || 500);
+        }
+    }
+
+    async bookSlotByWallet(userId: string, bookingDets: object): Promise<object> {
+        try {
+            if (!userId || !bookingDets) {
+                throw new ErrorResponse("Invalid input parameters for booking by wallet :.", 400);
+            }
+            const isBooked = await this.userRepository.bookSlotsByWallet(userId, bookingDets);
+            return isBooked;
+        } catch (error: any) {
+            throw new ErrorResponse(error.message || "Error checking balance.", error.status || 500);
         }
     }
 

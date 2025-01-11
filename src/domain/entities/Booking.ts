@@ -6,7 +6,10 @@ export class Booking {
         public userId: ObjectId | string,
         public companyId: ObjectId | string,
         public turfId: ObjectId | string,
-        public selectedSlots: { fromTime: Date; toTime: Date; date: Date; day: string }[],  // Updated with `fromTime`, `toTime`, `date`, and `day`
+        public selectedSlots: {
+            price: any;
+            _id: any; fromTime: Date; toTime: Date; date: Date; day: string
+        }[],  // Updated with `fromTime`, `toTime`, `date`, and `day`
         public totalAmount: number,
         public status: 'pending' | 'confirmed' | 'cancelled' | 'completed',
         public paymentStatus: 'pending' | 'completed' | 'failed',

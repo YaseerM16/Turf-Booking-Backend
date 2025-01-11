@@ -9,6 +9,7 @@ import { AdminRepository } from "../../infrastructure/database/repositories/Admi
 import { config } from "../../config/config";
 import axios from "axios";
 import { Slot } from "../entities/Slot";
+import { dayRank } from "../../utils/constants";
 
 Company
 
@@ -151,28 +152,27 @@ export class CompanyUseCase implements ICompanyUseCase {
 
     async registerTurf(turfDetails: any): Promise<Turf | null> {
         try {
+            const workingDaysArr = JSON.parse(turfDetails?.workingDays)
+
+            // Parse and transform workingDays to match the new schema
+            const price = Number(turfDetails?.price);
+            const workingDays = JSON.parse(turfDetails?.workingDays).map((day: string) => ({
+                day,
+                fromTime: turfDetails.fromTime, // Assign specific fromTime
+                toTime: turfDetails.toTime,   // Assign specific toTime
+                price             // Include the array of days
+            }));
 
             const workingSlots = {
-                fromTime: turfDetails?.fromTime,
-                toTime: turfDetails?.toTime,
-                workingDays: JSON.parse(turfDetails?.workingDays)
-            }
+                fromTime: turfDetails.fromTime, // Add parent-level fromTime
+                toTime: turfDetails.toTime,   // Add parent-level toTime
+                workingDays,
+            };
 
-            const images = turfDetails?.images
-            const location = JSON.parse(turfDetails?.location)
-            const facilities = JSON.parse(turfDetails?.selectedFacilities)
-            const price = Number(turfDetails?.price)
-            const supportedGames = JSON.parse(turfDetails?.games)
-
-            // const response: any = await axios.get(`https://api.opencagedata.com/geocode/v1/json?q=${location.latitude}%2C${location.longitude}&key=${config.GEOCODE_API}`)
-            // console.log("Response ;", response.status);
-
-            // if (response.status !== 200) {
-            //     throw new Error(`Failed to fetch data: ${response.statusText}`);
-            // }
-            // const address = String(response.data.results[0].formatted)
-            // console.log("REgtrived Address :", address);
-
+            const images = turfDetails?.images;
+            const location = JSON.parse(turfDetails?.location);
+            const facilities = JSON.parse(turfDetails?.selectedFacilities);
+            const supportedGames = JSON.parse(turfDetails?.games);
 
             const turf: Turf = {
                 companyId: turfDetails.companyId,
@@ -187,16 +187,16 @@ export class CompanyUseCase implements ICompanyUseCase {
                 supportedGames,
                 location,
                 workingSlots,
-            }
+            };
 
-
-            const isRegistered = await this.companyRepository.registerTurf(turf)
-            return isRegistered
-
+            const isRegistered = await this.companyRepository.registerTurf(turf, workingDaysArr);
+            return isRegistered;
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
         }
     }
+
+
 
     async editTurf(turfDetails: any): Promise<Turf | null> {
         try {
@@ -338,9 +338,9 @@ export class CompanyUseCase implements ICompanyUseCase {
 
     async addWorkingDays(turfId: string, payload: any): Promise<object> {
         try {
-            const { workingDays, fromTime, toTime } = payload;
+            const { workingDays, fromTime, toTime, price } = payload;
 
-            if (!workingDays || !fromTime || !toTime || !turfId) {
+            if (!workingDays || !fromTime || !toTime || !turfId || !price) {
                 throw new ErrorResponse("Payload data for adding days is missing  :", 500);
             }
 
@@ -356,5 +356,39 @@ export class CompanyUseCase implements ICompanyUseCase {
             throw new ErrorResponse(error.message, error.status);
         }
     }
+
+    async getDayDetails(turfId: string, day: string): Promise<object> {
+        try {
+            if (!turfId || !day) {
+                throw new ErrorResponse("TurfId or the Day is not Getting  :", 500);
+            }
+            const dayDetails: any = await this.companyRepository.getDayDetails(turfId, day)
+            if (!dayDetails) {
+                throw new ErrorResponse("TurfId or the Day is not Getting  :", 500);
+            }
+
+            return dayDetails
+
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
+    async editDayDetails(turfId: string, updates: object): Promise<object> {
+        try {
+
+            if (!turfId || !updates) {
+                throw new ErrorResponse("TurfId or the Updates Object is not Getting  :", 500);
+            }
+
+            const isUpdated = await this.companyRepository.editDayDetails(turfId, updates)
+
+            return isUpdated
+
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
 
 }

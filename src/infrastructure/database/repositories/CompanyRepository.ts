@@ -1,14 +1,17 @@
+import { AnyMxRecord } from "dns";
 import { Company } from "../../../domain/entities/Company";
 import { Slot } from "../../../domain/entities/Slot";
 import { Turf } from "../../../domain/entities/Turf";
 import { ICompanyRepository } from "../../../domain/repositories/ICompanyRepository";
+import { dayRank, dayValue } from "../../../utils/constants";
 import { ErrorResponse } from "../../../utils/errors";
-import TurfService, { SlotModel } from "../../services/TurfService";
+import TurfService from "../../services/TurfService";
 import CompanyModel from "../models/CompanyModel";
+import { SlotModel } from "../models/SlotModel";
 import TurfModel from "../models/TurfModel";
 
-export class CompanyRepository implements ICompanyRepository {
 
+export class CompanyRepository implements ICompanyRepository {
 
     async findByEmail(email: string): Promise<Company | null> {
         try {
@@ -45,9 +48,9 @@ export class CompanyRepository implements ICompanyRepository {
 
     /// <-  Turf Repo  -> ///
 
-    async registerTurf(turf: Turf): Promise<Turf | null> {
+    async registerTurf(turf: Turf, workingDays: string[]): Promise<Turf | null> {
         try {
-            const savedTurf = await TurfService.registerTurf(turf)
+            const savedTurf = await TurfService.registerTurf(turf, workingDays)
             await TurfService.markExpiredSlots()
             return savedTurf as unknown as Turf
         } catch (error: any) {
@@ -59,7 +62,8 @@ export class CompanyRepository implements ICompanyRepository {
         try {
             if (!companyId) throw new ErrorResponse("CompanyId is not Provided :", 500);
 
-            const turfs = await TurfModel.find({ companyId })
+            const turfs = await TurfModel.find({ companyId }).sort({ createdAt: -1 }); // Sort by the most recent (descending)
+
 
             return turfs as unknown as Turf[]
         } catch (error: any) {
@@ -239,13 +243,63 @@ export class CompanyRepository implements ICompanyRepository {
 
     async addWorkingDays(turfId: string, payload: any): Promise<object> {
         try {
-            const { workingDays, fromTime, toTime } = payload;
+            const { workingDays, fromTime, toTime, price } = payload;
 
-            if (!workingDays || !fromTime || !toTime || !turfId) {
+            if (!workingDays || !fromTime || !toTime || !turfId || !price) {
                 throw new ErrorResponse("Payload data for adding days is missing  :", 500);
             }
 
-            const slots = TurfService.generateSlotsForUpdate(turfId, fromTime, toTime, workingDays);
+            const turf = await TurfModel.findById(turfId)
+            if (!turf) return {}
+
+            const existingWorkingDays = turf.workingSlots.workingDays.map((dayDetails) => dayDetails.day);
+
+            const existingToDate = turf.generatedSlots?.toDate;
+
+            const maxExistingRank = Math.max(
+                ...existingWorkingDays.map((day) => dayRank[day as keyof typeof dayRank])
+            );
+
+            const maxIncomingRank = Math.max(
+                ...workingDays.map((day: unknown) => dayRank[day as keyof typeof dayRank])
+            );
+
+            let updatedToDate;
+
+            // Update `toDate` if the incoming days have a greater rank
+            if (maxIncomingRank > maxExistingRank) {
+                const maxDay = dayValue[maxIncomingRank as keyof typeof dayValue];
+                const fromDate = new Date();
+                const nextMonth = fromDate.getMonth() + 1; // Get next month
+                const year = nextMonth > 11 ? fromDate.getFullYear() + 1 : fromDate.getFullYear();
+                const month = nextMonth % 12;
+
+                // Determine the last day of the next month
+                const lastDayOfNextMonth = new Date(year, month + 1, 0); // `0` gives the last day of the previous month
+
+                // Find the date of the `maxDay` in the last week of the next month
+                const lastWeekStart = new Date(lastDayOfNextMonth);
+                lastWeekStart.setDate(lastDayOfNextMonth.getDate() - 6); // Start of the last week
+
+                let toDate = new Date(lastDayOfNextMonth); // Default to the last day
+                for (let i = 0; i < 7; i++) {
+                    const currentDay = (lastWeekStart.getDay() + i) % 7; // Get days in the last week
+                    if (dayValue[currentDay as keyof typeof dayValue] === maxDay) {
+                        toDate = new Date(lastWeekStart);
+                        toDate.setDate(lastWeekStart.getDate() + i); // Set to matching `maxDay`
+                        break;
+                    }
+                }
+
+                const newToDate = new Date(toDate);
+                newToDate.setDate(toDate.getDate() + 1); // Add 1 day
+
+                updatedToDate = newToDate
+
+            }
+
+
+            const slots = TurfService.generateSlotsForUpdate(turfId, fromTime, toTime, workingDays, updatedToDate);
 
             // Save the new slots to the Slot collection and store the result
             const insertedSlots = await SlotModel.insertMany(slots);
@@ -258,18 +312,28 @@ export class CompanyRepository implements ICompanyRepository {
                 );
             }
 
-            // Update the working days in the Turf collection
+            const newWorkingDays = workingDays.map((day: string) => ({
+                day,
+                fromTime,
+                toTime,
+                price
+            }));
+
+            const updateQuery: any = {
+                $addToSet: {
+                    "workingSlots.workingDays": { $each: newWorkingDays },
+                },
+            };
+
+            if (updatedToDate) {
+                updateQuery.$set = {
+                    "generatedSlots.toDate": updatedToDate,
+                };
+            }
+
             const updatedTurf = await TurfModel.findByIdAndUpdate(
                 turfId,
-                {
-                    $set: {
-                        "workingSlots.fromTime": fromTime,
-                        "workingSlots.toTime": toTime,
-                    },
-                    $addToSet: {
-                        "workingSlots.workingDays": { $each: workingDays },
-                    },
-                },
+                updateQuery,
                 { new: true } // Return the updated document
             );
 
@@ -284,11 +348,80 @@ export class CompanyRepository implements ICompanyRepository {
                 insertedSlotIds: insertedSlots.map(slot => slot._id),
                 updatedTurf,
             };
+            // return {}
 
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
         }
     }
+
+    async getDayDetails(turfId: string, day: string): Promise<object> {
+        try {
+            const turf = await TurfModel.findById(turfId);
+            if (!turf) {
+                throw new Error(`Turf with ID ${turfId} not found`);
+            }
+
+            const { workingSlots } = turf;
+
+            // Check if the specified day exists in the workingSlots
+            const dayDetails = workingSlots.workingDays.find((slot: any) => slot.day.toLowerCase() === day.toLowerCase());
+            if (!dayDetails) {
+                throw new Error(`Details for ${day} not found`);
+            }
+
+            return {
+                dayDets: {
+                    day: dayDetails.day,
+                    fromTime: dayDetails.fromTime,
+                    toTime: dayDetails.toTime,
+                    price: dayDetails.price,
+                }
+            };
+
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
+    async editDayDetails(turfId: string, updates: { fromTime: string; toTime: string; price: number; day: string }): Promise<object> {
+        try {
+            // Fetch the turf by ID
+            const turf = await TurfModel.findById(turfId);
+            if (!turf) {
+                throw new Error(`Turf with ID ${turfId} not found`);
+            }
+
+            // Extract the `day` from updates to locate the specific working day
+            const { day, fromTime, toTime, price } = updates;
+
+            // Find the index of the working day to update
+            const dayIndex = turf.workingSlots.workingDays.findIndex((workingDay: any) => workingDay.day === day);
+            if (dayIndex === -1) {
+                throw new Error(`Working day '${day}' not found in the turf's working slots`);
+            }
+
+            // Update the specific working day with new details
+            turf.workingSlots.workingDays[dayIndex] = {
+                ...turf.workingSlots.workingDays[dayIndex], // Retain other fields (e.g., `_id`)
+                day,
+                fromTime,
+                toTime,
+                price,
+            };
+
+            // Save the updated turf
+            await turf.save();
+
+            return {
+                message: `Working day '${day}' updated successfully`,
+                updatedDay: turf.workingSlots.workingDays[dayIndex],
+            };
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status || 500);
+        }
+    }
+
 
 }
 

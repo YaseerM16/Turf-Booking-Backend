@@ -28,7 +28,8 @@ export interface ICompanyUseCase {
     makeSlotUnavail(slotId: string, turfId: string): Promise<object>
     makeSlotAvail(slotId: string, turfId: string): Promise<object>
     addWorkingDays(turfId: string, payload: any): Promise<object>
-
+    getDayDetails(turfId: string, day: string): Promise<object>;
+    editDayDetails(turfId: string, updates: object): Promise<object>;
 
     // updateProfileImage(_id: string, url: string): Promise<User | null>
     // userLogin(email: string, password: string): Promise<User | null>

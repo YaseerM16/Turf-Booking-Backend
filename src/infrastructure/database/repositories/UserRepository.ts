@@ -1,17 +1,31 @@
+import mongoose from "mongoose";
 import { Payment } from "../../../domain/entities/Payment";
 import { Slot } from "../../../domain/entities/Slot";
 import { Turf } from "../../../domain/entities/Turf";
 import { User } from "../../../domain/entities/User";
+import { Wallet } from "../../../domain/entities/Wallet";
 import { IUserRepository } from "../../../domain/repositories/IUserRepository";
 import { ErrorResponse } from "../../../utils/errors";
-import { SlotModel } from "../../services/TurfService";
 import BookingModel from "../models/BookingModel";
 import PaymentModel from "../models/PaymentModel";
 import TurfModel from "../models/TurfModel";
 import UserModel from "../models/UserModel";
+import WalletModel from "../models/WalletModel";
+import { SlotModel } from "../models/SlotModel";
+import { BalanceCheckResult } from "../../../utils/interfaces";
 
 
 export class MongoUserRepository implements IUserRepository {
+
+    async findById(userId: string): Promise<User | null> {
+        try {
+            const userDoc = await UserModel.findById(userId)
+            return userDoc ? userDoc : null
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
     async googleRegister(email: string, username: string): Promise<User | null> {
         try {
             const user = {
@@ -32,19 +46,25 @@ export class MongoUserRepository implements IUserRepository {
             throw new ErrorResponse(error.message, error.status);
         }
     }
+
     async create(user: User): Promise<User> {
         try {
             const userDoc = new UserModel(user)
             await userDoc.save()
+
+            console.log("CReated User in UserRepo :)");
             return userDoc
 
         } catch (error: any) {
+            console.log("Trhwoign Err in UserRepo :", error);
             throw new ErrorResponse(error.message, error.status);
         }
     }
     async update(id: string, value: any): Promise<User | null> {
         try {
-            const updatedUser = await UserModel.findByIdAndUpdate(id, value, {
+            const [jsonString] = Object.keys(value);
+            const updatedDets = JSON.parse(jsonString);
+            const updatedUser = await UserModel.findByIdAndUpdate(id, updatedDets, {
                 new: true,
                 fields: "-password"
             });
@@ -123,21 +143,24 @@ export class MongoUserRepository implements IUserRepository {
         }
     }
 
-    async getSlotByDay(turfId: string, day: string, date: string): Promise<Slot[] | null> {
+    async getSlotByDay(turfId: string, day: string, date: string): Promise<{ slots: Slot[]; price: number | null }> {
         try {
-            // console.log("HIII Hello :");
-
-            // console.log("turf id : ", turfId);
-            // console.log("day : ", day);
-            // console.log("date : ", date);
 
             const queryDate = new Date(date);  // Assuming `date` is in 'YYYY-MM-DD' format
 
 
             const slots = await SlotModel.find({ turfId, day, date: queryDate, isExpired: false }).exec();
             // console.log("SLOTS : ", slots);
+            const turf = await TurfModel.findById(turfId).exec();
+            if (!turf) {
+                throw new Error(`Turf with ID ${turfId} not found`);
+            }
 
-            return slots as unknown as Slot[]
+            // Find the working day in the workingDays array
+            const workingDay = turf.workingSlots.workingDays.find((workingDay: any) => workingDay.day === day);
+            const price = workingDay ? workingDay.price : null; // Get the price if the working day exists
+
+            return { slots: slots as unknown as Slot[], price };
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
         }
@@ -145,6 +168,284 @@ export class MongoUserRepository implements IUserRepository {
 
     async bookTheSlots(bookingDets: any): Promise<object> {
         try {
+
+            const slots = bookingDets.selectedSlots
+            const user = await UserModel.findById(bookingDets?.userId)
+
+            if (!user) {
+                throw new ErrorResponse("User not found.", 404);
+            }
+
+            for (const slot of slots) {
+                const updatedSlot = await SlotModel.findOneAndUpdate(
+                    { _id: slot._id, isBooked: false }, // Ensure the slot isn't already booked
+                    {
+                        $set: { isBooked: true, userId: bookingDets.userId } // Mark as booked and add userId
+                    },
+                    { new: true } // Return the updated document
+                );
+
+                if (!updatedSlot) {
+                    throw new ErrorResponse(
+                        `Slot with ID ${slot._id} is already booked or doesn't exist.`,
+                        400
+                    );
+                }
+            }
+
+            const userDet = {
+                name: user?.name,
+                email: user?.email,
+                phone: user?.phone || "Not Provided"
+            }
+            bookingDets.userDetails = userDet
+
+            const newBooking = new BookingModel(bookingDets);
+            const savedBooking = await newBooking.save();
+
+            const populatedBooking = await BookingModel.findById(savedBooking._id).populate('turfId');
+
+            const payment: Payment = {
+                bookingId: savedBooking._id,
+                userId: bookingDets.userId,
+                amount: bookingDets.totalAmount,
+                paymentStatus: bookingDets.paymentStatus,
+                paymentMethod: bookingDets.paymentMethod,
+                paymentTransactionId: bookingDets.paymentTransactionId,
+                paymentDate: bookingDets.bookingDate,
+                isRefunded: false,
+                refundTransactionId: undefined,
+                refundDate: undefined,
+                userDetails: {
+                    name: bookingDets.userDetails.name,
+                    email: bookingDets.userDetails.email,
+                    phone: bookingDets.userDetails.phone || "Not provided"
+                }
+            }
+
+            const paymentProcess = new PaymentModel(payment);
+            const paymentSaved = await paymentProcess.save();
+            // console.log("Returning Successful form BookingUsrRepo :)");
+
+            return {
+                success: true,
+                message: "Booking completed successfully.",
+                booking: populatedBooking,
+            };
+
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
+    async createWallet(userId: string): Promise<object> {
+        try {
+            const existingWallet = await WalletModel.findOne({ userId });
+            if (existingWallet) {
+                throw new ErrorResponse("Wallet already exists for this user", 400);
+            }
+
+            // Create a new wallet
+            const wallet = new WalletModel({
+                userId,
+                walletBalance: 0, // Initial balance is 0
+                walletTransaction: [], // Initialize with no transactions
+            });
+
+            // Save the wallet in the database
+            const savedWallet = await wallet.save();
+
+            return {
+                success: true,
+                message: "Wallet created successfully",
+                wallet: savedWallet,
+            };
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
+    async getBookingByUserId(userId: string, page: number, limit: number): Promise<{ bookings: any[]; totalBookings: number }> {
+        try {
+            const user = await UserModel.findById(userId);
+
+            if (!user) {
+                throw new ErrorResponse("User not found.", 404);
+            }
+
+            const skip = (page - 1) * limit;
+
+
+            const bookings = await BookingModel.find({ userId }).populate({
+                path: 'turfId',
+                select: 'turfName address price location images',
+            })
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit);
+
+
+
+            const totalBookings = await BookingModel.countDocuments({ userId });
+
+            // Ensure `bookings` is always an array, even if empty
+            return { bookings, totalBookings };
+        } catch (error) {
+            console.error("Error fetching bookings for user:", userId, error);
+            throw new Error("Error fetching bookings. Please try again later.");
+        }
+    }
+
+
+    async getWalletById(userId: string): Promise<Wallet | null> {
+        try {
+            const user = await UserModel.findById(userId)
+
+            if (!user) {
+                throw new ErrorResponse("User not found.", 404);
+            }
+
+            const wallet = await WalletModel.findOne({ userId })
+
+            if (wallet) return wallet
+            else return null
+
+        } catch (error) {
+            throw new Error("Error fetching bookings. Please try again later.");
+        }
+    }
+
+    async cancleTheSlot(userId: string, slotId: string, bookingId: string): Promise<object> {
+        const session = await mongoose.startSession();
+
+        try {
+            // Start a transaction
+            session.startTransaction();
+
+            if (!userId || !slotId) {
+                throw new ErrorResponse("UserID or SlotID is not provided.", 400);
+            }
+
+            // Fetch the slot
+            const slot = await SlotModel.findById(slotId).session(session);
+            if (!slot) {
+                throw new ErrorResponse("Slot not found.", 404);
+            }
+
+            // Check if the user is the one who booked the slot
+            if (slot.userId && slot.userId.toString() !== userId) {
+                throw new ErrorResponse("This slot was not booked by the current user.", 403);
+            }
+
+            // Assume the slot has a field `amount` for the slot price
+
+            // 1. Update the slot status
+            slot.isBooked = false;
+            slot.userId = null;
+            slot.isCancelled = true;
+            slot.isRefunded = true;
+            slot.refundTransactionId = `refund-${new Date().getTime()}-${Math.random().toString(36).substring(2, 8)}`; // Provide an actual refund transaction ID
+            slot.refundDate = new Date();
+            await slot.save({ session });
+
+            // 2. Update the booking model
+            const booking = await BookingModel.findOne({
+                "selectedSlots._id": slotId,
+                userId: userId
+            }).session(session);
+
+            if (!booking) {
+                throw new ErrorResponse("Booking not found for this slot.", 404);
+            }
+            const selectedSlot = booking.selectedSlots.find((slot) => slot._id.toString() === slotId);
+
+            if (!selectedSlot) {
+                throw new ErrorResponse("Slot not found in the booking.", 404);
+            }
+
+            const refundAmount = selectedSlot.price
+            // Decrease the total amount for the booking
+            booking.totalAmount -= refundAmount; // Adjust the amount dynamically
+            booking.selectedSlots = booking.selectedSlots.map((selectedSlot: any) => {
+                if (selectedSlot._id === slotId) {
+                    selectedSlot.isCancelled = true;
+                    selectedSlot.isRefunded = true;
+                    selectedSlot.refundTransactionId = "refund-transaction-id"; // Provide an actual refund transaction ID
+                    selectedSlot.refundDate = new Date();
+                }
+                return selectedSlot;
+            });
+
+            await booking.save({ session });
+
+            // 3. Update the wallet model (credit the refund amount)
+            const userWallet = await WalletModel.findOne({ userId }).session(session);
+            if (!userWallet) {
+                throw new ErrorResponse("User wallet not found.", 404);
+            }
+
+            userWallet.walletBalance += refundAmount; // Credit the refunded slot amount dynamically
+            userWallet.walletTransaction.push({
+                transactionAmount: refundAmount, // Refund amount dynamically determined
+                transactionType: "credit", // Since it's a refund, we credit the amount
+                transactionMethod: "Cancel Booking",
+                transactionDate: new Date()
+            });
+
+            await userWallet.save({ session });
+
+            // Commit the transaction
+            await session.commitTransaction();
+            session.endSession();
+
+            return {
+                message: "Slot cancelled and refund processed successfully.",
+                success: true,
+                refundAmount, // Return the refunded amount
+                booking, // Return the updated booking document
+            };
+
+        } catch (error) {
+            // Abort the transaction in case of error
+            await session.abortTransaction();
+            session.endSession();
+            throw error;  // Re-throw the error after aborting
+        }
+    }
+
+    async checkWalletBalance(userId: string, total: number): Promise<BalanceCheckResult> {
+        try {
+            const wallet = await WalletModel.findOne({ userId });
+
+            if (!wallet) {
+                throw new ErrorResponse("Wallet not found for the user.", 404);
+            }
+
+            const isSufficient = wallet.walletBalance >= total;
+
+            return {
+                isSufficient,
+                currentBalance: wallet.walletBalance,
+            };
+        } catch (error: any) {
+            console.error("Error checking wallet balance for user:", userId, error);
+            throw new ErrorResponse(error.message || "Error checking wallet balance.", error.status || 500);
+        }
+    }
+
+    async bookSlotsByWallet(userId: string, bookingDets: any): Promise<object> {
+        try {
+            const user = await UserModel.findById(userId)
+            if (!user) {
+                throw new ErrorResponse("User not found.", 404);
+
+            }
+            const userDet = {
+                name: user?.name,
+                email: user?.email,
+                phone: user?.phone || "Not Provided"
+            }
+
 
             const slots = bookingDets.selectedSlots
 
@@ -165,21 +466,36 @@ export class MongoUserRepository implements IUserRepository {
                 }
             }
 
-            const user = await UserModel.findById(bookingDets?.userId)
-
-            if (!user) {
-                throw new ErrorResponse("User not found.", 404);
-            }
-
-            const userDet = {
-                name: user?.name,
-                email: user?.email,
-                phone: user?.phone
-            }
+            bookingDets.userId = userId
+            bookingDets.status = "completed"
+            bookingDets.paymentMethod = "wallet"
+            bookingDets.paymentDate = null
+            bookingDets.bookingDate = new Date()
+            bookingDets.isRefunded = false
+            bookingDets.isActive = true
+            bookingDets.paymentStatus = 'completed'
             bookingDets.userDetails = userDet
 
             const newBooking = new BookingModel(bookingDets);
             const savedBooking = await newBooking.save();
+
+            // 3. Update the wallet model (credit the refund amount)
+            const userWallet = await WalletModel.findOne({ userId })
+            if (!userWallet) {
+                throw new ErrorResponse("User wallet not found.", 404);
+            }
+
+            userWallet.walletBalance -= bookingDets.totalAmount // Credit the refunded slot amount dynamically
+            userWallet.walletTransaction.push({
+                transactionAmount: bookingDets.totalAmount, // Refund amount dynamically determined
+                transactionType: "debit", // Since it's a refund, we credit the amount
+                transactionMethod: "Slot Booked",
+                transactionDate: new Date()
+            });
+
+            await userWallet.save();
+
+            const populatedBooking = await BookingModel.findById(savedBooking._id).populate('turfId');
 
             const payment: Payment = {
                 bookingId: savedBooking._id,
@@ -195,36 +511,21 @@ export class MongoUserRepository implements IUserRepository {
                 userDetails: {
                     name: bookingDets.userDetails.name,
                     email: bookingDets.userDetails.email,
-                    phone: bookingDets.userDetails.phone
+                    phone: bookingDets.userDetails.phone || "Not provided"
                 }
             }
 
             const paymentProcess = new PaymentModel(payment);
             const paymentSaved = await paymentProcess.save();
-            console.log("Returning Successful form BookingUsrRepo :)");
 
             return {
                 success: true,
                 message: "Booking completed successfully.",
-                booking: savedBooking,
+                booking: populatedBooking,
             };
 
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
-        }
-    }
-
-    async getBookingByUserId(userId: string): Promise<[] | null> {
-        try {
-            const bookings = await BookingModel.find({ userId }).populate({
-                path: 'turfId',
-                select: 'turfName address price location images',
-            });
-
-            return bookings.length > 0 ? bookings as [] : null;
-        } catch (error) {
-            console.error("Error fetching bookings for user:", userId, error);
-            throw new Error("Error fetching bookings. Please try again later.");
         }
     }
 }

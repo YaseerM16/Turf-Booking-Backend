@@ -3,5 +3,5 @@ import { User } from "../entities/User";
 Company
 
 export interface IEmailService {
-    accountVerifyMail(user: (User | Company), type: string): Promise<void>;
+    accountVerifyMail(user: any, type: string): Promise<void>;
 }

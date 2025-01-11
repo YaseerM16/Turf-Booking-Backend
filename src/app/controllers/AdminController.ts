@@ -29,13 +29,13 @@ export class AdminController {
                 const token = this.authService.generateToken(det);
                 const refreshToken = this.authService.generateRefreshToken(det)
 
-                res.cookie("refreshToken", refreshToken, {
+                res.cookie("AdminRefreshToken", refreshToken, {
                     httpOnly: true,
                     secure: config.MODE !== "development",
                     sameSite: "lax"
                 });
 
-                res.cookie("token", token, {
+                res.cookie("AdminToken", token, {
                     httpOnly: false,
                     secure: false,
                     sameSite: "lax",
@@ -160,8 +160,8 @@ export class AdminController {
 
     async logout(req: Request, res: Response) {
         try {
-            res.clearCookie('token');
-            res.clearCookie('refreshToken');
+            res.clearCookie('AdminToken');
+            res.clearCookie('AdminRefreshToken');
 
             res.status(200).json({ message: 'Logged out successfully', loggedOut: true });
 

@@ -1,3 +1,4 @@
+import { promises } from "dns";
 import { Company } from "../entities/Company";
 import { Slot } from "../entities/Slot";
 import { Turf } from "../entities/Turf";
@@ -9,7 +10,7 @@ export interface ICompanyRepository {
 
 
     //Turf
-    registerTurf(turf: Turf): Promise<Turf | null>;
+    registerTurf(turf: Turf, workingDays: string[]): Promise<Turf | null>;
     getTurfs(companyId: string): Promise<Turf[] | null>;
     getTurfById(turfId: string): Promise<Turf | null>;
     deleteTurfImage(turfId: string, index: number): Promise<String[] | null>;
@@ -23,4 +24,6 @@ export interface ICompanyRepository {
     makeSlotUnavail(slotId: string, turfId: string): Promise<object>;
     makeSlotAvail(slotId: string, turfId: string): Promise<object>;
     addWorkingDays(turfId: string, payload: any): Promise<object>;
+    getDayDetails(turfId: string, day: string): Promise<object>;
+    editDayDetails(turfId: string, updates: object): Promise<object>;
 }

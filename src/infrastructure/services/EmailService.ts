@@ -18,8 +18,11 @@ export class MailService implements IEmailService {
     }
     async accountVerifyMail(user: any, type: string): Promise<void> {
         try {
+            console.log("User in AccountVerifyMail :", user);
+            console.log("Id VAl :", user.id);
+            const userIdString = user.id.toString()
 
-            let token = await generateHashPassword(user._id.toString());
+            let token = await generateHashPassword(userIdString);
             const currentDate = new Date();
             const twoDaysLater = new Date(currentDate);
 
@@ -37,8 +40,9 @@ export class MailService implements IEmailService {
 
             // Ensure user is updated before proceeding
             // console.log("User Details before update :", user.forgotPasswordTokenExpiry);
+            const userUpdatePayload = JSON.stringify(user); // Convert the user object to a JSON string
 
-            const updatedUser = await this.repository.update(user._id.toString(), user);
+            const updatedUser = await this.repository.update(user.id, { [userUpdatePayload]: true });
 
             // Check if the update was successful and proceed only if the user has updated values
             if (!updatedUser) {
@@ -72,6 +76,8 @@ export class MailService implements IEmailService {
             // }
 
         } catch (error: any) {
+            console.log("Error inside the MailService :", error);
+
             throw new ErrorResponse(error.message, error.status);
         }
     }

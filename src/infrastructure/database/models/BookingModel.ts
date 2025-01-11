@@ -12,7 +12,12 @@ const BookingSchema = new Schema<Booking>({
         day: { type: String, required: true },  // Day of the week
         date: { type: Date, required: true },  // Date of the booking
         slot: { type: String, required: true },  // Time slot in "HH:MM - HH:MM" format
-        isBooked: { type: Boolean, required: true, default: false }  // Slot booking status
+        isBooked: { type: Boolean, required: true, default: false },  // Slot booking status
+        isCancelled: { type: Boolean, required: true, default: false },  // Slot cancellation status
+        isRefunded: { type: Boolean, default: false },  // Refund status for the individual slot
+        refundTransactionId: { type: String },  // Refund transaction ID for the slot
+        refundDate: { type: Date },  // Refund date for the slot
+        price: { type: Number, required: true },  // Price of the slot
     }],
     totalAmount: { type: Number, required: true },
     status: { type: String, enum: ['pending', 'confirmed', 'cancelled', 'completed'], required: true },

@@ -6,6 +6,7 @@ import { ErrorResponse } from "../../utils/errors";
 import { IAuthService } from "../interfaces/services/IAuthService";
 import { config } from "../../config/config";
 import { Company } from "../../domain/entities/Company";
+import TurfService from "../../infrastructure/services/TurfService";
 
 
 export class CompanyController {
@@ -58,13 +59,13 @@ export class CompanyController {
                     const token = this.authService.generateToken(det);
                     const refreshToken = this.authService.generateRefreshToken(det)
 
-                    res.cookie("refreshToken", refreshToken, {
+                    res.cookie("CompanyRefreshToken", refreshToken, {
                         httpOnly: true,
                         secure: config.MODE !== "development",
                         sameSite: "lax"
                     });
 
-                    res.cookie("token", token, {
+                    res.cookie("CompanyToken", token, {
                         httpOnly: false,
                         secure: false,
                         sameSite: "lax",
@@ -107,13 +108,13 @@ export class CompanyController {
             const token = this.authService.generateToken(det);
             const refreshToken = this.authService.generateRefreshToken(det)
 
-            res.cookie("refreshToken", refreshToken, {
+            res.cookie("CompanyRefreshToken", refreshToken, {
                 httpOnly: true,
                 secure: config.MODE !== "development",
                 sameSite: "lax"
             });
 
-            res.cookie("token", token, {
+            res.cookie("CompanyToken", token, {
                 httpOnly: false,
                 secure: false,
                 sameSite: "lax",
@@ -131,8 +132,8 @@ export class CompanyController {
 
     async logout(req: Request, res: Response) {
         try {
-            res.clearCookie('token');
-            res.clearCookie('refreshToken');
+            res.clearCookie('CompanyToken');
+            res.clearCookie('CompanyRefreshToken');
 
             res.status(200).json({ message: 'Logged out successfully', loggedOut: true });
 
@@ -344,6 +345,39 @@ export class CompanyController {
                 res.status(200).json({ success: false, message: "Failed to Updat the Working day !!! :" });
             }
 
+        } catch (error: any) {
+            res.status(500).json({ message: error?.message });
+        }
+    }
+
+    async getDetailsOfDay(req: Request, res: Response) {
+        try {
+            const { turfId, day } = req.params;
+            const dayDetails = await this.companyUseCase.getDayDetails(turfId, day)
+            res.status(200).json({ success: true, dayDetails, message: "Updated Working day successfully :" });
+
+        } catch (error: any) {
+            res.status(500).json({ message: error?.message });
+
+        }
+    }
+
+    async genExampleOneDay(req: Request, res: Response) {
+        try {
+            const { turfId } = req.params
+            const gens = await TurfService.generateSlotsForNextDay(turfId)
+            res.status(200).json({ success: true, message: "Updated Working day successfully :" });
+        } catch (error: any) {
+            res.status(500).json({ message: error?.message });
+        }
+    }
+
+
+    async editWorkingDayDetails(req: Request, res: Response) {
+        try {
+            const { turfId } = req.params
+            const isDayUpdated = await this.companyUseCase.editDayDetails(turfId, req.body)
+            res.status(200).json({ success: true, isDayUpdated, message: "Updated Working day successfully :" });
         } catch (error: any) {
             res.status(500).json({ message: error?.message });
         }

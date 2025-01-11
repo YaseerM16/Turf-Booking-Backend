@@ -6,10 +6,7 @@ import { validationResult } from "express-validator"
 import { IUserUseCase } from "../interfaces/usecases/user/IUserUseCase";
 import { User } from "../../domain/entities/User";
 import { generatePaymentHash } from "../../../src/infrastructure/services/BookingService"
-import he from "he"
-import multer from "multer";
-import { GetBucketInventoryConfigurationOutputFilterSensitiveLog } from "@aws-sdk/client-s3";
-const upload = multer()
+
 
 export class UserController {
     constructor(private userUseCase: IUserUseCase, private authService: IAuthService) { }
@@ -21,6 +18,7 @@ export class UserController {
             if (!errors.isEmpty()) {
                 throw new ErrorResponse("Invalid email or password", 401);
             }
+            console.log("CAlling signup UseCase :)");
 
             const user = await this.userUseCase.RegisterUser(req.body)
 
@@ -35,6 +33,7 @@ export class UserController {
             res.status(400).json({ message: (error as Error).message });
         }
     }
+
     async userLogin(req: Request, res: Response): Promise<void> {
         try {
             const errors = validationResult(req);
@@ -111,10 +110,6 @@ export class UserController {
                 sameSite: "lax",
             });
 
-            // res
-            //     .status(200)
-            //     .json({ success: true, message: "account verified", user, token });
-
             res.status(200).json({ success: true, user: newUser, message: "account verified" });
 
         } catch (error) {
@@ -151,10 +146,6 @@ export class UserController {
                 sameSite: "lax",
             });
 
-            // res
-            //     .status(200)
-            //     .json({ success: true, message: "account verified", user, token });
-
             res.status(200).json({ success: true, user: newUser, message: "account verified" });
         } catch (error) {
             res.status(403).json({ message: (error as Error).message });
@@ -173,29 +164,34 @@ export class UserController {
                         ...JSON.parse(JSON.stringify(data)),
                         password: undefined,
                     };
-                    const det: any = {
-                        _id: user?._id,
-                        email: user?.email,
-                        userRole: "user"
-                    };
-                    const token = this.authService.generateToken(det);
-                    const refreshToken = this.authService.generateRefreshToken(det)
+                    const creatWallet: any = await this.userUseCase.createWallet(user?._id)
+                    if (creatWallet?.success) {
+                        const det: any = {
+                            _id: user?._id,
+                            email: user?.email,
+                            userRole: "user"
+                        };
+                        const token = this.authService.generateToken(det);
+                        const refreshToken = this.authService.generateRefreshToken(det)
 
-                    res.cookie("refreshToken", refreshToken, {
-                        httpOnly: true,
-                        secure: config.MODE !== "development",
-                        sameSite: "lax"
-                    });
+                        res.cookie("refreshToken", refreshToken, {
+                            httpOnly: true,
+                            secure: config.MODE !== "development",
+                            sameSite: "lax"
+                        });
 
-                    res.cookie("token", token, {
-                        httpOnly: false,
-                        secure: false,
-                        sameSite: "lax",
-                    });
+                        res.cookie("token", token, {
+                            httpOnly: false,
+                            secure: false,
+                            sameSite: "lax",
+                        });
 
-                    res
-                        .status(200)
-                        .json({ success: true, message: "account verified", user, token });
+                        res
+                            .status(200)
+                            .json({ success: true, message: "account verified", user, token });
+                    } else {
+                        res.status(500).json({ message: "Internal server error while creating Wallet for this User :( " });
+                    }
                 } else if (type == "forgotPassword") {
                     res
                         .status(200)
@@ -203,7 +199,17 @@ export class UserController {
                 }
             }
         } catch (error: any) {
-            throw new ErrorResponse(error.message, error.status);
+            res.status(500).json({ message: "Internal server error", error });
+        }
+    }
+
+    async getVerificationMail(req: Request, res: Response) {
+        try {
+            const { userId } = req.params
+            await this.userUseCase.sendVerificationMail(userId)
+            res.status(200).json({ success: true, message: "Email was sent successfully :)" });
+        } catch (error) {
+            res.status(500).json({ message: "Internal server error while try to send the verification mail :", error });
         }
     }
 
@@ -228,18 +234,22 @@ export class UserController {
     async updateDetails(req: Request, res: Response): Promise<void> {
         try {
             const { userId } = req.params
+            // console.log("THis is the updateDetails -:");
+
+            // console.log("USer Id ::", userId);
+            // console.log("updatedDets -::", req.body)
 
             const user = await this.userUseCase.updateProfileDetails(userId, req.body)
+
             if (!user) {
                 res.status(404).json({ success: false, message: "User not found or update failed" });
                 return
             }
 
             res.status(200).send({ success: true, user });
-            return
 
         } catch (error) {
-            res.status(500).json({ message: "Internal server error" });
+            res.status(500).json({ message: "Internal server error", error });
         }
     }
 
@@ -359,11 +369,11 @@ export class UserController {
 
     async saveBooking(req: Request, res: Response) {
         try {
-            console.log("Save Bookiing is Aprochec*)");
-
+            // console.log("Save Bookiing is Aprochec*)");
+            // console.log("bookingDets in Controller : ", req.body);
             const isBooked: any = await this.userUseCase.bookTheSlots(req.body)
 
-            console.log("Sending BOOKeD Dets ;", isBooked);
+            // console.log("Sending BOOKeD Dets ;", isBooked);
 
             if (isBooked.success) {
                 res.status(200).json({ success: true, isBooked, message: "Turf Slots was Booked successfully :" });
@@ -379,13 +389,65 @@ export class UserController {
 
     async getBookings(req: Request, res: Response) {
         try {
-            const { userId } = req.query
-            const bookings = await this.userUseCase.getBookingOfUser(userId as string)
+            const { userId, page, limit } = req.query
+            const bookings = await this.userUseCase.getBookingOfUser(userId as string, page as unknown as number, limit as unknown as number)
             res.status(200).json({ success: true, bookings, message: "Bookings Fetched successfully :" });
         } catch (error: any) {
             res.status(500).json({ message: error?.message });
         }
     }
 
+    async myWallet(req: Request, res: Response) {
+        try {
+            const { userId } = req.params
+            const wallet = await this.userUseCase.getWalletbyId(userId)
+            // console.log("This is the Mywallet C : userId ", userId);
+            res.status(200).json({ success: true, wallet, message: "Wallet Fetched successfully :" });
+        } catch (error: any) {
+            res.status(500).json({ message: error?.message });
+        }
+    }
+
+    async cancelSlot(req: Request, res: Response) {
+        try {
+            const { userId, slotId, bookingId } = req.params
+            const isCancelled: any = await this.userUseCase.cancelTheSlot(userId, slotId, bookingId)
+
+            if (isCancelled.success) {
+                res.status(200).json({ success: true, booking: isCancelled, message: "Slots has been Cancelled successfully :" });
+            } else {
+                res.status(500).json({ success: false, message: "Something went wrong while Cancelling the slots !! :" });
+            }
+
+        } catch (error: any) {
+            res.status(500).json({ message: error?.message, error });
+        }
+    }
+
+    async checkWalletBalance(req: Request, res: Response) {
+        try {
+            const { userId } = req.params
+            const total = Number(req.query.grandTotal)
+
+            const walletBalance = await this.userUseCase.checkBalance(userId, total)
+            res.status(200).json({ success: true, walletBalance, message: "Balance Checked successfully :" });
+
+        } catch (error: any) {
+            res.status(500).json({ message: error?.message, error });
+        }
+    }
+
+    async bookSlotsByWallet(req: Request, res: Response) {
+        try {
+            const { userId } = req.params
+            console.log("Book BY walLet is HEre >");
+            console.log("UserId :", userId);
+            console.log("SEelect Sltosf :", req.body);
+            const isBookingCompleted = await this.userUseCase.bookSlotByWallet(userId, req.body)
+            res.status(200).json({ success: true, isBookingCompleted, message: "Balance Checked successfully :" });
+        } catch (error: any) {
+            res.status(500).json({ message: error?.message, error });
+        }
+    }
 
 }
