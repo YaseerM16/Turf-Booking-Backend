@@ -14,9 +14,18 @@ export class Turf {
         public supportedGames: string[],
         public location: { latitude: number; longitude: number },
         public workingSlots: {
-            fromTime: string;
-            toTime: string;
-            workingDays: string[];
+            fromTime: string; // Common start time
+            toTime: string;   // Common end time
+            workingDays: {
+                price: number;
+                day: string;
+                fromTime: string;
+                toTime: string;
+            }[];
+        },
+        public generatedSlots?: {
+            fromDate: Date;
+            toDate: Date;
         },
         public isDelete?: boolean,
         public isActive?: boolean,
@@ -26,3 +35,4 @@ export class Turf {
         public _id?: ObjectId,
     ) { }
 }
+

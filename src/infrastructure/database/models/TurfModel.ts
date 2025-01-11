@@ -1,7 +1,8 @@
 import { Schema, model } from "mongoose";
 import { turfValidators } from "../validators/Turf.validators";
+import { Turf } from "../../../domain/entities/Turf";
 
-const TurfSchema = new Schema(
+const TurfSchema = new Schema<Turf>(
     {
         companyId: {
             type: Schema.Types.ObjectId,
@@ -115,12 +116,45 @@ const TurfSchema = new Schema(
                 },
             },
             workingDays: {
-                type: [String],
+                type: [
+                    {
+                        day: {
+                            type: String,
+                            required: true,
+                            enum: [
+                                "Sunday",
+                                "Monday",
+                                "Tuesday",
+                                "Wednesday",
+                                "Thursday",
+                                "Friday",
+                                "Saturday",
+                            ],
+                        },
+                        fromTime: {
+                            type: String,
+                            required: true,
+                            validate: {
+                                validator: turfValidators.fromTime.validator,
+                                message: turfValidators.fromTime.message,
+                            },
+                        },
+                        toTime: {
+                            type: String,
+                            required: true,
+                            validate: {
+                                validator: turfValidators.toTime.validator,
+                                message: turfValidators.toTime.message,
+                            },
+                        },
+                        price: {
+                            type: Number,
+                            required: true,
+                            min: [0, "Price must be a positive number."],
+                        },
+                    },
+                ],
                 required: true,
-                validate: {
-                    validator: turfValidators.workingDays.validator,
-                    message: turfValidators.workingDays.message,
-                },
             },
         },
         isActive: {
@@ -135,6 +169,10 @@ const TurfSchema = new Schema(
             type: Boolean,
             default: false,
         },
+        generatedSlots: {
+            fromDate: { type: Date },
+            toDate: { type: Date },
+        },
     },
     {
         timestamps: true,
@@ -142,3 +180,4 @@ const TurfSchema = new Schema(
 );
 
 export default model("Turf", TurfSchema);
+
