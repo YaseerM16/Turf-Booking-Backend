@@ -1,6 +1,6 @@
 import { IAdminUseCase } from "../../app/interfaces/usecases/admin/IAdminUseCase";
 import { config } from "../../config/config";
-import { ErrorResponse } from "../../utils/errors";
+import { ErrorResponse } from "../../shared/utils/errors";
 import { Company } from "../entities/Company";
 import { User } from "../entities/User";
 import { IAdminRepository } from "../repositories/IAdminRepository";

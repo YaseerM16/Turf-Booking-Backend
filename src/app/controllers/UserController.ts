@@ -1,15 +1,21 @@
 import e, { NextFunction, Request, Response } from "express";
 import { IAuthService } from "../interfaces/services/IAuthService";
-import { ErrorResponse } from "../../utils/errors";
+import { ErrorResponse } from "../../shared/utils/errors";
 import { config } from "../../config/config";
 import { validationResult } from "express-validator"
 import { IUserUseCase } from "../interfaces/usecases/user/IUserUseCase";
 import { User } from "../../domain/entities/User";
 import { generatePaymentHash } from "../../../src/infrastructure/services/BookingService"
-
+import { StatusCode } from "../../shared/enums/StatusCode";
+import { ResponseModel } from "../../shared/utils/ResponseModel";
+import { sendResponse } from "../../shared/utils/responseUtil";
 
 export class UserController {
-    constructor(private userUseCase: IUserUseCase, private authService: IAuthService) { }
+
+    constructor(
+        private readonly userUseCase: IUserUseCase,
+        private readonly authService: IAuthService
+    ) { }
 
     async registersUser(req: Request, res: Response): Promise<void> {
         try {
@@ -27,10 +33,14 @@ export class UserController {
                 password: undefined,
             };
 
-            res.status(200).json({ success: true, user: newUser });
+            // const response = new ResponseModel(true, "User Registered Successfully :)", { user: newUser })
+            // res.status(StatusCode.SUCCESS).json(response)
+            sendResponse(res, true, "User Registered Successfully ✅", StatusCode.SUCCESS, { user: newUser })
 
         } catch (error) {
-            res.status(400).json({ message: (error as Error).message });
+            // const response = new ResponseModel(false, (error as Error).message)
+            // res.status(StatusCode.BAD_REQUEST).json(response)
+            sendResponse(res, false, (error as Error).message, StatusCode.BAD_REQUEST)
         }
     }
 
@@ -70,13 +80,12 @@ export class UserController {
                 sameSite: "lax",
             });
 
-            res
-                .status(200)
-                .json({ success: true, message: "Logged In successfully", user: userData, loggedIn: true });
+            sendResponse(res, true, "Logged In Successfully ✅", StatusCode.SUCCESS, { user: userData, loggedIn: true })
 
         } catch (error) {
-            console.error("Login Error:", error);
-            res.status(400).json({ message: (error as Error).message });
+            console.log("Err res by Login:", error);
+
+            sendResponse(res, false, (error as Error).message, StatusCode.BAD_REQUEST)
         }
     }
 
@@ -110,10 +119,10 @@ export class UserController {
                 sameSite: "lax",
             });
 
-            res.status(200).json({ success: true, user: newUser, message: "account verified" });
+            sendResponse(res, true, "Registered Successfully ..!✅", StatusCode.SUCCESS, { user: newUser })
 
         } catch (error) {
-            res.status(403).json({ message: (error as Error).message });
+            sendResponse(res, false, (error as Error).message, StatusCode.FORBIDDEN)
         }
     }
 
@@ -146,9 +155,10 @@ export class UserController {
                 sameSite: "lax",
             });
 
-            res.status(200).json({ success: true, user: newUser, message: "account verified" });
+            sendResponse(res, true, "Logged In Successfully ..!", StatusCode.SUCCESS, { user: newUser })
+
         } catch (error) {
-            res.status(403).json({ message: (error as Error).message });
+            sendResponse(res, false, (error as Error).message, StatusCode.FORBIDDEN)
         }
     }
 
@@ -224,32 +234,28 @@ export class UserController {
                 res.status(400).send("Profile image is required");
             }
             const user = await this.userUseCase.updateProfileImage(userId, imageUrl);
-            res.status(200).send({ success: true, user });
+            sendResponse(res, true, "Profile Image Updated Successfully ..✅", StatusCode.SUCCESS, { user })
 
         } catch (error) {
-            res.status(403).json({ message: (error as Error).message });
+            sendResponse(res, false, (error as Error).message, StatusCode.FORBIDDEN)
         }
     }
 
     async updateDetails(req: Request, res: Response): Promise<void> {
         try {
             const { userId } = req.params
-            // console.log("THis is the updateDetails -:");
-
-            // console.log("USer Id ::", userId);
-            // console.log("updatedDets -::", req.body)
 
             const user = await this.userUseCase.updateProfileDetails(userId, req.body)
 
             if (!user) {
-                res.status(404).json({ success: false, message: "User not found or update failed" });
+                sendResponse(res, false, "User not found or update failed !.. ❌", StatusCode.NOT_FOUND)
                 return
             }
 
-            res.status(200).send({ success: true, user });
+            sendResponse(res, true, "Profile has been Updated Successfully! ✅", StatusCode.SUCCESS, { user, success: true })
 
         } catch (error) {
-            res.status(500).json({ message: "Internal server error", error });
+            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
         }
     }
 
@@ -304,10 +310,12 @@ export class UserController {
             // console.log("Queries in getTurfsofUser :", query);
 
             const turfs = await this.userUseCase.getAllTurfs(query)
-            res.status(200).json({ success: true, turfs: turfs.turfs, totalTurfs: turfs.totalTurfs, message: "Turfs Fetched successfully :" });
+            sendResponse(res, true, "Turfs Fetched successfully ..!!", StatusCode.SUCCESS, { turfs: turfs.turfs, totalTurfs: turfs.totalTurfs })
+            // res.status(200).json({ success: true, turfs: turfs.turfs, totalTurfs: turfs.totalTurfs, message: "Turfs Fetched successfully :" });
 
-        } catch (error: any) {
-            res.status(500).json({ message: error?.message });
+        } catch (error: unknown) {
+            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
+            // res.status(500).json({ message: error?.message });
         }
     }
 
@@ -315,9 +323,10 @@ export class UserController {
         try {
             const { turfId } = req.params
             const turf = await this.userUseCase.getTurfById(turfId)
-            res.status(200).json({ success: true, turf, message: "Turf Detail Fetched successfully :" });
-        } catch (error: any) {
-            res.status(500).json({ message: error?.message });
+            // res.status(200).json({ success: true, turf, message: "Turf Detail Fetched successfully :" });
+            sendResponse(res, true, "Turf Detail Fetched successfully ..!", StatusCode.SUCCESS, { turf })
+        } catch (error: unknown) {
+            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
         }
     }
 
@@ -327,10 +336,12 @@ export class UserController {
             // console.log("by Date :", date);
 
             const slots = await this.userUseCase.getSlotsByDay(turfId as string, day as string, date as string)
-            res.status(200).json({ success: true, slots, message: "Turf Slots by Day Fetched successfully :" });
+            sendResponse(res, true, "Turf Slots by Day Fetched successfully ..!", StatusCode.SUCCESS, { slots })
+            // res.status(200).json({ success: true, slots, message: "Turf Slots by Day Fetched successfully :" });
 
-        } catch (error: any) {
-            res.status(500).json({ message: error?.message });
+        } catch (error: unknown) {
+            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
+            // res.status(500).json({ message: error?.message });
         }
     }
 
@@ -391,9 +402,11 @@ export class UserController {
         try {
             const { userId, page, limit } = req.query
             const bookings = await this.userUseCase.getBookingOfUser(userId as string, page as unknown as number, limit as unknown as number)
-            res.status(200).json({ success: true, bookings, message: "Bookings Fetched successfully :" });
+            // res.status(200).json({ success: true, bookings, message: "Bookings Fetched successfully :" });
+            sendResponse(res, true, "Bookings Fetched successfully :", StatusCode.SUCCESS, { bookings })
         } catch (error: any) {
-            res.status(500).json({ message: error?.message });
+            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
+            // res.status(500).json({ message: error?.message });
         }
     }
 
@@ -402,9 +415,9 @@ export class UserController {
             const { userId } = req.params
             const wallet = await this.userUseCase.getWalletbyId(userId)
             // console.log("This is the Mywallet C : userId ", userId);
-            res.status(200).json({ success: true, wallet, message: "Wallet Fetched successfully :" });
+            sendResponse(res, true, "Wallet Fetched successfully !", StatusCode.SUCCESS, { wallet })
         } catch (error: any) {
-            res.status(500).json({ message: error?.message });
+            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
         }
     }
 
@@ -430,23 +443,27 @@ export class UserController {
             const total = Number(req.query.grandTotal)
 
             const walletBalance = await this.userUseCase.checkBalance(userId, total)
-            res.status(200).json({ success: true, walletBalance, message: "Balance Checked successfully :" });
+            sendResponse(res, true, "Balance Checked successfully ..!", StatusCode.SUCCESS, { walletBalance })
+            // res.status(200).json({ success: true, walletBalance, message: "Balance Checked successfully :" });
 
-        } catch (error: any) {
-            res.status(500).json({ message: error?.message, error });
+        } catch (error: unknown) {
+            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
+            // res.status(500).json({ message: error?.message, error });
         }
     }
 
     async bookSlotsByWallet(req: Request, res: Response) {
         try {
             const { userId } = req.params
-            console.log("Book BY walLet is HEre >");
-            console.log("UserId :", userId);
-            console.log("SEelect Sltosf :", req.body);
+            // console.log("Book BY walLet is HEre >");
+            // console.log("UserId :", userId);
+            // console.log("SEelect Sltosf :", req.body);
             const isBookingCompleted = await this.userUseCase.bookSlotByWallet(userId, req.body)
-            res.status(200).json({ success: true, isBookingCompleted, message: "Balance Checked successfully :" });
-        } catch (error: any) {
-            res.status(500).json({ message: error?.message, error });
+            sendResponse(res, true, "Balance Checked successfully ..!", StatusCode.SUCCESS, { isBookingCompleted })
+            // res.status(200).json({ success: true, isBookingCompleted, message: "Balance Checked successfully :" });
+        } catch (error: unknown) {
+            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
+            // res.status(500).json({ message: error?.message, error });
         }
     }
 

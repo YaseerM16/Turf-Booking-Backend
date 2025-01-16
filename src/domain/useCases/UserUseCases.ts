@@ -1,7 +1,7 @@
 import { User } from "../entities/User";
 import { IUserRepository } from "../repositories/IUserRepository"
 import { IEmailService } from "../repositories/IEmailService";
-import { ErrorResponse } from "../../utils/errors";
+import { ErrorResponse } from "../../shared/utils/errors";
 import { comparePassword, generateHashPassword } from "../../infrastructure/services/PasswordService";
 import { IUserUseCase } from "../../app/interfaces/usecases/user/IUserUseCase";
 import { AuthService } from "../../infrastructure/services/AuthService";
@@ -9,7 +9,7 @@ import { Turf } from "../entities/Turf";
 import { Slot } from "../entities/Slot";
 import UserModel from "../../infrastructure/database/models/UserModel";
 import { Wallet } from "../entities/Wallet";
-import { BalanceCheckResult } from "../../utils/interfaces";
+import { BalanceCheckResult } from "../../shared/utils/interfaces";
 AuthService
 
 
@@ -185,6 +185,8 @@ export class UserUseCase implements IUserUseCase {
 
     async updateProfileDetails(_id: string, data: string): Promise<User | null> {
         try {
+            console.log("Update Dets for APi : ", data);
+
             const user = await this.userRepository.update(_id, data);
             if (!user) {
                 throw new ErrorResponse("User not found or update failed", 404);  // Handling not found

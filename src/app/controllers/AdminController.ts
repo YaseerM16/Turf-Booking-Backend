@@ -1,7 +1,7 @@
 import e, { NextFunction, Request, Response } from "express";
 import { IAdminUseCase } from "../interfaces/usecases/admin/IAdminUseCase";
 import { validationResult } from "express-validator";
-import { ErrorResponse } from "../../utils/errors";
+import { ErrorResponse } from "../../shared/utils/errors";
 import { Admin } from "../../domain/entities/Admin";
 import { IAuthService } from "../interfaces/services/IAuthService";
 import { config } from "../../config/config";

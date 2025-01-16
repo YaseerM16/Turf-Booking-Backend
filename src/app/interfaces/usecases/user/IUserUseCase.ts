@@ -2,7 +2,7 @@ import { Slot } from "../../../../domain/entities/Slot";
 import { Turf } from "../../../../domain/entities/Turf";
 import { User } from "../../../../domain/entities/User";
 import { Wallet } from "../../../../domain/entities/Wallet";
-import { BalanceCheckResult } from "../../../../utils/interfaces";
+import { BalanceCheckResult } from "../../../../shared/utils/interfaces";
 
 export interface IUserUseCase {
     RegisterUser(user: User): Promise<User>;

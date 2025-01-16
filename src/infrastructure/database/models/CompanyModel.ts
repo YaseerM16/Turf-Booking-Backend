@@ -64,7 +64,12 @@ const CompanySchema = new Schema<Company>({
             required: true,
         }
     }
-});
+
+},
+    {
+        timestamps: true,
+    }
+);
 
 // Create the Company model using the schema
 const CompanyModel = mongoose.model<Company>("Company", CompanySchema);

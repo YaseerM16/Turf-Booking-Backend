@@ -2,7 +2,7 @@ import e, { NextFunction, Request, Response } from "express";
 
 import { ICompanyUseCase } from "../../app/interfaces/usecases/company/ICompanyUseCase"
 import { validationResult } from "express-validator"
-import { ErrorResponse } from "../../utils/errors";
+import { ErrorResponse } from "../../shared/utils/errors";
 import { IAuthService } from "../interfaces/services/IAuthService";
 import { config } from "../../config/config";
 import { Company } from "../../domain/entities/Company";

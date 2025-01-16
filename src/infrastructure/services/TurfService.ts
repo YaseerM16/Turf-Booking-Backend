@@ -1,11 +1,11 @@
 import mongoose from "mongoose";
 import { Turf } from "../../domain/entities/Turf";
 import TurfModel from "../database/models/TurfModel";
-import { ErrorResponse } from "../../utils/errors";
+import { ErrorResponse } from "../../shared/utils/errors";
 import cron from "node-cron";
 import { RRule, Weekday } from 'rrule';
 import { SlotModel } from "../database/models/SlotModel";
-import { dayRank, dayValue } from "../../utils/constants";
+import { DayRank, DayValue } from "../../shared/utils/constants";
 
 
 class TurfService {
@@ -14,12 +14,12 @@ class TurfService {
         session.startTransaction();
         try {
             const maxDayIndex = Math.max(
-                ...workingDaysArr.map((day) => dayRank[day as keyof typeof dayRank])
+                ...workingDaysArr.map((day) => DayRank[day as keyof typeof DayRank])
             );
 
             // console.log("MAXXX DAy :", maxDay);
 
-            const maxDay = dayValue[maxDayIndex as keyof typeof dayValue]
+            const maxDay = DayValue[maxDayIndex as keyof typeof DayValue]
             const fromDate = new Date();
             const nextMonth = fromDate.getMonth() + 1; // Get next month
             const year = nextMonth > 11 ? fromDate.getFullYear() + 1 : fromDate.getFullYear();
@@ -35,7 +35,7 @@ class TurfService {
             let toDate = new Date(lastDayOfNextMonth); // Default to the last day
             for (let i = 0; i < 7; i++) {
                 const currentDay = (lastWeekStart.getDay() + i) % 7; // Get days in the last week
-                if (dayValue[currentDay as keyof typeof dayValue] === maxDay) {
+                if (DayValue[currentDay as keyof typeof DayValue] === maxDay) {
                     toDate = new Date(lastWeekStart);
                     toDate.setDate(lastWeekStart.getDate() + i); // Set to matching `maxDay`
                     break;

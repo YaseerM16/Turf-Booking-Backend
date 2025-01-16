@@ -1,4 +1,4 @@
-import { BalanceCheckResult } from "../../utils/interfaces";
+import { BalanceCheckResult } from "../../shared/utils/interfaces";
 import { Slot } from "../entities/Slot";
 import { Turf } from "../entities/Turf";
 import { User } from "../entities/User";
