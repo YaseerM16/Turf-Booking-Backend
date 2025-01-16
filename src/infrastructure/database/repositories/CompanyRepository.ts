@@ -3,8 +3,8 @@ import { Company } from "../../../domain/entities/Company";
 import { Slot } from "../../../domain/entities/Slot";
 import { Turf } from "../../../domain/entities/Turf";
 import { ICompanyRepository } from "../../../domain/repositories/ICompanyRepository";
-import { dayRank, dayValue } from "../../../utils/constants";
-import { ErrorResponse } from "../../../utils/errors";
+import { DayRank, DayValue } from "../../../shared/utils/constants";
+import { ErrorResponse } from "../../../shared/utils/errors";
 import TurfService from "../../services/TurfService";
 import CompanyModel from "../models/CompanyModel";
 import { SlotModel } from "../models/SlotModel";
@@ -257,18 +257,18 @@ export class CompanyRepository implements ICompanyRepository {
             const existingToDate = turf.generatedSlots?.toDate;
 
             const maxExistingRank = Math.max(
-                ...existingWorkingDays.map((day) => dayRank[day as keyof typeof dayRank])
+                ...existingWorkingDays.map((day) => DayRank[day as keyof typeof DayRank])
             );
 
             const maxIncomingRank = Math.max(
-                ...workingDays.map((day: unknown) => dayRank[day as keyof typeof dayRank])
+                ...workingDays.map((day: unknown) => DayRank[day as keyof typeof DayRank])
             );
 
             let updatedToDate;
 
             // Update `toDate` if the incoming days have a greater rank
             if (maxIncomingRank > maxExistingRank) {
-                const maxDay = dayValue[maxIncomingRank as keyof typeof dayValue];
+                const maxDay = DayValue[maxIncomingRank as keyof typeof DayValue];
                 const fromDate = new Date();
                 const nextMonth = fromDate.getMonth() + 1; // Get next month
                 const year = nextMonth > 11 ? fromDate.getFullYear() + 1 : fromDate.getFullYear();
@@ -284,7 +284,7 @@ export class CompanyRepository implements ICompanyRepository {
                 let toDate = new Date(lastDayOfNextMonth); // Default to the last day
                 for (let i = 0; i < 7; i++) {
                     const currentDay = (lastWeekStart.getDay() + i) % 7; // Get days in the last week
-                    if (dayValue[currentDay as keyof typeof dayValue] === maxDay) {
+                    if (DayValue[currentDay as keyof typeof DayValue] === maxDay) {
                         toDate = new Date(lastWeekStart);
                         toDate.setDate(lastWeekStart.getDate() + i); // Set to matching `maxDay`
                         break;

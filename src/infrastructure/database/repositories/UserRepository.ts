@@ -5,14 +5,14 @@ import { Turf } from "../../../domain/entities/Turf";
 import { User } from "../../../domain/entities/User";
 import { Wallet } from "../../../domain/entities/Wallet";
 import { IUserRepository } from "../../../domain/repositories/IUserRepository";
-import { ErrorResponse } from "../../../utils/errors";
+import { ErrorResponse } from "../../../shared/utils/errors";
 import BookingModel from "../models/BookingModel";
 import PaymentModel from "../models/PaymentModel";
 import TurfModel from "../models/TurfModel";
 import UserModel from "../models/UserModel";
 import WalletModel from "../models/WalletModel";
 import { SlotModel } from "../models/SlotModel";
-import { BalanceCheckResult } from "../../../utils/interfaces";
+import { BalanceCheckResult } from "../../../shared/utils/interfaces";
 
 
 export class MongoUserRepository implements IUserRepository {
@@ -62,14 +62,21 @@ export class MongoUserRepository implements IUserRepository {
     }
     async update(id: string, value: any): Promise<User | null> {
         try {
-            const [jsonString] = Object.keys(value);
-            const updatedDets = JSON.parse(jsonString);
-            const updatedUser = await UserModel.findByIdAndUpdate(id, updatedDets, {
+            // console.log("Hi firi Updat _:_", id);
+            // const [jsonString] = Object.keys(value);
+            // console.log("JSonStr :", jsonString);
+
+            // const updatedDets = JSON.parse(jsonString);
+            // console.log("Update Dets for Pro :", updatedDets);
+
+            const updatedUser = await UserModel.findByIdAndUpdate(id, value, {
                 new: true,
                 fields: "-password"
             });
             return updatedUser
         } catch (error: any) {
+            console.log("Errro trew from UseRespo :", error);
+
             throw new ErrorResponse(error.message, error.status);
         }
     }

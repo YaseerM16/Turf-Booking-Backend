@@ -1,8 +1,8 @@
-import { ErrorResponse } from "../../utils/errors";
+import { ErrorResponse } from "../../shared/utils/errors";
 import { User } from "../../domain/entities/User";
 import { IUserRepository } from "../../domain/repositories/IUserRepository";
 import { generateHashPassword } from "./PasswordService";
-import { sendMail } from "../../utils/sendMail";
+import { sendMail } from "../../shared/utils/sendMail";
 import { IEmailService } from "../../app/interfaces/services/IEmailService";
 import { Company } from "../../domain/entities/Company";
 import { ICompanyRepository } from "../../domain/repositories/ICompanyRepository";

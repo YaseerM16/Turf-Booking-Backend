@@ -31,7 +31,8 @@ router.post("/auth/google-login", (req: Request, res: Response) => userControlle
 
 
 ///   Profile   ///
-router.patch("/profile/update-details/:userId",
+router.patch(
+    "/profile/update-details/:userId",
     Authenticator.userAuthenticator,
     AccessControl.isUserBlocked,
     (req: Request, res: Response) => userController.updateDetails(req, res)

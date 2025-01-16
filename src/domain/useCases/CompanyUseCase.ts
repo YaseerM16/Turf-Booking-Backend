@@ -2,16 +2,10 @@ import { Company } from "../entities/Company";
 import { ICompanyUseCase } from "../../../src/app/interfaces/usecases/company/ICompanyUseCase"
 import { ICompanyRepository } from "../repositories/ICompanyRepository";
 import { IEmailService } from "../repositories/IEmailService";
-import { ErrorResponse } from "../../utils/errors";
+import { ErrorResponse } from "../../shared/utils/errors";
 import { comparePassword, generateHashPassword } from "../../infrastructure/services/PasswordService";
 import { Turf } from "../entities/Turf";
-import { AdminRepository } from "../../infrastructure/database/repositories/AdminRepository";
-import { config } from "../../config/config";
-import axios from "axios";
 import { Slot } from "../entities/Slot";
-import { dayRank } from "../../utils/constants";
-
-Company
 
 
 export class CompanyUseCase implements ICompanyUseCase {
@@ -37,9 +31,7 @@ export class CompanyUseCase implements ICompanyUseCase {
             return newCompany
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
-
         }
-
     }
 
     async verifyMail(type: string, token: string, email: string): Promise<Company | null> {

@@ -1,5 +1,5 @@
 import bcryptjs from "bcryptjs";
-import { ErrorResponse } from "../../utils/errors";
+import { ErrorResponse } from "../../shared/utils/errors";
 
 export const generateHashPassword = async (
     password: string

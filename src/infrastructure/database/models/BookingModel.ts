@@ -35,7 +35,11 @@ const BookingSchema = new Schema<Booking>({
     isActive: { type: Boolean, default: true },
     refundTransactionId: { type: String },
     refundDate: { type: Date }
-})
+},
+    {
+        timestamps: true,
+    }
+)
 
 
 const BookingModel = mongoose.model<Booking>("Booking", BookingSchema);

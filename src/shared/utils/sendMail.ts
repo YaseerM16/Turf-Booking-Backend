@@ -1,4 +1,4 @@
-import { config } from "../config/config";
+import { config } from "../../config/config";
 import { ErrorResponse } from "./errors";
 import nodemailer from "nodemailer"
 
