@@ -7,7 +7,6 @@ import { IUserUseCase } from "../interfaces/usecases/user/IUserUseCase";
 import { User } from "../../domain/entities/User";
 import { generatePaymentHash } from "../../../src/infrastructure/services/BookingService"
 import { StatusCode } from "../../shared/enums/StatusCode";
-import { ResponseModel } from "../../shared/utils/ResponseModel";
 import { sendResponse } from "../../shared/utils/responseUtil";
 
 export class UserController {
@@ -464,6 +463,26 @@ export class UserController {
         } catch (error: unknown) {
             sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
             // res.status(500).json({ message: error?.message, error });
+        }
+    }
+
+    async createChatRoom(req: Request, res: Response) {
+        try {
+            const { userId, companyId } = req.params
+            const chatRoom = await this.userUseCase.createChatRoom(userId, companyId)
+            sendResponse(res, true, "Chat Room has been Created or getting successfully ..!", StatusCode.SUCCESS, { room: chatRoom })
+        } catch (error) {
+            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
+        }
+    }
+
+    async onSendMessage(req: Request, res: Response) {
+        try {
+            const { userId, companyId } = req.params
+            const sendMessage = await this.userUseCase.sendMessage(userId, companyId, req.body)
+            sendResponse(res, true, "Message Sent Successfully", StatusCode.SUCCESS, { message: sendMessage })
+        } catch (error) {
+            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
         }
     }
 

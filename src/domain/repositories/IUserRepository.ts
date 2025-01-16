@@ -1,4 +1,6 @@
 import { BalanceCheckResult } from "../../shared/utils/interfaces";
+import { ChatRoom } from "../entities/ChatRoom";
+import { Message } from "../entities/Message";
 import { Slot } from "../entities/Slot";
 import { Turf } from "../entities/Turf";
 import { User } from "../entities/User";
@@ -29,5 +31,9 @@ export interface IUserRepository {
     getSlotByDay(turfId: string, day: string, date: string): Promise<{ slots: Slot[]; price: number | null }>
     bookTheSlots(bookingDets: object): Promise<object>;
     bookSlotsByWallet(userId: string, selectedSlots: any): Promise<object>
+
+    /// <- Chat -> ///
+    createChatRoom(userId: string, companyId: string): Promise<ChatRoom>;
+    sendMessage(userId: string, companyId: string, data: object): Promise<Message>
 
 }

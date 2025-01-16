@@ -10,6 +10,9 @@ import { Slot } from "../entities/Slot";
 import UserModel from "../../infrastructure/database/models/UserModel";
 import { Wallet } from "../entities/Wallet";
 import { BalanceCheckResult } from "../../shared/utils/interfaces";
+import { ChatRoom } from "../entities/ChatRoom";
+import { StatusCode } from "../../shared/enums/StatusCode";
+import { Message } from "../entities/Message";
 AuthService
 
 
@@ -379,6 +382,26 @@ export class UserUseCase implements IUserUseCase {
             return isBooked;
         } catch (error: any) {
             throw new ErrorResponse(error.message || "Error checking balance.", error.status || 500);
+        }
+    }
+
+    async createChatRoom(userId: string, companyId: string): Promise<ChatRoom> {
+        try {
+            if (!userId || !companyId) throw new ErrorResponse("UserId or CompanyId were not getting !!", StatusCode.BAD_REQUEST);
+            const chatRoom = await this.userRepository.createChatRoom(userId, companyId)
+            return chatRoom
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message || "Error checking balance.", StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async sendMessage(userId: string, companyId: string, data: object): Promise<Message> {
+        try {
+            if (!userId || !companyId || !data) throw new ErrorResponse("UserId or CompanyId or data were not getting While try to Send Message !!", StatusCode.BAD_REQUEST);
+            const message = await this.userRepository.sendMessage(userId, companyId, data)
+            return message
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message || "Error Sending Message to Company !!.", StatusCode.INTERNAL_SERVER_ERROR);
         }
     }
 
