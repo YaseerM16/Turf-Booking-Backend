@@ -1,3 +1,5 @@
+import { ChatRoom } from "../../../../domain/entities/ChatRoom";
+import { Message } from "../../../../domain/entities/Message";
 import { Slot } from "../../../../domain/entities/Slot";
 import { Turf } from "../../../../domain/entities/Turf";
 import { User } from "../../../../domain/entities/User";
@@ -36,4 +38,8 @@ export interface IUserUseCase {
     bookTheSlots(fullDetails: any): Promise<object>;
     cancelTheSlot(userId: string, slotId: string, bookingId: string): Promise<object>;
     bookSlotByWallet(userId: string, bookingDets: object): Promise<object>;
+
+    /// <- Chat -> ///
+    createChatRoom(userId: string, companyId: string): Promise<ChatRoom>;
+    sendMessage(userId: string, companyId: string, data: object): Promise<Message>
 }

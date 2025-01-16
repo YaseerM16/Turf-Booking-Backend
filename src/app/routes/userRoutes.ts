@@ -80,4 +80,10 @@ router.get("/wallet/check-balance/:userId", (req: Request, res: Response) => use
 router.post("/book-slots-by-wallet/:userId", (req: Request, res: Response) => userController.bookSlotsByWallet(req, res))
 
 
+
+////    Chat    ////
+
+router.post("/create-chat-room/:userId/:companyId", (req: Request, res: Response) => userController.createChatRoom(req, res))
+router.post("/send-message/:userId/:companyId", (req: Request, res: Response) => userController.onSendMessage(req, res))
+
 export { router as userRoute }
