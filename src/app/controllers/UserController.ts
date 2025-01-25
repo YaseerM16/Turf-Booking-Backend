@@ -486,4 +486,23 @@ export class UserController {
         }
     }
 
+    async getMessages(req: Request, res: Response) {
+        try {
+            const { roomId } = req.params
+            const messages = await this.userUseCase.getMessages(roomId)
+            sendResponse(res, true, "Messages Fetched Successfully ..!", StatusCode.SUCCESS, { messages })
+        } catch (error) {
+            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
+        }
+    }
+
+    async getChats(req: Request, res: Response) {
+        try {
+            const { userId } = req.params
+            const chats = await this.userUseCase.getChats(userId)
+            sendResponse(res, true, "Chats Fetched Successfully ..:)", StatusCode.SUCCESS, { chats })
+        } catch (error) {
+            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
+        }
+    }
 }

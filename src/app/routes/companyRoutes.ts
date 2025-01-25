@@ -7,11 +7,6 @@ import { MailService } from "../../infrastructure/services/EmailService";
 import { uploadMiddleware } from "../../infrastructure/multer/multerConfig";
 import Authenticator from "../../infrastructure/middleware/Authenticator";
 import AccessControl from "../../infrastructure/middleware/AccessControl";
-uploadMiddleware
-CompanyController
-CompanyRepository
-AccessControl
-
 const router: Router = express.Router()
 
 
@@ -71,6 +66,13 @@ router.patch("/:turfId/add-working-days", Authenticator.companyAuthenticator,
 router.get("/get-details-by-day/:turfId/:day", (req: Request, res: Response) => companyController.getDetailsOfDay(req, res))
 router.patch("/edit-day-details/:turfId", (req: Request, res: Response) => companyController.editWorkingDayDetails(req, res))
 
-router.get("/example-gen-slots/:turfId", (req: Request, res: Response) => companyController.genExampleOneDay(req, res))
+// router.get("/example-gen-slots/:turfId", (req: Request, res: Response) => companyController.genExampleOneDay(req, res))
+
+////////// CHAT ////////////////
+
+router.post("/create-chat-room/:companyId/:userId", (req: Request, res: Response) => companyController.createChatRoom(req, res))
+router.get("/get-chat-lists/:companyId", (req: Request, res: Response) => companyController.getChatLists(req, res))
+router.get("/get-chat-messages/:roomId", (req: Request, res: Response) => companyController.getChatMessages(req, res))
+router.post("/send-message/:companyId/:userId", (req: Request, res: Response) => companyController.onSendMessage(req, res))
 
 export { router as companyRoute }

@@ -2,6 +2,8 @@ import { promises } from "dns";
 import { Company } from "../entities/Company";
 import { Slot } from "../entities/Slot";
 import { Turf } from "../entities/Turf";
+import { ChatRoom } from "../entities/ChatRoom";
+import { Message } from "../entities/Message";
 
 export interface ICompanyRepository {
     findByEmail(email: string): Promise<Company | null>;
@@ -26,4 +28,11 @@ export interface ICompanyRepository {
     addWorkingDays(turfId: string, payload: any): Promise<object>;
     getDayDetails(turfId: string, day: string): Promise<object>;
     editDayDetails(turfId: string, updates: object): Promise<object>;
+
+    ////// Chat //////
+    createChatRoom(companyId: string, userId: string): Promise<ChatRoom>
+    getChatRooms(companyId: string): Promise<ChatRoom[] | null>
+    getChatMessages(roomId: string): Promise<{ messages: Message[], chat: ChatRoom } | null>
+    onSendMessage(companyId: string, userId: string, data: object): Promise<Message>
+
 }

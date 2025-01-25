@@ -7,6 +7,8 @@ import { IAuthService } from "../interfaces/services/IAuthService";
 import { config } from "../../config/config";
 import { Company } from "../../domain/entities/Company";
 import TurfService from "../../infrastructure/services/TurfService";
+import { sendResponse } from "../../shared/utils/responseUtil";
+import { StatusCode } from "../../shared/enums/StatusCode";
 
 
 export class CompanyController {
@@ -120,13 +122,14 @@ export class CompanyController {
                 sameSite: "lax",
             });
 
-            res
-                .status(200)
-                .json({ success: true, message: "Logged In successfully", company: companyData, loggedIn: true });
-
+            // res
+            //     .status(200)
+            //     .json({ success: true, message: "Logged In successfully", company: companyData, loggedIn: true });
+            sendResponse(res, true, "Logged In successfully", StatusCode.SUCCESS, { company: companyData, loggedIn: true })
 
         } catch (error: any) {
-            res.status(401).json({ message: (error as Error).message });
+            sendResponse(res, false, (error as Error).message, StatusCode.UNAUTHORIZED)
+            // res.status(401).json({ message: (error as Error).message });
         }
     }
 
@@ -380,6 +383,46 @@ export class CompanyController {
             res.status(200).json({ success: true, isDayUpdated, message: "Updated Working day successfully :" });
         } catch (error: any) {
             res.status(500).json({ message: error?.message });
+        }
+    }
+
+    async createChatRoom(req: Request, res: Response) {
+        try {
+            const { companyId, userId } = req.params
+            const room = await this.companyUseCase.createChatRoom(companyId, userId)
+            sendResponse(res, true, "Successfully created or got the chat room ..!", StatusCode.SUCCESS, { room })
+        } catch (error) {
+            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
+        }
+    }
+
+    async getChatLists(req: Request, res: Response) {
+        try {
+            const { companyId } = req.params
+            const chatRooms = await this.companyUseCase.getChatLists(companyId)
+            sendResponse(res, true, "Chat Lists Got Successfully ..!", StatusCode.SUCCESS, { rooms: chatRooms })
+        } catch (error) {
+            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
+        }
+    }
+
+    async getChatMessages(req: Request, res: Response) {
+        try {
+            const { roomId } = req.params
+            const messages = await this.companyUseCase.getChatMessages(roomId)
+            sendResponse(res, true, "Messages Fetched Successfully ..!", StatusCode.SUCCESS, { messages })
+        } catch (error) {
+            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
+        }
+    }
+
+    async onSendMessage(req: Request, res: Response) {
+        try {
+            const { companyId, userId } = req.params
+            const message = await this.companyUseCase.onSendMessage(companyId, userId, req.body)
+            sendResponse(res, true, "Message Sent Successfully to the User ..!", StatusCode.SUCCESS, { message })
+        } catch (error) {
+            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
         }
     }
 

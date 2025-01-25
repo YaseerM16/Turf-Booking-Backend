@@ -1,4 +1,6 @@
+import { ChatRoom } from "../../../../domain/entities/ChatRoom";
 import { Company } from "../../../../domain/entities/Company";
+import { Message } from "../../../../domain/entities/Message";
 import { Slot } from "../../../../domain/entities/Slot";
 import { Turf } from "../../../../domain/entities/Turf";
 
@@ -31,6 +33,12 @@ export interface ICompanyUseCase {
     getDayDetails(turfId: string, day: string): Promise<object>;
     editDayDetails(turfId: string, updates: object): Promise<object>;
 
+
+    ////// Chat //////
+    createChatRoom(companyId: string, userId: string): Promise<ChatRoom>
+    getChatLists(companyId: string): Promise<ChatRoom[] | null>;
+    getChatMessages(roomId: string): Promise<{ messages: Message[], chat: ChatRoom } | null>;
+    onSendMessage(companyId: string, userId: string, data: object): Promise<Message>
     // updateProfileImage(_id: string, url: string): Promise<User | null>
     // userLogin(email: string, password: string): Promise<User | null>
     // updateProfileDetails(_id: string, data: string): Promise<User | null>
