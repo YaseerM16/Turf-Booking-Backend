@@ -42,4 +42,6 @@ export interface IUserUseCase {
     /// <- Chat -> ///
     createChatRoom(userId: string, companyId: string): Promise<ChatRoom>;
     sendMessage(userId: string, companyId: string, data: object): Promise<Message>
+    getMessages(roomId: string): Promise<{ messages: Message[], chat: ChatRoom } | null>
+    getChats(userId: string): Promise<ChatRoom[] | null>;
 }

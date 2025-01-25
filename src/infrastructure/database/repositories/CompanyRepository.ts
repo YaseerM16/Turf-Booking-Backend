@@ -9,6 +9,11 @@ import TurfService from "../../services/TurfService";
 import CompanyModel from "../models/CompanyModel";
 import { SlotModel } from "../models/SlotModel";
 import TurfModel from "../models/TurfModel";
+import { ChatRoom as ChatRoomEntity } from "../../../domain/entities/ChatRoom";
+import { StatusCode } from "../../../shared/enums/StatusCode";
+import ChatRoom from "../models/ChatRoomModel";
+import { Message } from "../../../domain/entities/Message";
+import MessageModel from "../models/MessageModel";
 
 
 export class CompanyRepository implements ICompanyRepository {
@@ -422,6 +427,79 @@ export class CompanyRepository implements ICompanyRepository {
         }
     }
 
+    async createChatRoom(companyId: string, userId: string): Promise<ChatRoomEntity> {
+        try {
+            if (!companyId || !userId) {
+                throw new ErrorResponse("UserID or CompanyID is not provided.", StatusCode.BAD_REQUEST);
+            }
+            const existingRoom = await ChatRoom.findOne({ userId, companyId });
+            if (existingRoom) {
+                return existingRoom as unknown as ChatRoomEntity
+            }
+            const newRoom = new ChatRoom({ userId, companyId });
+            const savedRoom = await newRoom.save();
+            return savedRoom as unknown as ChatRoomEntity
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status || StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async getChatRooms(companyId: string): Promise<ChatRoomEntity[] | null> {
+        try {
+            if (!companyId) {
+                throw new ErrorResponse("CompanyID is not provided.", StatusCode.BAD_REQUEST);
+            }
+
+            const chatRooms = await ChatRoom.find({ companyId })
+                .populate({
+                    path: 'userId',
+                    select: 'name email phone profilePicture', // Specify the fields to include (or exclude)
+                })
+
+            return chatRooms as unknown as ChatRoomEntity[]
+
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status || StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async getChatMessages(roomId: string): Promise<{ messages: Message[], chat: ChatRoomEntity } | null> {
+        try {
+            if (!roomId) {
+                throw new ErrorResponse("RoomId is not provided While Trying to Get a Messages ..!", StatusCode.BAD_REQUEST);
+            }
+
+            await ChatRoom.updateOne({ _id: roomId }, { $set: { isReadCc: 0 } })
+            await MessageModel.updateMany({ roomId }, { $set: { isRead: true } })
+            const messages = await MessageModel.find({ roomId })
+            const updatedChatRoom = await ChatRoom.findById(roomId).populate({
+                path: 'userId',
+                select: 'name email phone profilePicture', // Specify the fields to include (or exclude)
+            })
+                .exec();
+            return { messages: messages as unknown as Message[], chat: updatedChatRoom as unknown as ChatRoomEntity }
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status || StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async onSendMessage(companyId: string, userId: string, data: { roomId: string, message: string }): Promise<Message> {
+        try {
+            if (!companyId || !userId || !data) {
+                throw new ErrorResponse("UserID or CompanyID or data is not provided.", StatusCode.BAD_REQUEST);
+            }
+            const { roomId, message } = data
+
+            const newMessage = new MessageModel({ senderId: companyId, receiverId: userId, roomId, content: message })
+            await newMessage.save()
+
+            await ChatRoom.findByIdAndUpdate(roomId, { lastMessage: message, createdAt: new Date().toISOString() }, { new: true })
+
+            return newMessage as unknown as Message
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status || StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
 
 }
 

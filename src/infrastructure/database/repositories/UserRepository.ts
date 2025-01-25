@@ -559,7 +559,7 @@ export class MongoUserRepository implements IUserRepository {
         }
     }
 
-    async sendMessage(userId: string, companyId: string, data: any): Promise<Message> {
+    async sendMessage(userId: string, companyId: string, data: { roomId: string, message: string }): Promise<Message> {
         try {
             if (!userId || !companyId || !data) {
                 throw new ErrorResponse("UserID or CompanyID or data is not provided While Trying to Send a Message ..!", StatusCode.BAD_REQUEST);
@@ -573,6 +573,44 @@ export class MongoUserRepository implements IUserRepository {
             await ChatRoom.findByIdAndUpdate(roomId, { lastMessage: message, createdAt: new Date().toISOString() }, { new: true })
 
             return newMessage as unknown as Message
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message, StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async getMessages(roomId: string): Promise<{ messages: Message[], chat: ChatRoomEntity } | null> {
+        try {
+            if (!roomId) {
+                throw new ErrorResponse("RoomId is not provided While Trying to Get a Messages ..!", StatusCode.BAD_REQUEST);
+            }
+            await ChatRoom.updateOne({ _id: roomId }, { $set: { isReadUc: 0 } })
+            await MessageModel.updateMany({ roomId }, { $set: { isRead: true } })
+            const messages = await MessageModel.find({ roomId })
+            const updatedChatRoom = await ChatRoom.findById(roomId).populate({
+                path: 'companyId',
+                select: 'companyname companyemail phone profilePicture', // Specify the fields to include (or exclude)
+            })
+                .exec();
+
+            return { messages: messages as unknown as Message[], chat: updatedChatRoom as unknown as ChatRoomEntity }
+
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message, StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async getChats(userId: string): Promise<ChatRoomEntity[] | null> {
+        try {
+            if (!userId) throw new ErrorResponse("UserId is not provided While Trying to Get the Chats ..!", StatusCode.BAD_REQUEST);
+            const chatRooms = await ChatRoom.find({ userId })
+                .sort({ createdAt: -1 }) // Sort by `createdAt` in descending order
+                .populate({
+                    path: 'companyId',
+                    select: 'companyname companyemail phone profilePicture', // Specify the fields to include (or exclude)
+                })
+                .exec();
+
+            return chatRooms as unknown as ChatRoomEntity[]
         } catch (error) {
             throw new ErrorResponse((error as Error).message, StatusCode.INTERNAL_SERVER_ERROR);
         }

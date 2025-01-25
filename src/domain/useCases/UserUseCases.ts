@@ -405,4 +405,24 @@ export class UserUseCase implements IUserUseCase {
         }
     }
 
+    async getMessages(roomId: string): Promise<{ messages: Message[], chat: ChatRoom } | null> {
+        try {
+            if (!roomId) throw new ErrorResponse("roomId data were not getting While try to Get Messages !!", StatusCode.BAD_REQUEST);
+            const messages = await this.userRepository.getMessages(roomId)
+            return messages
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message || "Error While Getting the Messages ...!!", StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async getChats(userId: string): Promise<ChatRoom[] | null> {
+        try {
+            if (!userId) throw new ErrorResponse("userId is not getting While try to Get Chats.. !!", StatusCode.BAD_REQUEST);
+            const chats = await this.userRepository.getChats(userId)
+            return chats
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message || "Error While Getting the Messages ...!!", StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 }

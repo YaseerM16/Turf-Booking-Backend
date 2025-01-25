@@ -19,7 +19,7 @@ const chatRoomSchema = new mongoose.Schema({
         type: Number,
         default: 0,
     },
-    isReadDc: {
+    isReadCc: {
         type: Number,
         default: 0,
     },

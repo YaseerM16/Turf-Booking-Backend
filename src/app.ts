@@ -6,16 +6,21 @@ import cors from "cors"
 import cookieParser from "cookie-parser";
 import { companyRoute } from "./app/routes/companyRoutes"
 import { adminRoute } from "./app/routes/adminRoutes"
-
+import { Server } from "socket.io"
+import http from "http"
+import { socketHandler } from "./infrastructure/services/SocketService"
 
 mongoose
 userRoute
 dotenv.config()
 
+
 mongoose.connect(process.env.MONGO_URL || "")
     .then(() => console.log("Mongo DB Connected :)"))
     .catch(err => console.log("Error While DB Connection ;", err))
 const app = express()
+const server = http.createServer(app)
+
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 app.use(cookieParser());
@@ -32,10 +37,15 @@ app.use((req, res, next) => {
 
 app.use(
     cors({
-        origin: ['http://localhost:3000', 'http://localhost:5000', "http://127.0.0.1:3000"],
+        origin: ['http://localhost:3000', "http://127.0.0.1:3000"],
         credentials: true,
     })
 );
+
+
+
+
+
 app.use("/api/v1/user", userRoute)
 app.use("/api/v1/company", companyRoute)
 app.use("/api/v1/admin", adminRoute)

@@ -85,5 +85,7 @@ router.post("/book-slots-by-wallet/:userId", (req: Request, res: Response) => us
 
 router.post("/create-chat-room/:userId/:companyId", (req: Request, res: Response) => userController.createChatRoom(req, res))
 router.post("/send-message/:userId/:companyId", (req: Request, res: Response) => userController.onSendMessage(req, res))
+router.get("/get-messages/:roomId", (req: Request, res: Response) => userController.getMessages(req, res))
 
+router.get("/get-chats/:userId", (req: Request, res: Response) => userController.getChats(req, res))
 export { router as userRoute }

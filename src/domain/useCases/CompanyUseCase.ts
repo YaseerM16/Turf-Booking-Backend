@@ -6,6 +6,10 @@ import { ErrorResponse } from "../../shared/utils/errors";
 import { comparePassword, generateHashPassword } from "../../infrastructure/services/PasswordService";
 import { Turf } from "../entities/Turf";
 import { Slot } from "../entities/Slot";
+import { ChatRoom as ChatRoomEntity } from "../entities/ChatRoom";
+import { StatusCode } from "../../shared/enums/StatusCode";
+import { Message } from "../entities/Message";
+
 
 
 export class CompanyUseCase implements ICompanyUseCase {
@@ -95,7 +99,7 @@ export class CompanyUseCase implements ICompanyUseCase {
             let company = await this.companyRepository.findByEmail(email);
 
             if (!company || !company.password) {
-                throw new ErrorResponse("user dosen't exist", 404);
+                throw new ErrorResponse("Company doesn't exist try Register company..!", 404);
             }
             const passwordMatch = await comparePassword(password, company.password);
 
@@ -377,6 +381,47 @@ export class CompanyUseCase implements ICompanyUseCase {
 
             return isUpdated
 
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
+    async createChatRoom(companyId: string, userId: string): Promise<ChatRoomEntity> {
+        try {
+            if (!companyId || !userId) throw new ErrorResponse("CompanyId or UserId is not Getting while Creating chat Room ..!:", StatusCode.INTERNAL_SERVER_ERROR);
+            const room = await this.companyRepository.createChatRoom(companyId, userId)
+            return room
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+
+        }
+    }
+
+    async getChatLists(companyId: string): Promise<ChatRoomEntity[] | null> {
+        try {
+            if (!companyId) throw new ErrorResponse("CompanyId is not Getting while Getting chat Rooms ..!:", StatusCode.INTERNAL_SERVER_ERROR);
+            const chatRooms = await this.companyRepository.getChatRooms(companyId)
+            return chatRooms
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
+    async getChatMessages(roomId: string): Promise<{ messages: Message[], chat: ChatRoomEntity } | null> {
+        try {
+            if (!roomId) throw new ErrorResponse("roomID is not Getting while Getting Room Chats ..!:", StatusCode.INTERNAL_SERVER_ERROR);
+            const messages = await this.companyRepository.getChatMessages(roomId)
+            return messages
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
+    async onSendMessage(companyId: string, userId: string, data: object): Promise<Message> {
+        try {
+            if (!companyId || !userId || !data) throw new ErrorResponse("CompanyId or UserId or data is not Getting while Try to Send Message ..!:", StatusCode.INTERNAL_SERVER_ERROR);
+            const message = await this.companyRepository.onSendMessage(companyId, userId, data)
+            return message
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
         }
