@@ -35,4 +35,9 @@ export interface ICompanyRepository {
     getChatMessages(roomId: string): Promise<{ messages: Message[], chat: ChatRoom } | null>
     onSendMessage(companyId: string, userId: string, data: object): Promise<Message>
 
+    /// <- Notificaitons -> ///
+    getNotifications(userId: string): Promise<Notification[] | null>;
+    updateNotifications(data: any): Promise<Notification[] | null>
+    deleteNotifications(roomId: string, userId: string): Promise<object>;
+
 }

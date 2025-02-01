@@ -22,6 +22,12 @@ const messageSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    deletedForSender: { type: Boolean, default: false },
+    deletedForReceiver: { type: Boolean, default: false },
+    isImage: {
+        type: Boolean,
+        default: false,
+    },
 },
     {
         timestamps: true

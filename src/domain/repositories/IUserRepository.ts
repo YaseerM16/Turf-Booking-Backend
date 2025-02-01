@@ -37,5 +37,12 @@ export interface IUserRepository {
     sendMessage(userId: string, companyId: string, data: object): Promise<Message>
     getMessages(roomId: string): Promise<{ messages: Message[], chat: ChatRoom } | null>
     getChats(userId: string): Promise<ChatRoom[] | null>
+    messageDeleteEveryOne(messageId: string): Promise<Message | null>
+    messageDeleteForMe(messageId: string): Promise<Message | null>
+
+    /// <- Notificaitons -> ///
+    getNotifications(userId: string): Promise<Notification[] | null>;
+    updateNotifications(data: any): Promise<Notification[] | null>
+    deleteNotifications(roomId: string, userId: string): Promise<object>;
 
 }

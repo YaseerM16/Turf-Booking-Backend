@@ -428,4 +428,37 @@ export class CompanyUseCase implements ICompanyUseCase {
     }
 
 
+    //// Notificaions 
+
+    async getNotifications(companyId: string): Promise<Notification[] | null> {
+        try {
+            if (!companyId) throw new ErrorResponse("userId is not getting While try to Get Notifications.. !!", StatusCode.BAD_REQUEST);
+            const notifications = await this.companyRepository.getNotifications(companyId)
+            return notifications as unknown as Notification[]
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message || "Error While Getting the Notifications ...!!", StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async updateNotifications(data: object): Promise<Notification[] | null> {
+        try {
+            if (!data) throw new ErrorResponse("data for notification update is not getting While try to Update Notifications.. !!", StatusCode.BAD_REQUEST);
+            const updatedNotifications = await this.companyRepository.updateNotifications(data)
+            return updatedNotifications as unknown as Notification[]
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message || "Error While updating the Notifications ...!!", StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async deleteNotifications(roomId: string, companyId: string): Promise<object> {
+        try {
+            if (!roomId || !companyId) throw new ErrorResponse("roomId or userId for notification delete is not getting While try to delete Notifications.. !!", StatusCode.BAD_REQUEST);
+            const deleteNotification = await this.companyRepository.deleteNotifications(roomId, companyId)
+            return deleteNotification
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message || "Error While Deleting the Notifications ...!!", StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
 }

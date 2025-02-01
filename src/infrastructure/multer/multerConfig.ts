@@ -4,6 +4,8 @@ import path from 'path';
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3"; // Importing from AWS SDK v3
 import { config } from "../../config/config";
 import multerS3 from "multer-s3"
+import { v4 as uuidv4 } from "uuid";
+
 import fs from "fs"
 
 const uploadDir = path.join(__dirname, 'uploads');
@@ -50,6 +52,27 @@ const s3 = new S3Client({
         secretAccessKey, // Non-null assertion
     }
 });
+
+export async function uploadToS3(buffer: Buffer, filename: string, mimetype: string) {
+    const bucketName = config.S3_BUCKET_NAME!
+    if (!bucketName) {
+        throw new Error("AWS_BUCKET_NAME is not defined");
+    }
+
+    const key = `uploads/${uuidv4()}-${filename}`; // Unique filename
+
+    const uploadParams = {
+        Bucket: bucketName,
+        Key: key,
+        Body: buffer,
+        ContentType: mimetype,
+    };
+
+    await s3.send(new PutObjectCommand(uploadParams));
+
+    return `https://${bucketName}.s3.${region}.amazonaws.com/${key}`;
+}
+
 
 const S3storage = multerS3({
     s3: s3,
