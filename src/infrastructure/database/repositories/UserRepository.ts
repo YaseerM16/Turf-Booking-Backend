@@ -18,6 +18,7 @@ import ChatRoom from "../models/ChatRoomModel";
 import { StatusCode } from "../../../shared/enums/StatusCode";
 import { Message } from "../../../domain/entities/Message";
 import MessageModel from "../models/MessageModel";
+import NotificationModel from "../models/NotificationModel";
 
 
 export class MongoUserRepository implements IUserRepository {
@@ -586,6 +587,8 @@ export class MongoUserRepository implements IUserRepository {
             await ChatRoom.updateOne({ _id: roomId }, { $set: { isReadUc: 0 } })
             await MessageModel.updateMany({ roomId }, { $set: { isRead: true } })
             const messages = await MessageModel.find({ roomId })
+                .exec();
+
             const updatedChatRoom = await ChatRoom.findById(roomId).populate({
                 path: 'companyId',
                 select: 'companyname companyemail phone profilePicture', // Specify the fields to include (or exclude)
@@ -612,6 +615,146 @@ export class MongoUserRepository implements IUserRepository {
 
             return chatRooms as unknown as ChatRoomEntity[]
         } catch (error) {
+            throw new ErrorResponse((error as Error).message, StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async getNotifications(userId: string): Promise<Notification[] | null> {
+        try {
+            if (!userId) throw new ErrorResponse("UserId is not provided While Trying to Get the Notifications ..!", StatusCode.BAD_REQUEST);
+            const notifications = await NotificationModel.find({ userId }).sort({ updatedAt: -1 });
+            return notifications as unknown as Notification[]
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message, StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async updateNotifications(data: any): Promise<Notification[] | null> {
+        try {
+            if (!data) throw new ErrorResponse("data for notification update is not getting While try to Update Notifications.. !!", StatusCode.BAD_REQUEST);
+            const { userId, roomId, companyId, lastMessage, unreadCount, user, company, updatedAt, companyname } = data
+            let notification = await NotificationModel.findOne({ userId, roomId });
+
+            if (notification) {
+                // Update existing notification
+                notification.userLastMessage = lastMessage;
+                notification.unreadUserCount = unreadCount;
+                notification.updatedAt = updatedAt;
+            } else {
+                // Create a new notification
+                notification = new NotificationModel({
+                    userId,
+                    companyname,
+                    roomId,
+                    companyId,
+                    lastMessage,
+                    unreadCount,
+                    updatedAt,
+                    user,
+                    company,
+                });
+            }
+
+            await notification.save();
+            const notifications = await NotificationModel.find({ userId }).sort({ updatedAt: -1 });
+
+            return notifications as unknown as Notification[]
+
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message, StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async deleteNotifications(roomId: string, userId: string): Promise<object> {
+        try {
+            const notificationExist = await NotificationModel.findOne({ roomId, userId })
+
+            if (!notificationExist) {
+                return { success: true, message: "No notification found." };
+            }
+
+            await NotificationModel.updateOne(
+                { roomId, userId },
+                {
+                    $set: {
+                        unreadUserCount: 0,
+                        userLastMessage: null
+                    }
+                }
+            );
+
+            return { success: true, message: "Notification deleted successfully." };
+
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message, StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+    async messageDeleteEveryOne(messageId: string): Promise<Message> {
+        try {
+            const findMessage = await MessageModel.findByIdAndUpdate(
+                messageId,
+                { deletedForSender: true },
+                { new: true } // Returns the updated document
+            ) as unknown as Message;
+
+            if (!findMessage) {
+                throw new Error("Message not found");
+            }
+
+            const chatRoom = await ChatRoom.findById(findMessage.roomId);
+
+
+            if (chatRoom) {
+                const remainingMessages = await MessageModel.find({ roomId: chatRoom._id });
+                const validMessages = remainingMessages.filter(msg => !msg.deletedForSender && !msg.deletedForReceiver);
+
+                if (validMessages.length > 0) {
+                    const lastMessage = validMessages[validMessages.length - 1];
+                    chatRoom.lastMessage = lastMessage.content
+                } else {
+                    chatRoom.lastMessage = '';
+                }
+
+                await chatRoom.save();
+            }
+            return findMessage
+        } catch (error: unknown) {
+            throw new ErrorResponse((error as Error).message, StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async messageDeleteForMe(messageId: string): Promise<Message> {
+        try {
+            const findMessage = await MessageModel.findByIdAndUpdate(
+                messageId,
+                { deletedForReceiver: true },
+                { new: true } // Returns the updated document
+            ) as unknown as Message
+
+            if (!findMessage) {
+                throw new Error("Message not found");
+            }
+
+            const chatRoom = await ChatRoom.findById(findMessage.roomId);
+
+
+            if (chatRoom) {
+                const remainingMessages = await MessageModel.find({ roomId: chatRoom._id });
+                const validMessages = remainingMessages.filter(msg => !msg.deletedForSender);
+
+                if (validMessages.length > 0) {
+                    const lastMessage = validMessages[validMessages.length - 1];
+                    chatRoom.lastMessage = lastMessage.content
+                } else {
+                    chatRoom.lastMessage = '';  // No valid messages left
+                }
+
+                await chatRoom.save();
+            }
+            return findMessage
+        } catch (error: unknown) {
             throw new ErrorResponse((error as Error).message, StatusCode.INTERNAL_SERVER_ERROR);
         }
     }

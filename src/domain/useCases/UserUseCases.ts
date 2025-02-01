@@ -13,6 +13,7 @@ import { BalanceCheckResult } from "../../shared/utils/interfaces";
 import { ChatRoom } from "../entities/ChatRoom";
 import { StatusCode } from "../../shared/enums/StatusCode";
 import { Message } from "../entities/Message";
+import { Notification } from "../entities/Notification";
 AuthService
 
 
@@ -424,5 +425,55 @@ export class UserUseCase implements IUserUseCase {
             throw new ErrorResponse((error as Error).message || "Error While Getting the Messages ...!!", StatusCode.INTERNAL_SERVER_ERROR);
         }
     }
+
+    async getNotifications(userId: string): Promise<Notification[] | null> {
+        try {
+            if (!userId) throw new ErrorResponse("userId is not getting While try to Get Notifications.. !!", StatusCode.BAD_REQUEST);
+            const notifications = await this.userRepository.getNotifications(userId)
+            return notifications as unknown as Notification[]
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message || "Error While Getting the Notifications ...!!", StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async updateNotifications(data: object): Promise<Notification[] | null> {
+        try {
+            if (!data) throw new ErrorResponse("data for notification update is not getting While try to Update Notifications.. !!", StatusCode.BAD_REQUEST);
+            const updatedNotifications = await this.userRepository.updateNotifications(data)
+            return updatedNotifications as unknown as Notification[]
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message || "Error While updating the Notifications ...!!", StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async deleteNotifications(roomId: string, userId: string): Promise<object> {
+        try {
+            if (!roomId || !userId) throw new ErrorResponse("roomId or userId for notification delete is not getting While try to delete Notifications.. !!", StatusCode.BAD_REQUEST);
+            const deleteNotification = await this.userRepository.deleteNotifications(roomId, userId)
+            return deleteNotification
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message || "Error While Deleting the Notifications ...!!", StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async deleteForEveryOne(messageId: string): Promise<Message | null> {
+        try {
+            if (!messageId) throw new ErrorResponse("message Id is not getting while for delete for Everyone.. !!", StatusCode.BAD_REQUEST);
+            const updatedMessage = await this.userRepository.messageDeleteEveryOne(messageId)
+            return updatedMessage
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message || "Error While Deleting the Message for everyone ...!!", StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+    async deleteForMe(messageId: string): Promise<Message | null> {
+        try {
+            if (!messageId) throw new ErrorResponse("message Id is not getting while for delete for Everyone.. !!", StatusCode.BAD_REQUEST);
+            const updatedMessage = await this.userRepository.messageDeleteForMe(messageId)
+            return updatedMessage
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message || "Error While Deleting the Message for everyone ...!!", StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 
 }

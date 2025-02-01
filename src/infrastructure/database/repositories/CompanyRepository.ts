@@ -14,6 +14,7 @@ import { StatusCode } from "../../../shared/enums/StatusCode";
 import ChatRoom from "../models/ChatRoomModel";
 import { Message } from "../../../domain/entities/Message";
 import MessageModel from "../models/MessageModel";
+import NotificationModel from "../models/NotificationModel";
 
 
 export class CompanyRepository implements ICompanyRepository {
@@ -498,6 +499,77 @@ export class CompanyRepository implements ICompanyRepository {
             return newMessage as unknown as Message
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status || StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async getNotifications(companyId: string): Promise<Notification[] | null> {
+        try {
+            if (!companyId) throw new ErrorResponse("UserId is not provided While Trying to Get the Notifications ..!", StatusCode.BAD_REQUEST);
+            const notifications = await NotificationModel.find({ companyId }).sort({ updatedAt: -1 });
+            return notifications as unknown as Notification[]
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message, StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async updateNotifications(data: any): Promise<Notification[] | null> {
+        try {
+            if (!data) throw new ErrorResponse("data for notification update is not getting While try to Update Notifications.. !!", StatusCode.BAD_REQUEST);
+            const { userId, roomId, companyId, lastMessage, unreadCount, user, company, updatedAt, companyname } = data
+            let notification = await NotificationModel.findOne({ companyId, roomId });
+
+            if (notification) {
+                // Update existing notification
+                notification.companyLastMessage = lastMessage;
+                notification.unreadCompanyCount = unreadCount;
+                notification.updatedAt = updatedAt;
+            } else {
+                // Create a new notification
+                notification = new NotificationModel({
+                    userId,
+                    companyname,
+                    roomId,
+                    companyId,
+                    lastMessage,
+                    unreadCount,
+                    updatedAt,
+                    user,
+                    company,
+                });
+            }
+
+            await notification.save();
+            const notifications = await NotificationModel.find({ companyId }).sort({ updatedAt: -1 });
+
+            return notifications as unknown as Notification[]
+
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message, StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async deleteNotifications(roomId: string, companyId: string): Promise<object> {
+        try {
+            const notificationExist = await NotificationModel.findOne({ roomId, companyId })
+
+            if (!notificationExist) {
+                return { success: true, message: "No notification found." };
+            }
+
+            await NotificationModel.updateOne(
+                { roomId, companyId },
+                {
+                    $set: {
+                        unreadCompanyCount: 0,
+                        companyLastMessage: null
+                    }
+                }
+            );
+
+            return { success: true, message: "Notification deleted successfully." };
+
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message, StatusCode.INTERNAL_SERVER_ERROR);
         }
     }
 

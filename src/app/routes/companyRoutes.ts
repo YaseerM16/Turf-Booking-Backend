@@ -75,4 +75,10 @@ router.get("/get-chat-lists/:companyId", (req: Request, res: Response) => compan
 router.get("/get-chat-messages/:roomId", (req: Request, res: Response) => companyController.getChatMessages(req, res))
 router.post("/send-message/:companyId/:userId", (req: Request, res: Response) => companyController.onSendMessage(req, res))
 
+
+////   Notification   ////
+router.get("/get-notifications/:companyId", (req: Request, res: Response) => companyController.getNotifications(req, res))
+router.post("/update-notifications", (req: Request, res: Response) => companyController.updateNotificaitons(req, res))
+router.delete("/delete-notification/:roomId/:companyId", (req: Request, res: Response) => companyController.deleteNotifications(req, res))
+
 export { router as companyRoute }

@@ -7,6 +7,8 @@ export class Message {
         public receiver: string,
         public senderId: ObjectId | string,
         public receiverId: ObjectId | string,
+        public deletedForSender: boolean,
+        public deletedForReceiver: boolean,
         public roomId: ObjectId | string,
         public content: string,
         public isRead: boolean = false,

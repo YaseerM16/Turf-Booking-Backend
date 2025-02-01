@@ -39,6 +39,11 @@ export interface ICompanyUseCase {
     getChatLists(companyId: string): Promise<ChatRoom[] | null>;
     getChatMessages(roomId: string): Promise<{ messages: Message[], chat: ChatRoom } | null>;
     onSendMessage(companyId: string, userId: string, data: object): Promise<Message>
+
+    /// <- Notificaitons -> ///
+    getNotifications(userId: string): Promise<Notification[] | null>;
+    updateNotifications(data: object): Promise<Notification[] | null>;
+    deleteNotifications(roomId: string, userId: string): Promise<object>
     // updateProfileImage(_id: string, url: string): Promise<User | null>
     // userLogin(email: string, password: string): Promise<User | null>
     // updateProfileDetails(_id: string, data: string): Promise<User | null>

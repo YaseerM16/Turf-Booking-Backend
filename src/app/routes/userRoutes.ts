@@ -7,23 +7,32 @@ import { AuthService } from "../../infrastructure/services/AuthService";
 import { uploadMiddleware } from "../../infrastructure/multer/multerConfig";
 import Authenticator from "../../infrastructure/middleware/Authenticator";
 import AccessControl from "../../infrastructure/middleware/AccessControl";
+import { validateSignup } from "../../infrastructure/middleware/validation/Signup.Validator";
+import { validateLogin } from "../../infrastructure/middleware/validation/Login.Validator";
+
+import { IUserRepository } from "../../domain/repositories/IUserRepository"
+import { IEmailService } from "../../app/interfaces/services/IEmailService";
+import { IUserUseCase } from "../../app/interfaces/usecases/user/IUserUseCase";
+import { IAuthService } from "../../app/interfaces/services/IAuthService";
+
 
 const router: Router = express.Router()
 
-const userRepository = new MongoUserRepository()
-const emailService = new MailService(userRepository)
-const userUseCase = new UserUseCase(userRepository, emailService)
-const authService = new AuthService()
+const userRepository: IUserRepository = new MongoUserRepository()
+const emailService: IEmailService = new MailService(userRepository)
+const userUseCase: IUserUseCase = new UserUseCase(userRepository, emailService)
+const authService: IAuthService = new AuthService()
 const userController = new AppUserController(userUseCase, authService)
 
 
 ///  Authentication   ///
-router.post("/auth/signup", (req: Request, res: Response) => userController.registersUser(req, res))
+router.post("/auth/signup", validateSignup, (req: Request, res: Response) => userController.registersUser(req, res))
 router.get("/auth/verifyemail", (req: Request, res: Response) => userController.verifyAccount(req, res))
 router.post("/auth/forgot-password", (req: Request, res: Response) => userController.forgotPassword(req, res))
 router.post("/auth/update-password", (req: Request, res: Response) => userController.passwordUpdate(req, res))
 router.get("/logout", (req: Request, res: Response) => userController.logout(req, res))
 router.post("/auth/login",
+    validateLogin,
     (req: Request, res: Response) => userController.userLogin(req, res)
 )
 router.post("/auth/google-sign-up", (req: Request, res: Response) => userController.googleSingUp(req, res))
@@ -58,16 +67,23 @@ router.get("/get-slots-by-day", (req: Request, res: Response) => userController.
 
 
 ///   Booking Slots   ///
-router.post("/payment/hashing", Authenticator.userAuthenticator,
-    AccessControl.isUserBlocked, (req: Request, res: Response) => userController.getPaymentHash(req, res))
-router.post("/payment/save-booking", Authenticator.userAuthenticator,
-    AccessControl.isUserBlocked, (req: Request, res: Response) => userController.saveBooking(req, res))
-router.get("/my-booking", Authenticator.userAuthenticator,
-    AccessControl.isUserBlocked, (req: Request, res: Response) => userController.getBookings(req, res))
-router.delete("/booking/cancel/:userId/:slotId/:bookingId", (req: Request, res: Response) => userController.cancelSlot(req, res))
+router.post("/payment/hashing",
+    Authenticator.userAuthenticator,
+    AccessControl.isUserBlocked,
+    (req: Request, res: Response) => userController.getPaymentHash(req, res))
+router.post("/payment/save-booking",
+    Authenticator.userAuthenticator,
+    AccessControl.isUserBlocked,
+    (req: Request, res: Response) => userController.saveBooking(req, res))
+router.get("/my-booking",
+    Authenticator.userAuthenticator,
+    AccessControl.isUserBlocked,
+    (req: Request, res: Response) => userController.getBookings(req, res))
+router.delete("/booking/cancel/:userId/:slotId/:bookingId",
+    (req: Request, res: Response) => userController.cancelSlot(req, res))
 
 
-router.put("/gen-slots")
+// router.put("/gen-slots")
 
 
 
@@ -83,9 +99,45 @@ router.post("/book-slots-by-wallet/:userId", (req: Request, res: Response) => us
 
 ////    Chat    ////
 
-router.post("/create-chat-room/:userId/:companyId", (req: Request, res: Response) => userController.createChatRoom(req, res))
-router.post("/send-message/:userId/:companyId", (req: Request, res: Response) => userController.onSendMessage(req, res))
-router.get("/get-messages/:roomId", (req: Request, res: Response) => userController.getMessages(req, res))
+router.post("/create-chat-room/:userId/:companyId",
+    Authenticator.userAuthenticator,
+    AccessControl.isUserBlocked,
+    (req: Request, res: Response) => userController.createChatRoom(req, res))
+router.post("/send-message/:userId/:companyId",
+    Authenticator.userAuthenticator,
+    AccessControl.isUserBlocked,
+    (req: Request, res: Response) => userController.onSendMessage(req, res))
+router.get("/get-messages/:roomId",
+    Authenticator.userAuthenticator,
+    AccessControl.isUserBlocked,
+    (req: Request, res: Response) => userController.getMessages(req, res))
+router.get("/get-chats/:userId",
+    Authenticator.userAuthenticator,
+    AccessControl.isUserBlocked,
+    (req: Request, res: Response) => userController.getChats(req, res))
+router.patch("/delete-for-everyone/:messageId",
+    Authenticator.userAuthenticator,
+    AccessControl.isUserBlocked,
+    (req: Request, res: Response) => userController.messageDeleteForEveryOne(req, res))
+router.patch("/delete-for-me/:messageId",
+    Authenticator.userAuthenticator,
+    AccessControl.isUserBlocked,
+    (req: Request, res: Response) => userController.messageDeleteForMe(req, res))
 
-router.get("/get-chats/:userId", (req: Request, res: Response) => userController.getChats(req, res))
+
+////   Notification   ////
+router.get("/get-notifications/:userId",
+    Authenticator.userAuthenticator,
+    AccessControl.isUserBlocked,
+    (req: Request, res: Response) => userController.getNotifications(req, res))
+router.post("/update-notifications",
+    Authenticator.userAuthenticator,
+    AccessControl.isUserBlocked,
+    (req: Request, res: Response) => userController.updateNotificaitons(req, res))
+router.delete("/delete-notification/:roomId/:userId",
+    Authenticator.userAuthenticator,
+    AccessControl.isUserBlocked,
+    (req: Request, res: Response) => userController.deleteNotifications(req, res))
+
+
 export { router as userRoute }
