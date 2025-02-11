@@ -32,6 +32,15 @@ export class MongoUserRepository implements IUserRepository {
         }
     }
 
+    async findBlockedUsers(): Promise<any> {
+        try {
+            const blockedUsers = await UserModel.countDocuments({ isActive: false })
+            return blockedUsers
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
     async googleRegister(email: string, username: string): Promise<User | null> {
         try {
             const user = {
@@ -255,7 +264,11 @@ export class MongoUserRepository implements IUserRepository {
         try {
             const existingWallet = await WalletModel.findOne({ userId });
             if (existingWallet) {
-                throw new ErrorResponse("Wallet already exists for this user", 400);
+                return {
+                    success: true,
+                    message: "Wallet Already Existed for this User..!!",
+                    wallet: existingWallet,
+                };
             }
 
             // Create a new wallet

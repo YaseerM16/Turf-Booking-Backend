@@ -48,6 +48,7 @@ export class UserUseCase implements IUserUseCase {
 
     async RegisterUser(data: User): Promise<User> {
         try {
+            console.log("2222");
 
             const existingUser = await this.userRepository.findByEmail(data.email)
 
@@ -58,18 +59,17 @@ export class UserUseCase implements IUserUseCase {
                 data.password = hashedPassword;
             }
 
-            console.log("Createing NewUser :)");
+            // console.log("Createing NewUser :)");
             const newUser = await this.userRepository.create(data);
 
             const plainUser = {
                 id: newUser._id,
                 email: newUser.email,
                 name: newUser.name,
-                // Add other fields as required
+                role: "user"
             };
 
             await this.mailService.accountVerifyMail(plainUser, "verifyEmail");
-            console.log("Mail Sended :) ");
 
             return newUser
 

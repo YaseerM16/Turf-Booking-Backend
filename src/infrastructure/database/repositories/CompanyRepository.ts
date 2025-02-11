@@ -15,6 +15,8 @@ import ChatRoom from "../models/ChatRoomModel";
 import { Message } from "../../../domain/entities/Message";
 import MessageModel from "../models/MessageModel";
 import NotificationModel from "../models/NotificationModel";
+import BookingModel from "../models/BookingModel";
+import mongoose from "mongoose";
 
 
 export class CompanyRepository implements ICompanyRepository {
@@ -572,6 +574,278 @@ export class CompanyRepository implements ICompanyRepository {
             throw new ErrorResponse((error as Error).message, StatusCode.INTERNAL_SERVER_ERROR);
         }
     }
+
+    async getDashboardData(companyId: string): Promise<any> {
+        try {
+            if (!companyId) {
+                throw new ErrorResponse("Company ID is required to fetch dashboard data!", StatusCode.BAD_REQUEST);
+            }
+
+            // Aggregate pipeline
+            const currentDate = new Date();
+            const last7DaysStart = new Date();
+            last7DaysStart.setDate(currentDate.getDate() - 7); // 7 days ago (excluding today)
+            const last7DaysEnd = new Date();
+            last7DaysEnd.setDate(currentDate.getDate() - 1); // Until yesterday
+
+            const dashboardData = await BookingModel.aggregate([
+                {
+                    $match: {
+                        companyId: new mongoose.Types.ObjectId(companyId),
+                        totalAmount: { $gt: 0 }
+                    }
+                },
+                { $unwind: "$selectedSlots" }, // Work with individual slots
+                {
+                    $group: {
+                        _id: null,
+                        totalBookings: { $sum: 1 }, // Total number of bookings (counting slots)
+                        completedBookings: {
+                            $sum: {
+                                $cond: [{ $lt: ["$selectedSlots.date", currentDate] }, 1, 0]
+                            }
+                        },
+                        upcomingBookings: {
+                            $sum: {
+                                $cond: [{ $gte: ["$selectedSlots.date", currentDate] }, 1, 0]
+                            }
+                        },
+                        totalRevenue: {
+                            $sum: {
+                                $cond: [{ $eq: ["$status", "completed"] }, "$totalAmount", 0]
+                            }
+                        },
+                        last7DaysRevenue: {
+                            $push: {
+                                $cond: [
+                                    {
+                                        $and: [
+                                            { $gte: ["$selectedSlots.date", last7DaysStart] },
+                                            { $lt: ["$selectedSlots.date", last7DaysEnd] },
+                                            { $eq: ["$selectedSlots.isCancelled", false] }
+                                        ]
+                                    },
+                                    {
+                                        date: { $dateToString: { format: "%Y-%m-%d", date: "$selectedSlots.date" } },
+                                        revenue: "$selectedSlots.price"
+                                    },
+                                    "$$REMOVE" // Removes non-matching entries
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    $project: {
+                        _id: 0,
+                        totalBookings: 1,
+                        completedBookings: 1,
+                        upcomingBookings: 1,
+                        totalRevenue: 1,
+                        pendingPayments: 1,
+                        last7DaysRevenue: {
+                            $reduce: {
+                                input: "$last7DaysRevenue",
+                                initialValue: [],
+                                in: {
+                                    $concatArrays: [
+                                        "$$value",
+                                        [{ date: "$$this.date", revenue: "$$this.revenue" }]
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            ]);
+
+            return dashboardData.length > 0
+                ? dashboardData[0]
+                : {
+                    totalBookings: 0,
+                    upcomingBookings: 0,
+                    completedBookings: 0,
+                    totalRevenue: 0,
+                };
+
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message, StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async getMonthlyRevenue(companyId: string): Promise<any> {
+        try {
+            if (!companyId) {
+                throw new ErrorResponse("Company ID is required to fetch monthly revenue!", StatusCode.BAD_REQUEST);
+            }
+
+            const monthlyRevenue = await BookingModel.aggregate([
+                {
+                    $match: {
+                        companyId: new mongoose.Types.ObjectId(companyId),
+                        totalAmount: { $gt: 0 } // Ensure the booking has a valid amount
+                    }
+                },
+                { $unwind: "$selectedSlots" }, // Unwind to work with individual slots
+                {
+                    $match: {
+                        "selectedSlots.isCancelled": false // Ensure the slot is not canceled
+                    }
+                },
+                {
+                    $group: {
+                        _id: { $dateToString: { format: "%Y-%m", date: "$selectedSlots.date" } }, // Group by Year-Month
+                        revenue: { $sum: "$selectedSlots.price" } // Sum price of slots for each month
+                    }
+                },
+                {
+                    $project: {
+                        _id: 0,
+                        month: "$_id", // Rename _id to month
+                        revenue: 1
+                    }
+                },
+                { $sort: { month: 1 } } // Sort by month in ascending order
+            ]);
+
+            return monthlyRevenue;
+
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message, StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async getRevenueByRange(companyId: string, fromDate: Date, toDate: Date): Promise<any> {
+        try {
+            if (!companyId || !fromDate || !toDate) {
+                throw new ErrorResponse("Company ID, From Date, and To Date are required!", StatusCode.BAD_REQUEST);
+            }
+
+            const from = new Date(fromDate);
+            const to = new Date(toDate);
+
+            if (isNaN(from.getTime()) || isNaN(to.getTime())) {
+                throw new ErrorResponse("Invalid date format!", StatusCode.BAD_REQUEST);
+            }
+
+            const revenueByRange = await BookingModel.aggregate([
+                {
+                    $match: {
+                        companyId: new mongoose.Types.ObjectId(companyId),
+                        totalAmount: { $gt: 0 }
+                    }
+                },
+                { $unwind: "$selectedSlots" }, // Work with individual slots
+                {
+                    $match: {
+                        "selectedSlots.date": { $gte: from, $lte: to }, // Filter by date range
+                        "selectedSlots.isCancelled": false // Ensure slot is not canceled
+                    }
+                },
+                {
+                    $group: {
+                        _id: { $dateToString: { format: "%Y-%m-%d", date: "$selectedSlots.date" } }, // Group by date
+                        revenue: { $sum: "$selectedSlots.price" } // Sum price of slots for each date
+                    }
+                },
+                {
+                    $project: {
+                        _id: 0,
+                        date: "$_id", // Rename _id to date
+                        revenue: 1
+                    }
+                },
+                { $sort: { date: 1 } } // Sort by date in ascending order
+            ]);
+
+            return revenueByRange;
+
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message, StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async getOverallRevenueByTurf(companyId: string, turfId: string): Promise<any> {
+        try {
+            if (!companyId || !turfId) {
+                throw new ErrorResponse("Company ID and Turf ID are required to fetch turf revenue data!", StatusCode.BAD_REQUEST);
+            }
+            const currentDate = new Date();
+            const last7DaysStart = new Date();
+            last7DaysStart.setDate(currentDate.getDate() - 7); // 7 days ago (excluding today)
+            const last7DaysEnd = new Date();
+            last7DaysEnd.setDate(currentDate.getDate() - 1); // Until yesterday
+            const dashboardData = await BookingModel.aggregate([
+                {
+                    $match: {
+                        companyId: new mongoose.Types.ObjectId(companyId),
+                        turfId: new mongoose.Types.ObjectId(turfId),
+                        totalAmount: { $gt: 0 },
+                    }
+                },
+                { $unwind: "$selectedSlots" },
+                {
+                    $group: {
+                        _id: null,
+                        totalBookings: { $sum: 1 },
+                        completedBookings: {
+                            $sum: {
+                                $cond: [{ $lt: ["$selectedSlots.date", new Date()] }, 1, 0]
+                            }
+                        },
+                        upcomingBookings: {
+                            $sum: {
+                                $cond: [{ $gte: ["$selectedSlots.date", new Date()] }, 1, 0]
+                            }
+                        },
+                        totalRevenue: {
+                            $sum: {
+                                $cond: [{ $eq: ["$status", "completed"] }, "$totalAmount", 0]
+                            }
+                        },
+                        last7DaysRevenue: {
+                            $push: {
+                                $cond: [
+                                    {
+                                        $and: [
+                                            { $gte: ["$selectedSlots.date", last7DaysStart] },
+                                            { $lt: ["$selectedSlots.date", last7DaysEnd] },
+                                            { $eq: ["$selectedSlots.isCancelled", false] }
+                                        ]
+                                    },
+                                    {
+                                        date: { $dateToString: { format: "%Y-%m-%d", date: "$selectedSlots.date" } },
+                                        revenue: "$selectedSlots.price"
+                                    },
+                                    "$$REMOVE" // Removes non-matching entries
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    $project: {
+                        _id: 0,
+                        totalBookings: 1,
+                        completedBookings: 1,
+                        upcomingBookings: 1,
+                        totalRevenue: 1,
+                        last7DaysRevenue: 1,
+                    }
+                }
+            ]);
+
+            return dashboardData.length > 0 ? dashboardData[0] : {
+                totalBookings: 0,
+                completedBookings: 0,
+                upcomingBookings: 0,
+                totalRevenue: 0
+            };
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message, StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 
 }
 

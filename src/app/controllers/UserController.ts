@@ -18,12 +18,8 @@ export class UserController {
 
     async registersUser(req: Request, res: Response): Promise<void> {
         try {
-            const errors = validationResult(req);
 
-            if (!errors.isEmpty()) {
-                throw new ErrorResponse("Invalid email or password", 401);
-            }
-            console.log("CAlling signup UseCase :)");
+            console.log("1111");
 
             const user = await this.userUseCase.RegisterUser(req.body)
 
