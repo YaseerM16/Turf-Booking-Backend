@@ -27,9 +27,14 @@ export class CompanyUseCase implements ICompanyUseCase {
                 company.password = hashedPassword;
             }
             const newCompany = await this.companyRepository.create(company);
-
+            const plainUser = {
+                id: newCompany._id,
+                companyemail: newCompany.companyemail,
+                companyname: newCompany.companyname,
+                role: "company"
+            };
             if (!newCompany.googleId) {
-                await this.mailService.accountVerifyMail(newCompany, "verifyEmail");
+                await this.mailService.accountVerifyMail(plainUser, "verifyEmail");
             }
 
             return newCompany
@@ -460,5 +465,44 @@ export class CompanyUseCase implements ICompanyUseCase {
         }
     }
 
+    async getDashboardData(companyId: string): Promise<any> {
+        try {
+            if (!companyId) throw new ErrorResponse("companyId is not getting for the Dashboard data fectching.. !!", StatusCode.BAD_REQUEST);
+            const data = await this.companyRepository.getDashboardData(companyId)
+            return data
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message || "Error While Fetching the COmpany Dashbaord data ...!!", StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async getMonthlyRevenue(companyId: string): Promise<any> {
+        try {
+            if (!companyId) throw new ErrorResponse("companyId is not getting for the Monthly Revenue fectching.. !!", StatusCode.BAD_REQUEST);
+            const monthlyRevenue = await this.companyRepository.getMonthlyRevenue(companyId)
+            return monthlyRevenue
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message || "Error While Fetching the COmpany Month wise revenue data ...!!", StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async getRevenueByRange(companyId: string, fromDate: Date, toDate: Date): Promise<any> {
+        try {
+            if (!companyId || !fromDate || !toDate) throw new ErrorResponse("companyId or the date were not getting for the Range wise Revenue fectching.. !!", StatusCode.BAD_REQUEST);
+            const revenues = await this.companyRepository.getRevenueByRange(companyId, fromDate, toDate)
+            return revenues
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message || "Error While Fetching the COmpany Month wise revenue data ...!!", StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async getOverallRevenueByTurf(companyId: string, turfId: string): Promise<any> {
+        try {
+            if (!companyId || !turfId) throw new ErrorResponse("companyId or turfId were not getting for the Turf Revenue fectching.. !!", StatusCode.BAD_REQUEST);
+            const turfRevenue = await this.companyRepository.getOverallRevenueByTurf(companyId, turfId)
+            return turfRevenue
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message || "Error While Fetching the Turf revenue data ...!!", StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
 
 }

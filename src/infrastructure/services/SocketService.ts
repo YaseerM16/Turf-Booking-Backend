@@ -66,7 +66,6 @@ export const socketHandler = (io: Server) => {
 
                     console.log("IMage URLS :", imageUrls);
 
-
                     const room = await ChatRoom.findById(roomId).populate({
                         path: 'companyId',
                         select: 'companyname companyemail phone profilePicture', // Specify the fields to include (or exclude)

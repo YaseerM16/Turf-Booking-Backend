@@ -2,9 +2,6 @@ import { config } from "../../config/config";
 import { ErrorResponse } from "./errors";
 import nodemailer from "nodemailer"
 
-config
-
-
 
 export const sendMail = async (
     name: string,

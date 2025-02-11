@@ -1,6 +1,7 @@
 import express, { Request, Response, Router } from "express";
 import { UserController as AppUserController } from "../../app/controllers/UserController";
 import { MongoUserRepository } from "../../infrastructure/database/repositories/UserRepository";
+import { CompanyRepository } from "../../infrastructure/database/repositories/CompanyRepository";
 import { UserUseCase } from "../../domain/useCases/UserUseCases";
 import { MailService } from "../../infrastructure/services/EmailService";
 import { AuthService } from "../../infrastructure/services/AuthService";
@@ -9,17 +10,18 @@ import Authenticator from "../../infrastructure/middleware/Authenticator";
 import AccessControl from "../../infrastructure/middleware/AccessControl";
 import { validateSignup } from "../../infrastructure/middleware/validation/Signup.Validator";
 import { validateLogin } from "../../infrastructure/middleware/validation/Login.Validator";
-
 import { IUserRepository } from "../../domain/repositories/IUserRepository"
 import { IEmailService } from "../../app/interfaces/services/IEmailService";
 import { IUserUseCase } from "../../app/interfaces/usecases/user/IUserUseCase";
 import { IAuthService } from "../../app/interfaces/services/IAuthService";
+import { ICompanyRepository } from "../../domain/repositories/ICompanyRepository";
 
 
 const router: Router = express.Router()
 
 const userRepository: IUserRepository = new MongoUserRepository()
-const emailService: IEmailService = new MailService(userRepository)
+const companyRepository: ICompanyRepository = new CompanyRepository()
+const emailService: IEmailService = new MailService(companyRepository, userRepository,)
 const userUseCase: IUserUseCase = new UserUseCase(userRepository, emailService)
 const authService: IAuthService = new AuthService()
 const userController = new AppUserController(userUseCase, authService)

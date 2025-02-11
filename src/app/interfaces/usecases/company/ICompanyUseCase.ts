@@ -44,6 +44,13 @@ export interface ICompanyUseCase {
     getNotifications(userId: string): Promise<Notification[] | null>;
     updateNotifications(data: object): Promise<Notification[] | null>;
     deleteNotifications(roomId: string, userId: string): Promise<object>
+
+    /// <- Dashboard -> ///
+    getDashboardData(companyId: string): Promise<any>
+    getMonthlyRevenue(companyId: string): Promise<any>
+    getRevenueByRange(companyId: string, fromDate: Date, toDate: Date): Promise<any>
+    getOverallRevenueByTurf(companyId: string, turfId: string): Promise<any>;
+
     // updateProfileImage(_id: string, url: string): Promise<User | null>
     // userLogin(email: string, password: string): Promise<User | null>
     // updateProfileDetails(_id: string, data: string): Promise<User | null>

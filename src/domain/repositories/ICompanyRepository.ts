@@ -40,4 +40,9 @@ export interface ICompanyRepository {
     updateNotifications(data: any): Promise<Notification[] | null>
     deleteNotifications(roomId: string, userId: string): Promise<object>;
 
+    /// <- DashBoard -> ///
+    getDashboardData(companyId: string): Promise<any>
+    getMonthlyRevenue(companyId: string): Promise<any>;
+    getRevenueByRange(companyId: string, fromDate: Date, toDate: Date): Promise<any>;
+    getOverallRevenueByTurf(companyId: string, turfId: string): Promise<any>;
 }
