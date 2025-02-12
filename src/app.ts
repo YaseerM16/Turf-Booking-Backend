@@ -6,6 +6,7 @@ import cors from "cors"
 import cookieParser from "cookie-parser";
 import { companyRoute } from "./app/routes/companyRoutes"
 import { adminRoute } from "./app/routes/adminRoutes"
+import { notificationRoute } from "./app/routes/notification.Routes"
 import morgan from "morgan"
 
 mongoose
@@ -43,7 +44,7 @@ app.use(
 app.use("/api/v1/user", userRoute)
 app.use("/api/v1/company", companyRoute)
 app.use("/api/v1/admin", adminRoute)
-
+app.use("/api/v1/notification", notificationRoute)
 
 export default app
 

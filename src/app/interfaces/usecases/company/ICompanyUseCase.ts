@@ -40,11 +40,6 @@ export interface ICompanyUseCase {
     getChatMessages(roomId: string): Promise<{ messages: Message[], chat: ChatRoom } | null>;
     onSendMessage(companyId: string, userId: string, data: object): Promise<Message>
 
-    /// <- Notificaitons -> ///
-    getNotifications(userId: string): Promise<Notification[] | null>;
-    updateNotifications(data: object): Promise<Notification[] | null>;
-    deleteNotifications(roomId: string, userId: string): Promise<object>
-
     /// <- Dashboard -> ///
     getDashboardData(companyId: string): Promise<any>
     getMonthlyRevenue(companyId: string): Promise<any>

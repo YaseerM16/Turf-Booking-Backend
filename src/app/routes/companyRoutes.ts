@@ -11,16 +11,24 @@ import { IEmailService } from "../interfaces/services/IEmailService";
 import { ICompanyRepository } from "../../domain/repositories/ICompanyRepository";
 import { IUserRepository } from "../../domain/repositories/IUserRepository";
 import { MongoUserRepository } from "../../infrastructure/database/repositories/UserRepository";
+import { NotificationRepository } from "../../infrastructure/database/repositories/NotificationRepository";
+import NotificationModel from "../../infrastructure/database/models/NotificationModel";
+import { NotificationUseCase } from "../../domain/useCases/NotificationUseCase";
+import { NotificationController } from "../controllers/NotificationController";
 
 const router: Router = express.Router()
 
 
 const companyRepository: ICompanyRepository = new CompanyRepository()
 const userRepository: IUserRepository = new MongoUserRepository()
-const emailService: IEmailService = new MailService(companyRepository, userRepository,)
+const emailService: IEmailService = new MailService(companyRepository, userRepository)
 const companyUseCase = new CompanyUseCase(companyRepository, emailService)
 const authService = new AuthService()
 const companyController = new CompanyController(companyUseCase, authService)
+
+const notificationRepo = new NotificationRepository(NotificationModel)
+const notificationUseCase = new NotificationUseCase(notificationRepo)
+const notificationController = new NotificationController(notificationUseCase)
 
 //Authentication
 router.post("/auth/register", (req: Request, res: Response) => companyController.registerCompany(req, res))
@@ -44,7 +52,8 @@ router.patch("/profile/update-details/:companyId",
 
 
 //Turf-Management
-router.post("/register-turf", Authenticator.companyAuthenticator,
+router.post("/register-turf",
+    Authenticator.companyAuthenticator,
     AccessControl.isCompanyBlocked, uploadMiddleware, (req: Request, res: Response) => companyController.registerTurf(req, res))
 router.get("/get-turfs", Authenticator.companyAuthenticator,
     AccessControl.isCompanyBlocked, (req: Request, res: Response) => companyController.getTurfs(req, res))
@@ -78,23 +87,57 @@ router.patch("/edit-day-details/:turfId", (req: Request, res: Response) => compa
 
 ////////// CHAT ////////////////
 
-router.post("/create-chat-room/:companyId/:userId", (req: Request, res: Response) => companyController.createChatRoom(req, res))
-router.get("/get-chat-lists/:companyId", (req: Request, res: Response) => companyController.getChatLists(req, res))
-router.get("/get-chat-messages/:roomId", (req: Request, res: Response) => companyController.getChatMessages(req, res))
-router.post("/send-message/:companyId/:userId", (req: Request, res: Response) => companyController.onSendMessage(req, res))
+router.post("/create-chat-room/:companyId/:userId",
+    Authenticator.companyAuthenticator,
+    AccessControl.isCompanyBlocked,
+    (req: Request, res: Response) => companyController.createChatRoom(req, res))
+router.get("/get-chat-lists/:companyId",
+    Authenticator.companyAuthenticator,
+    AccessControl.isCompanyBlocked,
+    (req: Request, res: Response) => companyController.getChatLists(req, res))
+router.get("/get-chat-messages/:roomId",
+    Authenticator.companyAuthenticator,
+    AccessControl.isCompanyBlocked,
+    (req: Request, res: Response) => companyController.getChatMessages(req, res))
+router.post("/send-message/:companyId/:userId",
+    Authenticator.companyAuthenticator,
+    AccessControl.isCompanyBlocked,
+    (req: Request, res: Response) => companyController.onSendMessage(req, res))
 
 
 ////   Notification   ////
-router.get("/get-notifications/:companyId", (req: Request, res: Response) => companyController.getNotifications(req, res))
-router.post("/update-notifications", (req: Request, res: Response) => companyController.updateNotificaitons(req, res))
-router.delete("/delete-notification/:roomId/:companyId", (req: Request, res: Response) => companyController.deleteNotifications(req, res))
+// router.get("/get-notifications/:companyId", (req: Request, res: Response) => companyController.getNotifications(req, res))
+router.get("/get-notifications/:id",
+    Authenticator.companyAuthenticator,
+    AccessControl.isCompanyBlocked,
+    (req: Request, res: Response) => notificationController.getNotifications(req, res))
+router.post("/update-notifications",
+    Authenticator.companyAuthenticator,
+    AccessControl.isCompanyBlocked,
+    (req: Request, res: Response) => notificationController.updateNotifications(req, res))
+router.delete("/delete-notification/:roomId/:id",
+    Authenticator.companyAuthenticator,
+    AccessControl.isCompanyBlocked,
+    (req: Request, res: Response) => notificationController.deleteNotifications(req, res))
 
 
 //Dashboard :
 
-router.get("/get-dashboard-data/:companyId", (req: Request, res: Response) => companyController.getDashboardData(req, res))
-router.get("/get-monthly-revenue/:companyId", (req: Request, res: Response) => companyController.getMonthlyRevenue(req, res))
-router.get("/get-revenue-by-range/:companyId", (req: Request, res: Response) => companyController.getRevenueByRange(req, res))
-router.get("/get-turf-overallRevenue/:companyId/:turfId", (req: Request, res: Response) => companyController.getRevenuesByTurf(req, res))
+router.get("/get-dashboard-data/:companyId",
+    Authenticator.companyAuthenticator,
+    AccessControl.isCompanyBlocked,
+    (req: Request, res: Response) => companyController.getDashboardData(req, res))
+router.get("/get-monthly-revenue/:companyId",
+    Authenticator.companyAuthenticator,
+    AccessControl.isCompanyBlocked,
+    (req: Request, res: Response) => companyController.getMonthlyRevenue(req, res))
+router.get("/get-revenue-by-range/:companyId",
+    Authenticator.companyAuthenticator,
+    AccessControl.isCompanyBlocked,
+    (req: Request, res: Response) => companyController.getRevenueByRange(req, res))
+router.get("/get-turf-overallRevenue/:companyId/:turfId",
+    Authenticator.companyAuthenticator,
+    AccessControl.isCompanyBlocked,
+    (req: Request, res: Response) => companyController.getRevenuesByTurf(req, res))
 
 export { router as companyRoute }
