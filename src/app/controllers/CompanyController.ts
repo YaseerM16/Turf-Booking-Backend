@@ -458,38 +458,6 @@ export class CompanyController {
         }
     }
 
-
-    // Notification 
-
-    async getNotifications(req: Request, res: Response) {
-        try {
-            const { companyId } = req.params
-            const notifications = await this.companyUseCase.getNotifications(companyId)
-            sendResponse(res, true, "Notifications fetched successfully :", StatusCode.SUCCESS, { notifications })
-        } catch (error) {
-            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
-        }
-    }
-
-    async updateNotificaitons(req: Request, res: Response) {
-        try {
-            const updatedNotifications = await this.companyUseCase.updateNotifications(req.body)
-            sendResponse(res, true, "Notifications fetched successfully :", StatusCode.SUCCESS, { notifications: updatedNotifications })
-        } catch (error) {
-            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
-        }
-    }
-
-    async deleteNotifications(req: Request, res: Response) {
-        try {
-            const { roomId, companyId } = req.params
-            const deleteNotification = await this.companyUseCase.deleteNotifications(roomId, companyId)
-            sendResponse(res, true, "Notification is Deleted Successfully :!", StatusCode.SUCCESS)
-        } catch (error) {
-            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
-        }
-    }
-
     async getDashboardData(req: Request, res: Response) {
         try {
             const { companyId } = req.params

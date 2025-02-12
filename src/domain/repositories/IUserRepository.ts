@@ -40,9 +40,4 @@ export interface IUserRepository {
     messageDeleteEveryOne(messageId: string): Promise<Message | null>
     messageDeleteForMe(messageId: string): Promise<Message | null>
 
-    /// <- Notificaitons -> ///
-    getNotifications(userId: string): Promise<Notification[] | null>;
-    updateNotifications(data: any): Promise<Notification[] | null>
-    deleteNotifications(roomId: string, userId: string): Promise<object>;
-
 }

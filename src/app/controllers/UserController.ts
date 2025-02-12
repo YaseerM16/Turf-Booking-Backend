@@ -504,35 +504,6 @@ export class UserController {
         }
     }
 
-    async getNotifications(req: Request, res: Response) {
-        try {
-            const { userId } = req.params
-            const notifications = await this.userUseCase.getNotifications(userId)
-            sendResponse(res, true, "Notifications fetched successfully :", StatusCode.SUCCESS, { notifications })
-        } catch (error) {
-            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
-        }
-    }
-
-    async updateNotificaitons(req: Request, res: Response) {
-        try {
-            const updatedNotifications = await this.userUseCase.updateNotifications(req.body)
-            sendResponse(res, true, "Notifications fetched successfully :", StatusCode.SUCCESS, { notifications: updatedNotifications })
-        } catch (error) {
-            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
-        }
-    }
-
-    async deleteNotifications(req: Request, res: Response) {
-        try {
-            const { roomId, userId } = req.params
-            const deleteNotification = await this.userUseCase.deleteNotifications(roomId, userId)
-            sendResponse(res, true, "Notification is Deleted Successfully :!", StatusCode.SUCCESS)
-        } catch (error) {
-            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
-        }
-    }
-
     async messageDeleteForEveryOne(req: Request, res: Response) {
         try {
             const { messageId } = req.params

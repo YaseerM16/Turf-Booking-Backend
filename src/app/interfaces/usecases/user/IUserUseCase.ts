@@ -48,8 +48,4 @@ export interface IUserUseCase {
     deleteForEveryOne(messageId: string): Promise<Message | null>
     deleteForMe(messageId: string): Promise<Message | null>
 
-    /// <- Notificaitons -> ///
-    getNotifications(userId: string): Promise<Notification[] | null>;
-    updateNotifications(data: object): Promise<Notification[] | null>;
-    deleteNotifications(roomId: string, userId: string): Promise<object>
 }

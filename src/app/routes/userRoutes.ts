@@ -15,6 +15,10 @@ import { IEmailService } from "../../app/interfaces/services/IEmailService";
 import { IUserUseCase } from "../../app/interfaces/usecases/user/IUserUseCase";
 import { IAuthService } from "../../app/interfaces/services/IAuthService";
 import { ICompanyRepository } from "../../domain/repositories/ICompanyRepository";
+import { NotificationUseCase } from "../../domain/useCases/NotificationUseCase";
+import { NotificationRepository } from "../../infrastructure/database/repositories/NotificationRepository";
+import { NotificationController } from "../controllers/NotificationController";
+import NotificationModel from "../../infrastructure/database/models/NotificationModel";
 
 
 const router: Router = express.Router()
@@ -26,6 +30,9 @@ const userUseCase: IUserUseCase = new UserUseCase(userRepository, emailService)
 const authService: IAuthService = new AuthService()
 const userController = new AppUserController(userUseCase, authService)
 
+const notificationRepo = new NotificationRepository(NotificationModel)
+const notificationUseCase = new NotificationUseCase(notificationRepo)
+const notificationController = new NotificationController(notificationUseCase)
 
 ///  Authentication   ///
 router.post("/auth/signup", validateSignup, (req: Request, res: Response) => userController.registersUser(req, res))
@@ -128,18 +135,25 @@ router.patch("/delete-for-me/:messageId",
 
 
 ////   Notification   ////
-router.get("/get-notifications/:userId",
+// router.get("/get-notifications/:userId",
+//     Authenticator.userAuthenticator,
+//     AccessControl.isUserBlocked,
+//     (req: Request, res: Response) => userController.getNotifications(req, res))
+
+router.get(
+    "/get-notifications/:id",
     Authenticator.userAuthenticator,
     AccessControl.isUserBlocked,
-    (req: Request, res: Response) => userController.getNotifications(req, res))
+    (req: Request, res: Response) => notificationController.getNotifications(req, res))
+
 router.post("/update-notifications",
     Authenticator.userAuthenticator,
     AccessControl.isUserBlocked,
-    (req: Request, res: Response) => userController.updateNotificaitons(req, res))
-router.delete("/delete-notification/:roomId/:userId",
+    (req: Request, res: Response) => notificationController.updateNotifications(req, res))
+router.delete("/delete-notification/:roomId/:id",
     Authenticator.userAuthenticator,
     AccessControl.isUserBlocked,
-    (req: Request, res: Response) => userController.deleteNotifications(req, res))
+    (req: Request, res: Response) => notificationController.deleteNotifications(req, res))
 
 
 export { router as userRoute }
