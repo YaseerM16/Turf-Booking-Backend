@@ -5,6 +5,8 @@ import { ErrorResponse } from "../../shared/utils/errors";
 import { Admin } from "../../domain/entities/Admin";
 import { IAuthService } from "../interfaces/services/IAuthService";
 import { config } from "../../config/config";
+import { sendResponse } from "../../shared/utils/responseUtil";
+import { StatusCode } from "../../shared/enums/StatusCode";
 
 
 export class AdminController {
@@ -170,6 +172,53 @@ export class AdminController {
             res.status(500).json({ message: 'Something went wrong during logout' });
         }
     };
+
+    async getDashboardData(req: Request, res: Response) {
+        try {
+            const dashboard = await this.adminUseCase.getDashboardData()
+            // res.status(200).json({ success: true, message: "Company Approved Successfully" });
+            sendResponse(res, true, "Dashboard Data Fetched Successfully :", StatusCode.SUCCESS, { dashboard })
+
+        } catch (error) {
+            console.error('Error during logout:', error);
+            // res.status(500).json({ message: 'Something went wrong during logout' });
+            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
+        }
+    };
+
+    async getMonthlyRevenues(req: Request, res: Response) {
+        try {
+            const monthlyRevenue = await this.adminUseCase.getMonthlyRevenue()
+            sendResponse(res, true, "Dashboard Data Fetched Successfully :", StatusCode.SUCCESS, { revenues: monthlyRevenue })
+
+        } catch (error) {
+            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
+        }
+    };
+
+    async getRevenuesByRange(req: Request, res: Response) {
+        try {
+            const { fromDate, toDate } = req.query
+            const rangeRevenues = await this.adminUseCase.getRevenueByRange(fromDate as unknown as Date, toDate as unknown as Date)
+            sendResponse(res, true, "Dashboard Data Fetched Successfully :", StatusCode.SUCCESS, { revenues: rangeRevenues })
+
+        } catch (error) {
+            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
+        }
+    };
+
+    async addSubscriptionPlan(req: Request, res: Response) {
+        try {
+            console.log("REqBoid of ADDSubcripts: :", req.body);
+
+            // const rangeRevenues = await this.adminUseCase.getRevenueByRange(fromDate as unknown as Date, toDate as unknown as Date)
+            // sendResponse(res, true, "Dashboard Data Fetched Successfully :", StatusCode.SUCCESS, { revenues: rangeRevenues })
+
+        } catch (error) {
+            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
+        }
+    };
+
 
 
 

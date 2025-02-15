@@ -1,4 +1,5 @@
 import { Company } from "../entities/Company";
+import { SubscriptionPlan } from "../entities/SubscriptionPlan";
 
 export interface IAdminRepository {
 
@@ -11,6 +12,13 @@ export interface IAdminRepository {
     getApprovedCompany(page: number, limit: number, searchQry: string, filter: string): Promise<{ companies: any[]; totalCompany: number }>
     approveTheCompany(companyId: string, companyEmail: string): Promise<Company>
     companyBlockToggle(companyId: string, companyEmail: string): Promise<object>
-    // create(company: Company): Promise<Company>;
-    // update(id: string, value: any): Promise<Company | null>
+
+    //Dashboard
+    getDashboardData(): Promise<any>;
+    getMonthlyRevenue(): Promise<any>;
+    getRevenueByRange(fromDate: Date, toDate: Date): Promise<any>
+
+    //Subscription
+    addSubscriptionPlan(plan: SubscriptionPlan): Promise<SubscriptionPlan>
+
 }

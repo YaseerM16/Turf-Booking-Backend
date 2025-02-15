@@ -1,11 +1,15 @@
 import { Schema, model } from "mongoose";
+import { SubscriptionPlan as planEntity } from "../../../domain/entities/SubscriptionPlan"
 
-const SubscriptionPlanSchema = new Schema({
-    name: { type: String, required: true, unique: true }, // Plan name (e.g., "Basic", "Premium")
-    price: { type: Number, required: true }, // Cost of the plan
-    duration: { type: String, enum: ["monthly", "yearly"], required: true }, // Duration type
-    features: [{ type: String }], // List of features included in the plan
-    isActive: { type: Boolean, default: true }, // Enable/disable plan
+
+const SubscriptionPlanSchema = new Schema<planEntity>({
+    name: { type: String, required: true, unique: true },
+    price: { type: Number, required: true },
+    duration: { type: String, enum: ["monthly", "yearly"], required: true },
+    features: { type: String },
+    isActive: { type: Boolean, default: true },
+    discount: { type: Number, default: 0 }, // New discount field (default 0)
+    isDelete: { type: Boolean, default: false },
 }, { timestamps: true });
 
-export const SubscriptionPlan = model("SubscriptionPlan", SubscriptionPlanSchema);
+export const SubscriptionPlan = model<planEntity>("SubscriptionPlan", SubscriptionPlanSchema);

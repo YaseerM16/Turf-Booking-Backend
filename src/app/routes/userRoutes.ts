@@ -19,6 +19,10 @@ import { NotificationUseCase } from "../../domain/useCases/NotificationUseCase";
 import { NotificationRepository } from "../../infrastructure/database/repositories/NotificationRepository";
 import { NotificationController } from "../controllers/NotificationController";
 import NotificationModel from "../../infrastructure/database/models/NotificationModel";
+import { SubscriptionPlanRepository } from "../../infrastructure/database/repositories/SubscriptionPlan.Repository ";
+import { SubscriptionPlan } from "../../infrastructure/database/models/SubscriptionPlan";
+import { SubscriptionPlanUseCase } from "../../domain/useCases/SubscriptionPlanUseCase";
+import { SubscriptionPlanController } from "../controllers/SubscriptionPlanController";
 
 
 const router: Router = express.Router()
@@ -33,6 +37,10 @@ const userController = new AppUserController(userUseCase, authService)
 const notificationRepo = new NotificationRepository(NotificationModel)
 const notificationUseCase = new NotificationUseCase(notificationRepo)
 const notificationController = new NotificationController(notificationUseCase)
+
+const subscriptionRepo = new SubscriptionPlanRepository(SubscriptionPlan)
+const subscriptionUseCase = new SubscriptionPlanUseCase(subscriptionRepo)
+const subscriptionController = new SubscriptionPlanController(subscriptionUseCase)
 
 ///  Authentication   ///
 router.post("/auth/signup", validateSignup, (req: Request, res: Response) => userController.registersUser(req, res))
@@ -154,6 +162,10 @@ router.delete("/delete-notification/:roomId/:id",
     Authenticator.userAuthenticator,
     AccessControl.isUserBlocked,
     (req: Request, res: Response) => notificationController.deleteNotifications(req, res))
+
+
+//// Subscription //////////
+router.get("/get-subscription-plans", (req: Request, res: Response) => subscriptionController.getAllPlans(req, res))
 
 
 export { router as userRoute }
