@@ -2,6 +2,7 @@ import { IAdminUseCase } from "../../app/interfaces/usecases/admin/IAdminUseCase
 import { config } from "../../config/config";
 import { ErrorResponse } from "../../shared/utils/errors";
 import { Company } from "../entities/Company";
+import { SubscriptionPlan } from "../entities/SubscriptionPlan";
 import { User } from "../entities/User";
 import { IAdminRepository } from "../repositories/IAdminRepository";
 // import { Admin } from "../entities/Admin";
@@ -113,5 +114,54 @@ export class AdminUseCase implements IAdminUseCase {
         }
     }
 
+    async getDashboardData(): Promise<any> {
+        try {
+
+            const dashboardData = await this.adminRepository.getDashboardData()
+            if (!dashboardData) {
+                throw new Error("Could not found or fetch the Dash board data of Admin.");
+            }
+            return dashboardData
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
+    async getMonthlyRevenue(): Promise<any> {
+        try {
+
+            const monthlyRevenue = await this.adminRepository.getMonthlyRevenue()
+            if (!monthlyRevenue) {
+                throw new Error("Could not found or fetch the Dash board data of Admin.");
+            }
+            return monthlyRevenue
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
+    async getRevenueByRange(fromDate: Date, toDate: Date): Promise<any> {
+        try {
+            const revenuesByRange = await this.adminRepository.getRevenueByRange(fromDate, toDate)
+            if (!revenuesByRange) {
+                throw new Error("Could not found or fetch the Range wise Revenues data of Admin.");
+            }
+            return revenuesByRange
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
+
+    ///SUbscirption ////
+
+    async addSubscriptionPlan(plan: SubscriptionPlan): Promise<SubscriptionPlan> {
+        try {
+
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+        throw new Error("Method not implemented.");
+    }
 
 }

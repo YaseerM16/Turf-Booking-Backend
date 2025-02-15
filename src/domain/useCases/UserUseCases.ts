@@ -234,7 +234,7 @@ export class UserUseCase implements IUserUseCase {
     async getAllTurfs(queryobj: any): Promise<{ turfs: Turf[], totalTurfs: number }> {
         try {
             const page = parseInt(queryobj.page as string) || 1; // Default to page 1 if not provided
-            const limit = parseInt(queryobj.limit as string) || 10;
+            const limit = parseInt(queryobj.limit as string) || 6;
             const searchQry = queryobj.searchQry as string
             const filter = {
                 type: queryobj.type as string || "",
