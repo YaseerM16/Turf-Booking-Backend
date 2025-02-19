@@ -1,6 +1,7 @@
 import { Schema, model } from "mongoose";
+import { Subscription as SubscriptionEntity } from "../../../domain/entities/Subscription"
 
-const SubscriptionSchema = new Schema({
+const SubscriptionSchema = new Schema<SubscriptionEntity>({
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true }, // User who subscribed
     planId: { type: Schema.Types.ObjectId, ref: "SubscriptionPlan", required: true }, // Subscribed plan
     status: { type: String, enum: ["active", "expired", "canceled"], default: "active" },

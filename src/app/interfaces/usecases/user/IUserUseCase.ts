@@ -5,7 +5,7 @@ import { Turf } from "../../../../domain/entities/Turf";
 import { User } from "../../../../domain/entities/User";
 import { Wallet } from "../../../../domain/entities/Wallet";
 import { BalanceCheckResult } from "../../../../shared/utils/interfaces";
-import { Notification } from "../../../../domain/entities/Notification";
+import { SubscriptionPlan } from "../../../../domain/entities/SubscriptionPlan";
 
 export interface IUserUseCase {
     RegisterUser(user: User): Promise<User>;
@@ -47,5 +47,8 @@ export interface IUserUseCase {
     getChats(userId: string): Promise<ChatRoom[] | null>;
     deleteForEveryOne(messageId: string): Promise<Message | null>
     deleteForMe(messageId: string): Promise<Message | null>
+
+    //Subscribe 
+    // subscribeToPlan(userId: string, plan: SubscriptionPlan, paymentMethod: string): Promise<any>;
 
 }

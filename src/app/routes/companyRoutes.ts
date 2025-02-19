@@ -34,6 +34,8 @@ const notificationController = new NotificationController(notificationUseCase)
 router.post("/auth/register", (req: Request, res: Response) => companyController.registerCompany(req, res))
 router.get("/auth/verifymail", (req: Request, res: Response) => companyController.verifyAccount(req, res))
 router.post("/auth/login", (req: Request, res: Response) => companyController.companyLogin(req, res))
+router.post("/auth/forgot-password", (req: Request, res: Response) => companyController.forgotPassword(req, res))
+router.post("/auth/update-password", (req: Request, res: Response) => companyController.passwordUpdate(req, res))
 router.get("/logout", (req: Request, res: Response) => companyController.logout(req, res))
 
 
@@ -139,5 +141,17 @@ router.get("/get-turf-overallRevenue/:companyId/:turfId",
     Authenticator.companyAuthenticator,
     AccessControl.isCompanyBlocked,
     (req: Request, res: Response) => companyController.getRevenuesByTurf(req, res))
+
+
+
+//// Sales Report ///// 
+router.get("/get-lastmonth-revenue/:companyId",
+    Authenticator.companyAuthenticator,
+    AccessControl.isCompanyBlocked,
+    (req: Request, res: Response) => companyController.getLastMonthRevenues(req, res))
+router.get("/get-revenues-by-interval/:companyId",
+    Authenticator.companyAuthenticator,
+    AccessControl.isCompanyBlocked,
+    (req: Request, res: Response) => companyController.getRevenuesByInterval(req, res))
 
 export { router as companyRoute }

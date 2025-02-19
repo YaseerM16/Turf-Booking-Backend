@@ -12,6 +12,8 @@ export interface ICompanyUseCase {
         email: string
     ): Promise<Company | null>;
     companyLogin(email: string, password: string): Promise<Company | null>
+    forgotPassword(email: string): Promise<void>;
+    updatePassword(email: string, password: string): Promise<Company | null>
     updateProfileImage(companyId: string, imageUrl: string): Promise<Company | null>
     updateProfileDetails(companyId: string, data: string): Promise<Company | null>
 
@@ -46,9 +48,9 @@ export interface ICompanyUseCase {
     getRevenueByRange(companyId: string, fromDate: Date, toDate: Date): Promise<any>
     getOverallRevenueByTurf(companyId: string, turfId: string): Promise<any>;
 
-    // updateProfileImage(_id: string, url: string): Promise<User | null>
-    // userLogin(email: string, password: string): Promise<User | null>
-    // updateProfileDetails(_id: string, data: string): Promise<User | null>
-    // forgotPassword(email: string): Promise<void>
-    // updatePassword(email: string, password: string): Promise<User | null>
+    // Sales-Report
+    getLastMonthRevenue(companyId: string, page: number, limit: number): Promise<any>;
+    getRevenuesByInterval(companyId: string, fromDate: Date, toDate: Date): Promise<any>;
+
+
 }

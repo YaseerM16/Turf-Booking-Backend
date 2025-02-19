@@ -75,15 +75,9 @@ export class CompanyController {
                         sameSite: "lax",
                     });
 
-                    // res
-                    //     .status(200)
-                    //     .json({ success: true, message: "account verified", company, token });
                     sendResponse(res, true, "account verified", StatusCode.SUCCESS, { company, token, success: true })
                 } else if (type == "forgotPassword") {
-                    // res
-                    //     .status(200)
-                    //     .json({ success: true, message: "account verified", token, forgotMail: true });
-                    sendResponse(res, false, "account verified", StatusCode.SUCCESS, { token, forgotMail: true, success: true })
+                    sendResponse(res, true, "account verified", StatusCode.SUCCESS, { token, forgotMail: true, success: true })
                 }
             }
         } catch (error: any) {
@@ -127,14 +121,41 @@ export class CompanyController {
                 sameSite: "lax",
             });
 
-            // res
-            //     .status(200)
-            //     .json({ success: true, message: "Logged In successfully", company: companyData, loggedIn: true });
             sendResponse(res, true, "Logged In successfully", StatusCode.SUCCESS, { company: companyData, loggedIn: true })
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             sendResponse(res, false, (error as Error).message, StatusCode.UNAUTHORIZED)
-            // res.status(401).json({ message: (error as Error).message });
+        }
+    }
+
+    async forgotPassword(req: Request, res: Response) {
+        try {
+            const { email } = req.body;
+            console.log("Email in forgotpassword :", email);
+
+            const data = await this.companyUseCase.forgotPassword(email);
+
+
+            sendResponse(res, true, "mail sent successfully", StatusCode.SUCCESS)
+
+        } catch (error: unknown) {
+            sendResponse(res, false, (error as Error).message, StatusCode.UNAUTHORIZED)
+        }
+    }
+
+    async passwordUpdate(req: Request, res: Response) {
+        try {
+            const { email, newPassword } = req.body;
+            console.log("Email : ", email);
+            console.log("Password : ", newPassword);
+
+            const user = await this.companyUseCase.updatePassword(email, newPassword);
+            res.clearCookie('token');
+            res.clearCookie('refreshToken');
+
+            sendResponse(res, true, "Password Updated Successfully :)", StatusCode.SUCCESS)
+        } catch (error: unknown) {
+            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
         }
     }
 
@@ -494,6 +515,33 @@ export class CompanyController {
             const { companyId, turfId } = req.params
             const overallRevenues = await this.companyUseCase.getOverallRevenueByTurf(companyId, turfId)
             sendResponse(res, true, "Revenues by the Turf Data Fetched Successfully...!", StatusCode.SUCCESS, { revenues: overallRevenues })
+        } catch (error) {
+            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
+        }
+    }
+
+    ///Sales Report :
+    async getLastMonthRevenues(req: Request, res: Response) {
+        try {
+            const { companyId } = req.params
+            const { page, limit } = req.query
+            // console.log("(cmpnyControl): calling getlastMonthRevenue :", companyId);
+            const revenues = await this.companyUseCase.getLastMonthRevenue(companyId, page as unknown as number, limit as unknown as number)
+            // console.log("This is the REVENUES in controller :", revenues);
+
+            sendResponse(res, true, "Revenues by the Turf Data Fetched Successfully...!", StatusCode.SUCCESS, { revenues })
+        } catch (error) {
+            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
+
+        }
+    }
+
+    async getRevenuesByInterval(req: Request, res: Response) {
+        try {
+            const { companyId } = req.params
+            const { fromDate, toDate } = req.query
+            const revenues = await this.companyUseCase.getRevenuesByInterval(companyId, fromDate as unknown as Date, toDate as unknown as Date)
+            sendResponse(res, true, "Revenues by the Intervals got successful :", StatusCode.SUCCESS, { revenues })
         } catch (error) {
             sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
         }

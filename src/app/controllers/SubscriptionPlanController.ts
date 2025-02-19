@@ -67,4 +67,29 @@ export class SubscriptionPlanController {
             sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR);
         }
     }
+
+    async subscribeToPlan(req: Request, res: Response) {
+        try {
+            const { userId } = req.params
+            const paymentMethod = req.query.paymentMethod;
+            // console.log("This is the SubscribeToPlan Constrol: ");
+            // console.log("USer ID : ", userId);
+            // console.log("Payment method ", req.query.paymentMethod);
+            // console.log("Body :", req.body);
+            const subscribe = await this.subscriptionPlanUseCase.subscribeToPlan(userId, req.body, paymentMethod as string)
+            sendResponse(res, true, "Notification is Deleted Successfully :!", StatusCode.SUCCESS, { subscribe })
+        } catch (error) {
+            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
+        }
+    }
+
+    async checkSubscription(req: Request, res: Response) {
+        try {
+            const { userId } = req.params
+            const plan = await this.subscriptionPlanUseCase.checkForSubscription(userId)
+            sendResponse(res, true, "Plan Fetched Successfully ..!", StatusCode.SUCCESS, { plan })
+        } catch (error) {
+            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
+        }
+    }
 }

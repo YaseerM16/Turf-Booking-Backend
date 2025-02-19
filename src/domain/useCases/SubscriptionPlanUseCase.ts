@@ -29,4 +29,12 @@ export class SubscriptionPlanUseCase implements ISubscriptionPlanUseCase {
     async deletePlan(id: string): Promise<void> {
         return this.subscriptionPlanRepository.deleteSubscriptionPlan(id);
     }
+
+    async subscribeToPlan(userId: string, plan: PlanEntity, paymentMethod: string): Promise<any> {
+        return this.subscriptionPlanRepository.subscribeToPlan(userId, plan, paymentMethod)
+    }
+
+    async checkForSubscription(userId: string): Promise<PlanEntity | null> {
+        return this.subscriptionPlanRepository.checkForSubscription(userId)
+    }
 }

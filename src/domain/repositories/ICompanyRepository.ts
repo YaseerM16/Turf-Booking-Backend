@@ -40,4 +40,9 @@ export interface ICompanyRepository {
     getMonthlyRevenue(companyId: string): Promise<any>;
     getRevenueByRange(companyId: string, fromDate: Date, toDate: Date): Promise<any>;
     getOverallRevenueByTurf(companyId: string, turfId: string): Promise<any>;
+
+    // Sales-Report
+    getLastMonthRevenue(companyId: string, page: number, limit: number): Promise<any>;
+    getRevenuesByInterval(companyId: string, fromDate: Date, toDate: Date): Promise<any>;
+
 }

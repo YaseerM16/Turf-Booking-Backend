@@ -122,6 +122,43 @@ export class CompanyUseCase implements ICompanyUseCase {
         }
     }
 
+    async forgotPassword(email: string): Promise<void> {
+        try {
+            const company = await this.companyRepository.findByEmail(email);
+
+            if (!company) {
+                throw new ErrorResponse("company not found", 404);
+            }
+
+            const plainUser = {
+                id: company._id,
+                companyemail: company.companyemail,
+                companyname: company.companyname,
+                role: "company"
+            };
+            await this.mailService.accountVerifyMail(plainUser, "forgotPassword");
+            return;
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
+    async updatePassword(email: string, password: string): Promise<Company | null> {
+        try {
+            const hashedPassword = await generateHashPassword(password);
+
+            const company = await this.companyRepository.findByEmail(email);
+
+            const updatedCompany = await this.companyRepository.update(company?._id.toString()!, {
+                password: hashedPassword,
+            });
+            return updatedCompany;
+
+        } catch (error: any) {
+            throw new ErrorResponse(error.message, error.status);
+        }
+    }
+
     async updateProfileImage(companyId: string, imageUrl: string): Promise<Company | null> {
         try {
             const data = { profilePicture: imageUrl };
@@ -469,6 +506,30 @@ export class CompanyUseCase implements ICompanyUseCase {
             return turfRevenue
         } catch (error) {
             throw new ErrorResponse((error as Error).message || "Error While Fetching the Turf revenue data ...!!", StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+    /// Sales Report 
+    async getLastMonthRevenue(companyId: string, page: number, limit: number): Promise<any> {
+        try {
+            // console.log("(cmpnyUseCase): calling getlastMonthRevenue :", companyId);
+
+            if (!companyId) throw new ErrorResponse("companyId were not getting for the Company Sales Report data fectching.. !!", StatusCode.BAD_REQUEST);
+            const revenues = await this.companyRepository.getLastMonthRevenue(companyId, page, limit)
+            return revenues
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message || "Error While Fetching the 30 days revenues for sales report data ...!!", StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async getRevenuesByInterval(companyId: string, fromDate: Date, toDate: Date): Promise<any> {
+        try {
+            if (!companyId || !fromDate || !toDate) throw new ErrorResponse("companyId or turfId were not getting for the Turf Revenue fectching.. !!", StatusCode.BAD_REQUEST);
+            const revenues = await this.companyRepository.getRevenuesByInterval(companyId, fromDate, toDate)
+            return revenues
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message || "Error While Fetching the 30 days revenues for sales report data ...!!", StatusCode.INTERNAL_SERVER_ERROR);
         }
     }
 

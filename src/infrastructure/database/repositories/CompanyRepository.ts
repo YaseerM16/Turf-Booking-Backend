@@ -24,6 +24,8 @@ export class CompanyRepository implements ICompanyRepository {
     async findByEmail(email: string): Promise<Company | null> {
         try {
             const companyDoc = await CompanyModel.findOne({ companyemail: email })
+            if (!companyDoc) throw new ErrorResponse("Company can't found :", 500);
+
             return companyDoc ? companyDoc : null
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
@@ -774,6 +776,171 @@ export class CompanyRepository implements ICompanyRepository {
             throw new ErrorResponse((error as Error).message, StatusCode.INTERNAL_SERVER_ERROR);
         }
     }
+
+
+    // SalesReport
+    async getLastMonthRevenue(companyId: string, page: number, limit: number): Promise<any> {
+        try {
+            if (!companyId) {
+                throw new ErrorResponse("Company ID is required to fetch revenue data!", StatusCode.BAD_REQUEST);
+            }
+
+            const skip = (page - 1) * limit;
+
+            // Define the date range (last 30 days)
+            const currentDate = new Date();
+            const last30DaysStart = new Date();
+            last30DaysStart.setDate(currentDate.getDate() - 30);
+
+            // Step 1: Get total count before pagination
+            const totalRevenues = await BookingModel.aggregate([
+                {
+                    $match: {
+                        companyId: new mongoose.Types.ObjectId(companyId),
+                        totalAmount: { $gt: 0 }
+                    }
+                },
+                { $unwind: "$selectedSlots" },
+                {
+                    $match: {
+                        "selectedSlots.date": { $gte: last30DaysStart, $lt: currentDate },
+                        "selectedSlots.isCancelled": false
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            date: { $dateToString: { format: "%Y-%m-%d", date: "$selectedSlots.date" } },
+                            turfId: "$selectedSlots.turfId"
+                        },
+                        revenue: { $sum: "$selectedSlots.price" }
+                    }
+                }
+            ]);
+
+            // Step 2: Apply pagination using skip and limit
+            const revenueData = await BookingModel.aggregate([
+                {
+                    $match: {
+                        companyId: new mongoose.Types.ObjectId(companyId),
+                        totalAmount: { $gt: 0 }
+                    }
+                },
+                { $unwind: "$selectedSlots" },
+                {
+                    $match: {
+                        "selectedSlots.date": { $gte: last30DaysStart, $lt: currentDate },
+                        "selectedSlots.isCancelled": false
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            date: { $dateToString: { format: "%Y-%m-%d", date: "$selectedSlots.date" } },
+                            turfId: "$selectedSlots.turfId"
+                        },
+                        revenue: { $sum: "$selectedSlots.price" }
+                    }
+                },
+                { $sort: { "_id.date": -1 } }, // Sort by date descending
+                { $skip: skip },
+                { $limit: Number(limit) }
+            ]);
+
+            // Extract unique turfIds
+            const turfIds = [...new Set(revenueData.map(item => item._id.turfId))];
+
+            // Fetch Turf details
+            const turfs = await TurfModel.find({ _id: { $in: turfIds } }).select("turfName location images");
+
+            // Merge revenue data with Turf details
+            const result = revenueData.map(revenue => {
+                const turf = turfs.find(turf => turf._id.toString() === revenue._id.turfId.toString());
+                return {
+                    date: revenue._id.date,
+                    revenue: revenue.revenue,
+                    turfName: turf ? turf.turfName : "Unknown",
+                    location: turf ? turf.location : "Unknown",
+                    images: turf ? turf.images : []
+                };
+            });
+
+            return {
+                result,
+                totalRevenues: totalRevenues.length, // Total count before pagination
+                currentPage: page
+            };
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message, StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+    async getRevenuesByInterval(companyId: string, fromDate: Date, toDate: Date): Promise<any> {
+        try {
+            if (!companyId || !fromDate || !toDate) {
+                throw new ErrorResponse("Company ID, From Date, and To Date are required!", StatusCode.BAD_REQUEST);
+            }
+
+            // Ensure valid date inputs
+            const from = new Date(fromDate);
+            const to = new Date(toDate);
+            to.setHours(23, 59, 59, 999); // Include the full day of 'toDate'
+
+            const revenueData = await BookingModel.aggregate([
+                {
+                    $match: {
+                        companyId: new mongoose.Types.ObjectId(companyId),
+                        totalAmount: { $gt: 0 }
+                    }
+                },
+                {
+                    $unwind: "$selectedSlots"
+                },
+                {
+                    $match: {
+                        "selectedSlots.date": { $gte: from, $lte: to },
+                        "selectedSlots.isCancelled": false
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            date: { $dateToString: { format: "%Y-%m-%d", date: "$selectedSlots.date" } },
+                            turfId: "$selectedSlots.turfId"
+                        },
+                        revenue: { $sum: "$selectedSlots.price" }
+                    }
+                },
+                {
+                    $sort: { "_id.date": -1 } // Sort by date descending
+                }
+            ]);
+
+            // Extract unique turfIds
+            const turfIds = [...new Set(revenueData.map(item => item._id.turfId))];
+
+            // Fetch Turf details
+            const turfs = await TurfModel.find({ _id: { $in: turfIds } }).select("turfName location images");
+
+            // Merge revenue data with Turf details
+            const result = revenueData.map(revenue => {
+                const turf = turfs.find(turf => turf._id.toString() === revenue._id.turfId.toString());
+                return {
+                    date: revenue._id.date,
+                    revenue: revenue.revenue,
+                    turfName: turf ? turf.turfName : "Unknown",
+                    location: turf ? turf.location : "Unknown",
+                    images: turf ? turf.images : []
+                };
+            });
+
+            return result;
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message, StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 
 
 }
