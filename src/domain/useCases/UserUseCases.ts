@@ -14,6 +14,7 @@ import { ChatRoom } from "../entities/ChatRoom";
 import { StatusCode } from "../../shared/enums/StatusCode";
 import { Message } from "../entities/Message";
 import { Notification } from "../entities/Notification";
+import { SubscriptionPlan } from "../entities/SubscriptionPlan";
 AuthService
 
 
@@ -444,6 +445,7 @@ export class UserUseCase implements IUserUseCase {
             throw new ErrorResponse((error as Error).message || "Error While Deleting the Message for everyone ...!!", StatusCode.INTERNAL_SERVER_ERROR);
         }
     }
+
 
 
 }

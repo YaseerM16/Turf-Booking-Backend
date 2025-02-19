@@ -9,6 +9,7 @@ import Authenticator from "../../infrastructure/middleware/Authenticator";
 import { validateAddSubscription } from "../../infrastructure/middleware/validation/AddSubscription.Validator";
 import { SubscriptionPlanController } from "../controllers/SubscriptionPlanController";
 import { SubscriptionPlan } from "../../infrastructure/database/models/SubscriptionPlan";
+import { Subscription } from "../../infrastructure/database/models/Subscription";
 
 
 const router: Router = express.Router()
@@ -18,7 +19,7 @@ const adminRepository = new AdminRepository()
 const adminUseCase = new AdminUseCase(adminRepository)
 const adminController = new AdminController(adminUseCase, authService)
 
-const subscriptionRepo = new SubscriptionPlanRepository(SubscriptionPlan)
+const subscriptionRepo = new SubscriptionPlanRepository(SubscriptionPlan, Subscription)
 const subscriptionUseCase = new SubscriptionPlanUseCase(subscriptionRepo)
 const subscriptionController = new SubscriptionPlanController(subscriptionUseCase)
 
@@ -37,7 +38,6 @@ router.get("/get-approved-companies", Authenticator.adminAuthenticator, (req: Re
 router.get("/company-toggle-block", Authenticator.adminAuthenticator, (req: Request, res: Response) => adminController.companyToggleBlock(req, res))
 
 // Dashboard
-
 router.get("/get-dashboard-data", Authenticator.adminAuthenticator, (req: Request, res: Response) => adminController.getDashboardData(req, res))
 router.get("/get-monthly-revenues", Authenticator.adminAuthenticator, (req: Request, res: Response) => adminController.getMonthlyRevenues(req, res))
 router.get("/get-revenues-by-range", Authenticator.adminAuthenticator, (req: Request, res: Response) => adminController.getRevenuesByRange(req, res))

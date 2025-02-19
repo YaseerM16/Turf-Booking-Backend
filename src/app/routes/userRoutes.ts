@@ -23,6 +23,7 @@ import { SubscriptionPlanRepository } from "../../infrastructure/database/reposi
 import { SubscriptionPlan } from "../../infrastructure/database/models/SubscriptionPlan";
 import { SubscriptionPlanUseCase } from "../../domain/useCases/SubscriptionPlanUseCase";
 import { SubscriptionPlanController } from "../controllers/SubscriptionPlanController";
+import { Subscription } from "../../infrastructure/database/models/Subscription";
 
 
 const router: Router = express.Router()
@@ -38,7 +39,7 @@ const notificationRepo = new NotificationRepository(NotificationModel)
 const notificationUseCase = new NotificationUseCase(notificationRepo)
 const notificationController = new NotificationController(notificationUseCase)
 
-const subscriptionRepo = new SubscriptionPlanRepository(SubscriptionPlan)
+const subscriptionRepo = new SubscriptionPlanRepository(SubscriptionPlan, Subscription)
 const subscriptionUseCase = new SubscriptionPlanUseCase(subscriptionRepo)
 const subscriptionController = new SubscriptionPlanController(subscriptionUseCase)
 
@@ -166,6 +167,7 @@ router.delete("/delete-notification/:roomId/:id",
 
 //// Subscription //////////
 router.get("/get-subscription-plans", (req: Request, res: Response) => subscriptionController.getAllPlans(req, res))
-
+router.post("/subscribe-to-plan/:userId", (req: Request, res: Response) => subscriptionController.subscribeToPlan(req, res))
+router.get("/check-for-subscription/:userId", (req: Request, res: Response) => subscriptionController.checkSubscription(req, res))
 
 export { router as userRoute }
