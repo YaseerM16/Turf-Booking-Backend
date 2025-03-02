@@ -1,5 +1,9 @@
 import { ISubscriptionPlanUseCase } from "../../app/interfaces/usecases/ISubscriptionPlanUseCase";
 import { SubscriptionPlan as PlanEntity } from "../../domain/entities/SubscriptionPlan"
+import { generatePaymentHash } from "../../infrastructure/services/BookingService";
+import { StatusCode } from "../../shared/enums/StatusCode";
+import { PaymentData } from "../../shared/utils/constants";
+import { ErrorResponse } from "../../shared/utils/errors";
 import { ISubscriptionPlanRepository } from "../repositories/ISubscriptionPlanRepository";
 
 
@@ -36,5 +40,37 @@ export class SubscriptionPlanUseCase implements ISubscriptionPlanUseCase {
 
     async checkForSubscription(userId: string): Promise<PlanEntity | null> {
         return this.subscriptionPlanRepository.checkForSubscription(userId)
+    }
+
+    async generatePaymenthash(paymentDetails: PaymentData): Promise<object> {
+        try {
+
+            const { txnid, amount, productinfo, name, email, udf1, udf2, udf3, udf4, udf5, udf6, udf7 } = paymentDetails
+
+            const userId = udf1
+            const userPlanExist = await this.subscriptionPlanRepository.checkForExistPlan(userId)
+
+            if (userPlanExist) throw new Error("Already has a active subscription..!");
+            if (
+                !txnid ||
+                !amount ||
+                !productinfo ||
+                !name ||
+                !email ||
+                !udf1 ||
+                !udf2 ||
+                !udf3 ||
+                !udf4
+            ) throw new Error("Mandatory fields missing");
+
+            const hash = await generatePaymentHash({
+                txnid, amount, productinfo, username: name, email, udf1, udf2, udf3, udf4, udf5, udf6, udf7,
+            });
+
+            return { hash, udf6, udf7 }
+
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message, StatusCode.INTERNAL_SERVER_ERROR);
+        }
     }
 }

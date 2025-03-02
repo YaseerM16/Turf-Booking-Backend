@@ -17,3 +17,19 @@ export const DayValue = {
     [DayRank.Saturday]: "Saturday",
     [DayRank.Sunday]: "Sunday",
 } as const;
+
+
+export type PaymentData = {
+    txnid: string;
+    amount: string;
+    productinfo: string;
+    name: string;
+    email: string;
+    udf1: string;
+    udf2: string;
+    udf3: string;
+    udf4: string;
+    udf5: string;
+    udf6: string;
+    udf7: string;
+};

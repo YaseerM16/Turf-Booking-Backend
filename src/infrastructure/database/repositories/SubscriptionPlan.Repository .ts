@@ -5,14 +5,17 @@ import { StatusCode } from "../../../shared/enums/StatusCode";
 import { ErrorResponse } from "../../../shared/utils/errors";
 import { ISubscriptionPlanRepository } from "../../../domain/repositories/ISubscriptionPlanRepository";
 import WalletModel from "../models/WalletModel";
+import { User } from "../../../domain/entities/User";
 
 export class SubscriptionPlanRepository implements ISubscriptionPlanRepository {
     private subscriptionPlanModel: Model<PlanEntity>;
     private subscriptionModel: Model<Subscription>;
+    private userModel: Model<User>;
 
-    constructor(subscriptionPlanModel: Model<PlanEntity>, subscriptionModel: Model<Subscription>) {
+    constructor(subscriptionPlanModel: Model<PlanEntity>, subscriptionModel: Model<Subscription>, userModel: Model<User>) {
         this.subscriptionPlanModel = subscriptionPlanModel;
         this.subscriptionModel = subscriptionModel;
+        this.userModel = userModel
     }
 
     async addSubscriptionPlan(plan: PlanEntity): Promise<{ plans: PlanEntity[], totalPlans: number }> {
@@ -66,8 +69,8 @@ export class SubscriptionPlanRepository implements ISubscriptionPlanRepository {
             const plans = await this.subscriptionPlanModel
                 .find({ isDelete: false })
                 .sort({ createdAt: -1 })
-                .skip(skip)
-                .limit(limit)
+                .skip(skip || 0)
+                .limit(limit || 0)
                 .lean();
 
             const totalPlans = await this.subscriptionPlanModel.countDocuments({ isDelete: false });
@@ -77,8 +80,6 @@ export class SubscriptionPlanRepository implements ISubscriptionPlanRepository {
             throw new ErrorResponse((error as Error).message, StatusCode.INTERNAL_SERVER_ERROR);
         }
     }
-
-
 
     async updateSubscriptionPlan(id: string, updatedPlan: Partial<PlanEntity>): Promise<PlanEntity | null> {
         try {
@@ -111,21 +112,37 @@ export class SubscriptionPlanRepository implements ISubscriptionPlanRepository {
         }
     }
 
+    async checkForExistPlan(userId: string): Promise<void | boolean> {
+        try {
+            const user = await this.userModel.findById(userId);
+
+            if (!user) throw new Error("User not found");
+
+            if (user.subscriptionPlan) return true
+
+        } catch (error) {
+            throw new Error((error as Error).message || "Invalid Payment Method...!");
+        }
+    }
+
     async subscribeToPlan(userId: string, plan: PlanEntity, paymentMethod: string): Promise<Subscription> {
         const session = await mongoose.startSession();
         session.startTransaction();
+        // console.log("The Plan :: ", plan);
 
         try {
-            // Fetch user's wallet
-            const wallet = await WalletModel.findOne({ userId }).session(session);
-            if (!wallet) throw new Error("Wallet not found");
+            const user = await this.userModel.findById(userId);
+
+            if (!user) throw new Error("User not found");
+
+            if (user.subscriptionPlan) throw new Error("User already has a subscription");
 
             if (paymentMethod === "wallet") {
+                // Fetch user's wallet
+                const wallet = await WalletModel.findOne({ userId }).session(session);
+                if (!wallet) throw new Error("Wallet not found");
                 // Check if wallet has enough balance
-                if (wallet.walletBalance < plan.price) {
-                    throw new Error("Insufficient wallet balance");
-                }
-
+                if (wallet.walletBalance < plan.price) throw new Error("Insufficient wallet balance");
                 // Deduct amount from wallet
                 wallet.walletBalance -= plan.price;
                 wallet.walletTransaction.push({
@@ -135,41 +152,96 @@ export class SubscriptionPlanRepository implements ISubscriptionPlanRepository {
                     transactionMethod: "wallet",
                 });
                 await wallet.save({ session });
+                // Calculate subscription end date
+                const endDate = new Date();
+                endDate.setMonth(endDate.getMonth() + (plan.duration === "monthly" ? 1 : 12));
+
+                // Create Subscription entity
+                const subscriptionEntity = new Subscription(
+                    new mongoose.Types.ObjectId() as unknown as string, // Generate a new ObjectId for _id
+                    userId,
+                    plan._id,
+                    "active",
+                    new Date(), // startDate (fix applied)
+                    endDate,
+                    `WALLET-${new Date().getTime()}`, // Mock payment ID
+                    new Date(), // createdAt (optional)
+                    new Date()  // updatedAt (optional)
+                );
+
+                // Save Subscription in DB
+                const subscription = new this.subscriptionModel(subscriptionEntity);
+                await subscription.save({ session });
+
+                // Populate planId details
+                const populatedSubscription = await this.subscriptionModel
+                    .findById(subscription._id)
+                    .populate('planId') // Ensure 'planId' is correctly referenced in your schema
+                    .session(session);
+
+                // Update user's subscriptionPlan field
+                await this.userModel.findByIdAndUpdate(
+                    populatedSubscription?.userId,
+                    { $set: { subscriptionPlan: populatedSubscription?.planId } },
+                    { session }
+                );
+
+                // Commit transaction
+                await session.commitTransaction();
+                session.endSession();
+
+                return populatedSubscription as unknown as Subscription;
+
+            } else if (paymentMethod === "payu") {
+                // console.log("THis is the PayMethod PayU of Subcription :", `UserID :${userId}, Plan : ${plan}`);
+                const endDate = new Date();
+                endDate.setMonth(endDate.getMonth() + (plan.duration === "monthly" ? 1 : 12));
+
+                // Create Subscription entity
+                const subscriptionEntity = new Subscription(
+                    new mongoose.Types.ObjectId() as unknown as string, // Generate a new ObjectId for _id
+                    userId,
+                    plan._id,
+                    "active",
+                    new Date(), // startDate (fix applied)
+                    endDate,
+                    `WALLET-${new Date().getTime()}`, // Mock payment ID
+                    new Date(), // createdAt (optional)
+                    new Date()  // updatedAt (optional)
+                );
+
+                // Save Subscription in DB
+                const subscription = new this.subscriptionModel(subscriptionEntity);
+                await subscription.save({ session });
+
+                // Populate planId details
+                const populatedSubscription = await this.subscriptionModel
+                    .findById(subscription._id)
+                    .populate('planId') // Ensure 'planId' is correctly referenced in your schema
+                    .session(session);
+
+                // Update user's subscriptionPlan field
+                await this.userModel.findByIdAndUpdate(
+                    populatedSubscription?.userId,
+                    { $set: { subscriptionPlan: populatedSubscription?.planId } },
+                    { session }
+                );
+
+                // Commit transaction
+                await session.commitTransaction();
+                session.endSession();
+                console.log();
+
+                return populatedSubscription as unknown as Subscription;
 
             } else {
-                throw new Error("Invalid payment method");
+                throw new Error("Invalid Payment Method...!");
             }
 
-            // Calculate subscription end date
-            const endDate = new Date();
-            endDate.setMonth(endDate.getMonth() + (plan.duration === "monthly" ? 1 : 12));
-
-            // Create Subscription entity
-            const subscriptionEntity = new Subscription(
-                new mongoose.Types.ObjectId() as unknown as string, // Generate a new ObjectId for _id
-                userId,
-                plan._id,
-                "active",
-                new Date(), // startDate (fix applied)
-                endDate,
-                `WALLET-${new Date().getTime()}`, // Mock payment ID
-                new Date(), // createdAt (optional)
-                new Date()  // updatedAt (optional)
-            );
-
-            // Save Subscription in DB
-            const subscription = new this.subscriptionModel(subscriptionEntity);
-            await subscription.save({ session });
-
-            // Commit transaction
-            await session.commitTransaction();
-            session.endSession();
-
-            return subscriptionEntity;
         } catch (error) {
             await session.abortTransaction();
             session.endSession();
-            throw error;
+            throw new Error((error as Error).message || "Failed to Subscribe to Plan.");
         }
     }
 
@@ -199,8 +271,7 @@ export class SubscriptionPlanRepository implements ISubscriptionPlanRepository {
                 plan.updatedAt
             ) : null; // Return the plan entity or null if not found
         } catch (error) {
-            console.error("Error checking subscription:", error);
-            throw new Error("Failed to check subscription.");
+            throw new Error((error as Error).message || "Failed to check subscription.");
         }
     }
 

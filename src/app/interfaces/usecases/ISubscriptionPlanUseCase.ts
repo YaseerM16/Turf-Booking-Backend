@@ -1,4 +1,5 @@
 import { SubscriptionPlan as PlanEntity, SubscriptionPlan } from "../../../domain/entities/SubscriptionPlan";
+import { PaymentData } from "../../../shared/utils/constants";
 
 export interface ISubscriptionPlanUseCase {
     createPlan(plan: PlanEntity): Promise<{ plans: PlanEntity[], totalPlans: number }>;
@@ -7,5 +8,6 @@ export interface ISubscriptionPlanUseCase {
     updatePlan(id: string, updatedPlan: Partial<PlanEntity>): Promise<PlanEntity | null>;
     deletePlan(id: string): Promise<void>;
     subscribeToPlan(userId: string, plan: SubscriptionPlan, paymentMethod: string): Promise<any>;
-    checkForSubscription(userId: string): Promise<SubscriptionPlan | null>
+    checkForSubscription(userId: string): Promise<SubscriptionPlan | null>;
+    generatePaymenthash(paymentDetails: PaymentData): Promise<object>;
 }

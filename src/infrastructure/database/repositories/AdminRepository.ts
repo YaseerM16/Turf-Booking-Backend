@@ -8,6 +8,10 @@ import { ErrorResponse } from "../../../shared/utils/errors";
 import { StatusCode } from "../../../shared/enums/StatusCode";
 import { SubscriptionPlan } from "../../../domain/entities/SubscriptionPlan";
 import { Company } from "../../../domain/entities/Company";
+import { startOfMonth, endOfMonth, subMonths, format } from "date-fns";
+import { Booking } from "../../../domain/entities/Booking";
+import { subDays, startOfDay } from "date-fns";
+
 
 type SearchQuery = {
     $or?: { companyname?: { $regex: string; $options: string }; companyemail?: { $regex: string; $options: string } }[];
@@ -45,6 +49,7 @@ export class AdminRepository implements IAdminRepository {
             throw new Error(`Error fetching users: ${error.message}`);
         }
     }
+
     async getRegisteredCompany(page: number, limit: number, searchQry: string): Promise<{ companies: any[]; totalCompany: number; }> {
         try {
             const skip = (page - 1) * limit;
@@ -124,13 +129,18 @@ export class AdminRepository implements IAdminRepository {
             }
             const updatedBlockStatus = !user.isActive
 
-            const updateResult = await UserModel.updateOne({ _id: userId }, { $set: { isActive: updatedBlockStatus } });
+            const updatedUser = await UserModel.findOneAndUpdate(
+                { _id: userId },
+                { $set: { isActive: updatedBlockStatus } },
+                { new: true } // ✅ Returns the updated document
+            );
 
-            if (updateResult.modifiedCount > 0) {
-                return { success: true };
+            if (updatedUser) {
+                return updatedUser;
             } else {
                 return { success: false, message: "Failed to update block status" };
             }
+
 
         } catch (error: any) {
             throw new Error(`Error fetching users: ${error.message}`);
@@ -163,7 +173,6 @@ export class AdminRepository implements IAdminRepository {
             throw new Error(`Error fetching users: ${error.message}`);
         }
     }
-
 
     async approveTheCompany(companyId: string, companyEmail: string): Promise<Company> {
         try {
@@ -261,6 +270,7 @@ export class AdminRepository implements IAdminRepository {
             throw new Error(`Error fetching users: ${error.message}`);
         }
     }
+
     async getMonthlyRevenue(): Promise<any> {
         try {
 
@@ -357,5 +367,240 @@ export class AdminRepository implements IAdminRepository {
         }
         throw new Error("Method not implemented.");
     }
+
+    ///Sales
+    async getLastMonthRevenue(page: number, limit: number): Promise<Booking[] | null> {
+        try {
+            if (!page || !limit) {
+                throw new ErrorResponse("Page or Limit is required to fetch revenue data!", StatusCode.BAD_REQUEST);
+            }
+
+            const skip = (Number(page) - 1) * limit;
+
+            // Get last month's date range
+            const lastMonthStart = startOfMonth(subMonths(new Date(), 1));
+            const lastMonthEnd = endOfMonth(subMonths(new Date(), 1));
+
+            // Aggregate revenue grouped by companyId
+            const revenueData = await BookingModel.aggregate([
+                {
+                    $match: {
+                        bookingDate: { $gte: lastMonthStart, $lte: lastMonthEnd },
+                        status: "completed",
+                        paymentStatus: "completed"
+                    }
+                },
+                {
+                    $group: {
+                        _id: "$companyId",
+                        totalRevenue: { $sum: "$totalAmount" },
+                        totalBookings: { $sum: 1 }
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "companies",
+                        localField: "_id",
+                        foreignField: "_id",
+                        as: "companyDetails"
+                    }
+                },
+                {
+                    $unwind: "$companyDetails"
+                },
+                {
+                    $project: {
+                        companyId: "$_id",
+                        companyName: "$companyDetails.companyname",
+                        companyEmail: "$companyDetails.companyemail",
+                        companyPhone: "$companyDetails.phone",
+                        totalRevenue: 1,
+                        totalBookings: 1
+                    }
+                },
+                { $sort: { totalRevenue: -1 } }, // Sort by highest revenue
+                { $skip: skip },
+                { $limit: Number(limit) }
+            ]);
+
+            return revenueData
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message, StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async getLast30DaysRevenue(page: number, limit: number): Promise<{ revenues: Booking[] | null, totalRevenues: number }> {
+        try {
+            if (!page || !limit) {
+                throw new ErrorResponse("Page or Limit is required to fetch revenue data!", StatusCode.BAD_REQUEST);
+            }
+
+            const skip = (Number(page) - 1) * limit;
+
+            // Get the start date for the last 30 days
+            const last30DaysStart = startOfDay(subDays(new Date(), 30));
+
+            const revenueData = await BookingModel.aggregate([
+                {
+                    $match: {
+                        bookingDate: { $gte: last30DaysStart },
+                        status: "completed",
+                        paymentStatus: "completed"
+                    }
+                },
+                {
+                    $group: {
+                        _id: { $dateToString: { format: "%Y-%m-%d", date: "$bookingDate" } },
+                        totalRevenue: { $sum: "$totalAmount" },
+                        totalBookings: { $sum: 1 }
+                    }
+                },
+                { $sort: { _id: -1 } }, // Sort by date in descending order
+                {
+                    $facet: {
+                        paginatedResults: [{ $skip: skip }, { $limit: Number(limit) }], // Apply pagination
+                        totalCount: [{ $count: "total" }] // Count total records before pagination
+                    }
+                }
+            ]);
+
+            // Extract values
+            const formattedRevenueData = revenueData[0].paginatedResults.map((item: any) => ({
+                date: format(new Date(item._id), "EEE, MMM d, yyyy"), // Example: "Tue, Feb 18, 2025"
+                totalRevenue: item.totalRevenue,
+                totalBookings: item.totalBookings
+            }));
+
+            const totalRevenues = revenueData[0].totalCount.length > 0 ? revenueData[0].totalCount[0].total : 0;
+
+            // Final Response
+            return {
+                revenues: formattedRevenueData,
+                totalRevenues,
+            };
+
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message, StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async getRevenuesByDateRange(fromDate: Date, toDate: Date, page: number, limit: number): Promise<{ revenues: Booking[], totalRevenues: number }> {
+        try {
+            if (!fromDate || !toDate || !page || !limit) {
+                throw new ErrorResponse("From Date, To Date, Page, and Limit are required!", StatusCode.BAD_REQUEST);
+            }
+
+            const skip = (Number(page) - 1) * limit;
+
+            // Ensure valid date inputs
+            const from = new Date(fromDate);
+            const to = new Date(toDate);
+            to.setHours(23, 59, 59, 999); // Include the full day of 'toDate'
+
+            const revenueData = await BookingModel.aggregate([
+                {
+                    $match: {
+                        bookingDate: { $gte: from, $lte: to },
+                        status: "completed",
+                        paymentStatus: "completed"
+                    }
+                },
+                {
+                    $group: {
+                        _id: { $dateToString: { format: "%Y-%m-%d", date: "$bookingDate" } },
+                        totalRevenue: { $sum: "$totalAmount" },
+                        totalBookings: { $sum: 1 }
+                    }
+                },
+                { $sort: { _id: -1 } }, // Sort by date descending
+                {
+                    $facet: {
+                        paginatedResults: [{ $skip: skip }, { $limit: Number(limit) }], // Apply pagination
+                        totalCount: [{ $count: "total" }] // Get total count before pagination
+                    }
+                }
+            ]);
+
+            // Extract formatted results
+            const formattedRevenueData = revenueData[0].paginatedResults.map((item: any) => ({
+                date: format(new Date(item._id), "EEE, MMM d, yyyy"), // Example: "Tue, Feb 18, 2025"
+                totalRevenue: item.totalRevenue,
+                totalBookings: item.totalBookings
+            }));
+
+            const totalRevenues = revenueData[0].totalCount.length > 0 ? revenueData[0].totalCount[0].total : 0;
+
+            // Final Response
+            return {
+                revenues: formattedRevenueData,
+                totalRevenues
+            };
+
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message, StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+    // async getRevenuesByCompanies(page: number, limit: number): Promise<Booking[] | null> {
+    //     try {
+    //         if (!page || !limit) {
+    //             throw new ErrorResponse("Page or Limit is required to fetch revenue data!", StatusCode.BAD_REQUEST);
+    //         }
+
+    //         const skip = (Number(page) - 1) * limit;
+
+    //         // Get last month's date range
+    //         const lastMonthStart = startOfMonth(subMonths(new Date(), 1));
+    //         const lastMonthEnd = endOfMonth(subMonths(new Date(), 1));
+
+    //         // Aggregate revenue grouped by companyId
+    //         const revenueData = await BookingModel.aggregate([
+    //             {
+    //                 $match: {
+    //                     bookingDate: { $gte: last30DaysStart },
+    //                     status: "completed",
+    //                     paymentStatus: "completed"
+    //                 }
+    //             },
+    //             {
+    //                 $group: {
+    //                     _id: { $dateToString: { format: "%Y-%m-%d", date: "$bookingDate" } },
+    //                     totalRevenue: { $sum: "$totalAmount" },
+    //                     totalBookings: { $sum: 1 }
+    //                 }
+    //             },
+    //             { $sort: { _id: -1 } }, // Sort by date in descending order
+    //             {
+    //                 $facet: {
+    //                     paginatedResults: [{ $skip: skip }, { $limit: Number(limit) }], // Apply pagination
+    //                     totalCount: [{ $count: "total" }] // Count total records before pagination
+    //                 }
+    //             }
+    //         ]);
+
+    //         // Extract values
+    //         const formattedRevenueData = revenueData[0].paginatedResults.map(item => ({
+    //             date: format(new Date(item._id), "EEE, MMM d, yyyy"), // Example: "Tue, Feb 18, 2025"
+    //             totalRevenue: item.totalRevenue,
+    //             totalBookings: item.totalBookings
+    //         }));
+
+    //         const totalRevenues = revenueData[0].totalCount.length > 0 ? revenueData[0].totalCount[0].total : 0;
+
+    //         // Final Response
+    //         return {
+    //             result: formattedRevenueData,
+    //             totalRevenues,
+    //             currentPage: page
+    //         };
+
+
+
+    //     } catch (error) {
+    //         throw new ErrorResponse((error as Error).message, StatusCode.INTERNAL_SERVER_ERROR);
+    //     }
+    // }
+
 
 }

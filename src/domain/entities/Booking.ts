@@ -7,6 +7,7 @@ export class Booking {
         public companyId: ObjectId | string,
         public turfId: ObjectId | string,
         public selectedSlots: {
+            slot: any;
             price: any;
             _id: any; fromTime: Date; toTime: Date; date: Date; day: string
         }[],  // Updated with `fromTime`, `toTime`, `date`, and `day`

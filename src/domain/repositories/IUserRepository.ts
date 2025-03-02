@@ -13,6 +13,8 @@ export interface IUserRepository {
     create(user: User): Promise<User>;
     update(id: string, value: any): Promise<User | null>;
     googleRegister(email: string, username: string): Promise<User | null>
+    topTurfs(): Promise<Turf[]>
+
 
     /// <- Wallet -> ///
     createWallet(userId: string): Promise<object>

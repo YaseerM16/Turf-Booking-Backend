@@ -284,15 +284,15 @@ export class CompanyController {
     async getTurfDetails(req: Request, res: Response) {
         try {
 
-            const { turfId } = req.query
+            const { companyId, turfId } = req.params
             if (!turfId) res.status(200).json({ success: false, message: "Cannot get the Turf Id :" });
 
-            const getTurf = await this.companyUseCase.getTurfById(turfId as string)
-            res.status(200).json({ success: true, turf: getTurf, message: "Turf Fetched successfully :" });
+            const getTurf = await this.companyUseCase.getTurfById(companyId, turfId as string)
+            sendResponse(res, true, "Turf Fetched successfully :)", StatusCode.SUCCESS, { turf: getTurf })
 
         } catch (error) {
             console.error('Error during getting Turf Details :', error);
-            res.status(500).json({ message: 'Something went wrong during Fetch the Turf Details :', error: error });
+            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
         }
     }
 

@@ -60,6 +60,10 @@ export class CompanyRepository implements ICompanyRepository {
 
     async registerTurf(turf: Turf, workingDays: string[]): Promise<Turf | null> {
         try {
+            const existingTurf = await TurfModel.findOne({ turfName: turf.turfName });
+            if (existingTurf) {
+                throw new Error("Turf name already exists");
+            }
             const savedTurf = await TurfService.registerTurf(turf, workingDays)
             await TurfService.markExpiredSlots()
             return savedTurf as unknown as Turf
@@ -129,19 +133,22 @@ export class CompanyRepository implements ICompanyRepository {
         }
     }
 
-    async getTurfById(turfId: string): Promise<Turf | null> {
+    async getTurfById(companyId: string, turfId: string): Promise<Turf | null> {
         try {
-            if (!turfId) throw new ErrorResponse("TurfId is not Provided in Repository :", 500);
+            if (!turfId || !companyId)
+                throw new ErrorResponse("TurfId or CompanyId were not provided in Repository", 400);
 
-            const turf = await TurfModel.findById(turfId);
-            if (!turf) throw new ErrorResponse("Turf not found", 404);
+            const turf = await TurfModel.findOne({ _id: turfId, companyId }); // Ensure turf belongs to the company
+            if (!turf)
+                throw new ErrorResponse("Turf not found or Unauthorized", 404);
 
-            return turf as unknown as Turf
+            return turf as unknown as Turf;
 
         } catch (error: any) {
-            throw new ErrorResponse(error.message, error.status);
+            throw new ErrorResponse(error.message, error.status || 500);
         }
     }
+
 
     async deleteTurfImage(turfId: string, index: number): Promise<String[] | null> {
         try {
