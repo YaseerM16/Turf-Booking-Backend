@@ -76,18 +76,20 @@ export class AdminController {
 
     async userToggleBlock(req: Request, res: Response) {
         try {
-            const { email, userId } = req.query
+            const { userId, email } = req.params
+            console.log("EMail nd UserID in TOGGLEBlock :", email, userId);
 
             if (!email) {
                 throw new Error("Email is required but was not provided.");
             }
 
             const user = await this.adminUseCase.isBlocked(email as string, userId as string)
-
-            res.status(200).json({ success: true, message: "User Block Toggled Successfully" });
+            sendResponse(res, true, "User Block Toggled Successfully", StatusCode.SUCCESS, { user })
+            // res.status(200).json({ success: true, message: "User Block Toggled Successfully" });
 
         } catch (error) {
-            res.status(400).json({ message: (error as Error).message });
+            // res.status(400).json({ message: (error as Error).message });
+            sendResponse(res, false, "There's something went wrong while toggling the user block ..!", StatusCode.INTERNAL_SERVER_ERROR)
         }
     }
     async companyToggleBlock(req: Request, res: Response) {
@@ -219,7 +221,27 @@ export class AdminController {
         }
     };
 
+    //Sales Report ::
+    async getLastMonthRevenues(req: Request, res: Response) {
+        try {
+            const { page, limit } = req.query
+            const monthlyRevenue = await this.adminUseCase.getLastMonthRevenue(page as unknown as number, limit as unknown as number)
+            sendResponse(res, true, "Dashboard Data Fetched Successfully :", StatusCode.SUCCESS, { revenues: monthlyRevenue })
 
+        } catch (error) {
+            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
+        }
+    };
 
+    async getRevenuesByDateRage(req: Request, res: Response) {
+        try {
+            const { page, limit, fromDate, toDate } = req.query
+            const revenues = await this.adminUseCase.getRevenuesByDateRange(fromDate as unknown as Date, toDate as unknown as Date, page as unknown as number, limit as unknown as number)
+            sendResponse(res, true, "Dashboard Data Fetched Successfully :", StatusCode.SUCCESS, { result: revenues })
+
+        } catch (error) {
+            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
+        }
+    }
 
 }

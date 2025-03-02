@@ -15,7 +15,11 @@ import { StatusCode } from "../../shared/enums/StatusCode";
 import { Message } from "../entities/Message";
 import { Notification } from "../entities/Notification";
 import { SubscriptionPlan } from "../entities/SubscriptionPlan";
-AuthService
+import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { s3 } from "../../infrastructure/multer/multerConfig";
+import { config } from "../../config/config";
+
 
 
 export class UserUseCase implements IUserUseCase {
@@ -95,7 +99,7 @@ export class UserUseCase implements IUserUseCase {
 
     async userLogin(email: string, password: string): Promise<User | null> {
         try {
-            let user = await this.userRepository.findByEmail(email);
+            const user = await this.userRepository.findByEmail(email);
 
             if (!user || !user.password) {
                 throw new ErrorResponse("user dosen't exist", 400);
@@ -232,10 +236,20 @@ export class UserUseCase implements IUserUseCase {
         }
     }
 
+    async topTurfs(): Promise<Turf[]> {
+        try {
+            const topTurfs = await this.userRepository.topTurfs()
+            // console.log("These are the TIp :", topTurfs);
+            return topTurfs
+        } catch (error: unknown) {
+            throw new ErrorResponse((error as Error).message, StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     async getAllTurfs(queryobj: any): Promise<{ turfs: Turf[], totalTurfs: number }> {
         try {
             const page = parseInt(queryobj.page as string) || 1; // Default to page 1 if not provided
-            const limit = parseInt(queryobj.limit as string) || 6;
+            const limit = parseInt(queryobj.limit as string) || 0;
             const searchQry = queryobj.searchQry as string
             const filter = {
                 type: queryobj.type as string || "",
@@ -436,6 +450,7 @@ export class UserUseCase implements IUserUseCase {
             throw new ErrorResponse((error as Error).message || "Error While Deleting the Message for everyone ...!!", StatusCode.INTERNAL_SERVER_ERROR);
         }
     }
+
     async deleteForMe(messageId: string): Promise<Message | null> {
         try {
             if (!messageId) throw new ErrorResponse("message Id is not getting while for delete for Everyone.. !!", StatusCode.BAD_REQUEST);
@@ -446,6 +461,27 @@ export class UserUseCase implements IUserUseCase {
         }
     }
 
+    async getSignedUrlUseCase(files: { fileName: string; fileType: string }[]): Promise<any> {
+        if (!Array.isArray(files) || files.length === 0) {
+            throw new Error("No files provided");
+        }
+
+        return await Promise.all(
+            files.map(async (file) => {
+                const fileKey = `courses/${Date.now()}-${file.fileName}`;
+
+                const command = new PutObjectCommand({
+                    Bucket: config.S3_BUCKET_NAME,
+                    Key: fileKey,
+                    ContentType: file.fileType,
+                });
+
+                const presignedUrl = await getSignedUrl(s3, command, { expiresIn: 300 });
+
+                return { fileKey, presignedUrl };
+            })
+        );
+    };
 
 
 }

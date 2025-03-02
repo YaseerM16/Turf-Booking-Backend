@@ -1,3 +1,4 @@
+import { Booking } from "../entities/Booking";
 import { Company } from "../entities/Company";
 import { SubscriptionPlan } from "../entities/SubscriptionPlan";
 
@@ -20,5 +21,10 @@ export interface IAdminRepository {
 
     //Subscription
     addSubscriptionPlan(plan: SubscriptionPlan): Promise<SubscriptionPlan>
+
+    //Sales Report
+    getLastMonthRevenue(page: number, limit: number): Promise<Booking[] | null>;
+    getLast30DaysRevenue(page: number, limit: number): Promise<{ revenues: Booking[] | null, totalRevenues: number }>;
+    getRevenuesByDateRange(fromDate: Date, toDate: Date, page: number, limit: number): Promise<{ revenues: Booking[], totalRevenues: number }>
 
 }

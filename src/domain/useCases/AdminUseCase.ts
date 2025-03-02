@@ -1,6 +1,8 @@
 import { IAdminUseCase } from "../../app/interfaces/usecases/admin/IAdminUseCase";
 import { config } from "../../config/config";
+import { StatusCode } from "../../shared/enums/StatusCode";
 import { ErrorResponse } from "../../shared/utils/errors";
+import { Booking } from "../entities/Booking";
 import { Company } from "../entities/Company";
 import { SubscriptionPlan } from "../entities/SubscriptionPlan";
 import { User } from "../entities/User";
@@ -65,15 +67,15 @@ export class AdminUseCase implements IAdminUseCase {
 
     async isBlocked(email: string, userId: string): Promise<object> {
         try {
-            if (!email) {
+            if (!email || !userId) {
                 throw new Error("Email is required but was not provided.");
             }
 
-            const users = await this.adminRepository.isBlocked(email, userId);
-            if (!users) {
+            const user = await this.adminRepository.isBlocked(email, userId);
+            if (!user) {
                 return { success: false, message: "User not found or error fetching data" };
             }
-            return { success: true, message: "User block status fetched successfully" };
+            return user
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
         }
@@ -163,5 +165,31 @@ export class AdminUseCase implements IAdminUseCase {
         }
         throw new Error("Method not implemented.");
     }
+
+
+    // /Sales Report/ //
+    async getLastMonthRevenue(page: number, limit: number): Promise<{ revenues: Booking[] | null, totalRevenues: number }> {
+        try {
+            if (!page || !limit) {
+                throw new ErrorResponse("Page or Limit is required to fetch revenue data!", StatusCode.BAD_REQUEST);
+            }
+            const revenues = await this.adminRepository.getLast30DaysRevenue(page, limit)
+            return revenues
+        } catch (error: unknown) {
+            throw new ErrorResponse((error as Error).message, StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+    async getRevenuesByDateRange(fromDate: Date, toDate: Date, page: number, limit: number): Promise<{ revenues: Booking[], totalRevenues: number }> {
+        try {
+            if (!page || !limit) {
+                throw new ErrorResponse("Page or Limit is required to fetch revenue data!", StatusCode.BAD_REQUEST);
+            }
+            const revenues = await this.adminRepository.getRevenuesByDateRange(fromDate, toDate, page, limit)
+            return revenues
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message, StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 
 }

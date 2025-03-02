@@ -22,6 +22,12 @@ export interface IUserUseCase {
     googleRegister(email: string, username: string): Promise<User | null>
     googleLogin(email: string): Promise<User | null>
     sendVerificationMail(userId: string): Promise<void>
+    topTurfs(): Promise<Turf[]>
+
+
+    //pre-signed Url ;
+    getSignedUrlUseCase(files: { fileName: string; fileType: string }[]): Promise<any>;
+
 
     /// <-   Wallet   ->  ///
     createWallet(userId: string): Promise<object>

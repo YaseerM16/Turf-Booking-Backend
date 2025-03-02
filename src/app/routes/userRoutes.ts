@@ -24,6 +24,7 @@ import { SubscriptionPlan } from "../../infrastructure/database/models/Subscript
 import { SubscriptionPlanUseCase } from "../../domain/useCases/SubscriptionPlanUseCase";
 import { SubscriptionPlanController } from "../controllers/SubscriptionPlanController";
 import { Subscription } from "../../infrastructure/database/models/Subscription";
+import UserModel from "../../infrastructure/database/models/UserModel";
 
 
 const router: Router = express.Router()
@@ -39,7 +40,7 @@ const notificationRepo = new NotificationRepository(NotificationModel)
 const notificationUseCase = new NotificationUseCase(notificationRepo)
 const notificationController = new NotificationController(notificationUseCase)
 
-const subscriptionRepo = new SubscriptionPlanRepository(SubscriptionPlan, Subscription)
+const subscriptionRepo = new SubscriptionPlanRepository(SubscriptionPlan, Subscription, UserModel)
 const subscriptionUseCase = new SubscriptionPlanUseCase(subscriptionRepo)
 const subscriptionController = new SubscriptionPlanController(subscriptionUseCase)
 
@@ -55,7 +56,7 @@ router.post("/auth/login",
 )
 router.post("/auth/google-sign-up", (req: Request, res: Response) => userController.googleSingUp(req, res))
 router.post("/auth/google-login", (req: Request, res: Response) => userController.googleLogin(req, res))
-
+router.get("/get-top-turfs", (req: Request, res: Response) => userController.getTopTurfs(req, res))
 
 ///   Profile   ///
 router.patch(
@@ -76,6 +77,11 @@ router.post("/get-verification-mail/:userId",
     Authenticator.userAuthenticator,
     AccessControl.isUserBlocked,
     (req: Request, res: Response) => userController.getVerificationMail(req, res))
+
+router.post("/get-preSignedUrl",
+    Authenticator.userAuthenticator,
+    AccessControl.isUserBlocked,
+    (req: Request, res: Response) => userController.getSignedUrlController(req, res))
 
 ///   Guest experience   ///
 
@@ -167,7 +173,18 @@ router.delete("/delete-notification/:roomId/:id",
 
 //// Subscription //////////
 router.get("/get-subscription-plans", (req: Request, res: Response) => subscriptionController.getAllPlans(req, res))
-router.post("/subscribe-to-plan/:userId", (req: Request, res: Response) => subscriptionController.subscribeToPlan(req, res))
-router.get("/check-for-subscription/:userId", (req: Request, res: Response) => subscriptionController.checkSubscription(req, res))
+router.post("/subscribe-to-plan/:userId",
+    Authenticator.userAuthenticator,
+    AccessControl.isUserBlocked,
+    (req: Request, res: Response) => subscriptionController.subscribeToPlan(req, res))
+router.get("/check-for-subscription/:userId",
+    Authenticator.userAuthenticator,
+    AccessControl.isUserBlocked,
+    (req: Request, res: Response) => subscriptionController.checkSubscription(req, res))
+router.post("/subscription/payment/hash",
+    Authenticator.userAuthenticator,
+    AccessControl.isUserBlocked,
+    (req: Request, res: Response) => subscriptionController.getPaymentHashSubscription(req, res)
+)
 
 export { router as userRoute }

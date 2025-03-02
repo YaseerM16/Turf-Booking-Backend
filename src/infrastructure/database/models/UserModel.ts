@@ -47,6 +47,9 @@ const UserSchema = new Schema<User>({
     },
     forgotPasswordToken: {
         type: String,
+    },
+    subscriptionPlan: {
+        type: Schema.Types.ObjectId, ref: 'SubscriptionPlan', required: true
     }
 
 })

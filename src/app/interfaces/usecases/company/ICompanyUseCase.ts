@@ -20,7 +20,7 @@ export interface ICompanyUseCase {
     //Turf
     registerTurf(turfDetails: any): Promise<Turf | null>;
     getTurfs(companyId: string): Promise<Turf[] | null>;
-    getTurfById(turfId: string): Promise<Turf | null>;
+    getTurfById(companyId: string, turfId: string): Promise<Turf | null>;
     deleteTurfImage(turfId: string, index: number): Promise<String[] | null>
     editTurf(turfDetails: any): Promise<Turf | null>
     blockTurf(turfId: string): Promise<object>

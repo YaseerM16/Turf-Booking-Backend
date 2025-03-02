@@ -13,6 +13,7 @@ export class User {
         public isVerified: boolean,
         public isDelete: boolean,
         public profilePicture: string,
+        public subscriptionPlan: ObjectId | string,
         public verifyToken: string | undefined,
         public verifyTokenExpiry: Date | undefined,
         public forgotPasswordToken: string | undefined,

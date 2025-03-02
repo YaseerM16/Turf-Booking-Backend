@@ -56,19 +56,33 @@ router.patch("/profile/update-details/:companyId",
 //Turf-Management
 router.post("/register-turf",
     Authenticator.companyAuthenticator,
-    AccessControl.isCompanyBlocked, uploadMiddleware, (req: Request, res: Response) => companyController.registerTurf(req, res))
-router.get("/get-turfs", Authenticator.companyAuthenticator,
-    AccessControl.isCompanyBlocked, (req: Request, res: Response) => companyController.getTurfs(req, res))
-router.get("/get-turf-details", Authenticator.companyAuthenticator,
-    AccessControl.isCompanyBlocked, (req: Request, res: Response) => companyController.getTurfDetails(req, res))
-router.delete("/delete-turf-image/:turfId/:index", Authenticator.companyAuthenticator,
-    AccessControl.isCompanyBlocked, (req: Request, res: Response) => companyController.deleteTurfImage(req, res))
-router.put("/edit-turf", uploadMiddleware, Authenticator.companyAuthenticator,
-    AccessControl.isCompanyBlocked, (req: Request, res: Response) => companyController.editTurf(req, res))
-router.patch("/block-turf", Authenticator.companyAuthenticator,
-    AccessControl.isCompanyBlocked, (req: Request, res: Response) => companyController.blockTurf(req, res))
-router.patch("/Un-block-turf", Authenticator.companyAuthenticator,
-    AccessControl.isCompanyBlocked, (req: Request, res: Response) => companyController.unBlockTurf(req, res))
+    AccessControl.isCompanyBlocked, uploadMiddleware,
+    (req: Request, res: Response) => companyController.registerTurf(req, res))
+router.get("/get-turfs",
+    Authenticator.companyAuthenticator,
+    AccessControl.isCompanyBlocked,
+    (req: Request, res: Response) => companyController.getTurfs(req, res))
+router.get("/get-turf-details/:companyId/:turfId",
+    Authenticator.companyAuthenticator,
+    AccessControl.isCompanyBlocked,
+    (req: Request, res: Response) => companyController.getTurfDetails(req, res))
+router.delete("/delete-turf-image/:turfId/:index",
+    Authenticator.companyAuthenticator,
+    AccessControl.isCompanyBlocked,
+    (req: Request, res: Response) => companyController.deleteTurfImage(req, res))
+router.put("/edit-turf",
+    uploadMiddleware,
+    Authenticator.companyAuthenticator,
+    AccessControl.isCompanyBlocked,
+    (req: Request, res: Response) => companyController.editTurf(req, res))
+router.patch("/block-turf",
+    Authenticator.companyAuthenticator,
+    AccessControl.isCompanyBlocked,
+    (req: Request, res: Response) => companyController.blockTurf(req, res))
+router.patch("/Un-block-turf",
+    Authenticator.companyAuthenticator,
+    AccessControl.isCompanyBlocked,
+    (req: Request, res: Response) => companyController.unBlockTurf(req, res))
 
 
 //Slot-Management
@@ -76,14 +90,26 @@ router.get("/get-slots-by-day",
     Authenticator.companyAuthenticator,
     AccessControl.isCompanyBlocked,
     (req: Request, res: Response) => companyController.getSlots(req, res))
-router.get("/make-slot-unavailable", Authenticator.companyAuthenticator,
-    AccessControl.isCompanyBlocked, (req: Request, res: Response) => companyController.makeSlotUnavail(req, res))
-router.get("/make-slot-available", Authenticator.companyAuthenticator,
-    AccessControl.isCompanyBlocked, (req: Request, res: Response) => companyController.makeSlotAvail(req, res))
-router.patch("/:turfId/add-working-days", Authenticator.companyAuthenticator,
-    AccessControl.isCompanyBlocked, (req: Request, res: Response) => companyController.addWorkingDays(req, res))
-router.get("/get-details-by-day/:turfId/:day", (req: Request, res: Response) => companyController.getDetailsOfDay(req, res))
-router.patch("/edit-day-details/:turfId", (req: Request, res: Response) => companyController.editWorkingDayDetails(req, res))
+router.get("/make-slot-unavailable",
+    Authenticator.companyAuthenticator,
+    AccessControl.isCompanyBlocked,
+    (req: Request, res: Response) => companyController.makeSlotUnavail(req, res))
+router.get("/make-slot-available",
+    Authenticator.companyAuthenticator,
+    AccessControl.isCompanyBlocked,
+    (req: Request, res: Response) => companyController.makeSlotAvail(req, res))
+router.patch("/:turfId/add-working-days",
+    Authenticator.companyAuthenticator,
+    AccessControl.isCompanyBlocked,
+    (req: Request, res: Response) => companyController.addWorkingDays(req, res))
+router.get("/get-details-by-day/:turfId/:day",
+    Authenticator.companyAuthenticator,
+    AccessControl.isCompanyBlocked,
+    (req: Request, res: Response) => companyController.getDetailsOfDay(req, res))
+router.patch("/edit-day-details/:turfId",
+    Authenticator.companyAuthenticator,
+    AccessControl.isCompanyBlocked,
+    (req: Request, res: Response) => companyController.editWorkingDayDetails(req, res))
 
 // router.get("/example-gen-slots/:turfId", (req: Request, res: Response) => companyController.genExampleOneDay(req, res))
 

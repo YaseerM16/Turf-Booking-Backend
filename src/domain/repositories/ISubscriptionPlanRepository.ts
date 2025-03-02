@@ -8,6 +8,7 @@ export interface ISubscriptionPlanRepository {
     getAllSubscriptionPlans(page: number, limit: number): Promise<{ plans: SubscriptionPlan[], totalPlans: number }>;
     updateSubscriptionPlan(id: string, updatedPlan: Partial<SubscriptionPlan>): Promise<SubscriptionPlan | null>;
     deleteSubscriptionPlan(id: string): Promise<void>;
+    checkForExistPlan(userId: string): Promise<void | boolean>;
     subscribeToPlan(userId: string, plan: SubscriptionPlan, paymentMethod: string): Promise<any>;
     checkForSubscription(userId: string): Promise<SubscriptionPlan | null>
 }

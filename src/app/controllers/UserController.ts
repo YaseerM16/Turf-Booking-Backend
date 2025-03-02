@@ -220,6 +220,15 @@ export class UserController {
         }
     }
 
+    async getTopTurfs(req: Request, res: Response) {
+        try {
+            const topTurfs = await this.userUseCase.topTurfs()
+            sendResponse(res, true, "The Top Featured Turfs were fetched successfully ... :)", StatusCode.SUCCESS, { turfs: topTurfs })
+        } catch (error) {
+            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
+        }
+    }
+
     async updateProfileImage(
         req: Request,
         res: Response,
@@ -523,6 +532,20 @@ export class UserController {
             sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
         }
     }
+
+    getSignedUrlController = async (req: Request, res: Response): Promise<void> => {
+        try {
+            // const { files } = req.body;
+            // console.log("Files for Upload PreSig :", req.body);
+
+            // const urls = await getSignedUrlUseCase(files);
+            const urls = await this.userUseCase.getSignedUrlUseCase(req.body)
+            sendResponse(res, true, "Presigned Url is Generated Successfully :!", StatusCode.SUCCESS, { urls })
+
+        } catch (error: any) {
+            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
+        }
+    };
 
 
 

@@ -55,7 +55,7 @@ export class MongoUserRepository implements IUserRepository {
 
     async findByEmail(email: string): Promise<User | null> {
         try {
-            const userDoc = await UserModel.findOne({ email })
+            const userDoc = await UserModel.findOne({ email }).populate("subscriptionPlan");
             return userDoc ? userDoc : null
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
@@ -75,19 +75,14 @@ export class MongoUserRepository implements IUserRepository {
             throw new ErrorResponse(error.message, error.status);
         }
     }
+
     async update(id: string, value: any): Promise<User | null> {
         try {
-            // console.log("Hi firi Updat _:_", id);
-            // const [jsonString] = Object.keys(value);
-            // console.log("JSonStr :", jsonString);
-
-            // const updatedDets = JSON.parse(jsonString);
-            // console.log("Update Dets for Pro :", updatedDets);
 
             const updatedUser = await UserModel.findByIdAndUpdate(id, value, {
                 new: true,
                 fields: "-password"
-            });
+            }).populate("subscriptionPlan");
             return updatedUser
         } catch (error: any) {
             console.log("Errro trew from UseRespo :", error);
@@ -145,16 +140,14 @@ export class MongoUserRepository implements IUserRepository {
             const totalTurfs = await TurfModel.countDocuments(query);
 
             const turfs = await TurfModel.find(query)
-                .skip(options.skip)
-                .limit(options.limit);
+                .skip(options.skip || 0)
+                .limit(options.limit || 0);
 
             return { turfs: turfs as unknown as Turf[], totalTurfs };
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
         }
     }
-
-
 
     async getTurfById(turfId: string): Promise<Turf | null> {
         try {
@@ -389,9 +382,29 @@ export class MongoUserRepository implements IUserRepository {
                 throw new ErrorResponse("Slot not found in the booking.", 404);
             }
 
-            const refundAmount = selectedSlot.price
-            // Decrease the total amount for the booking
-            booking.totalAmount -= refundAmount; // Adjust the amount dynamically
+            // Convert fromTime (start time of the slot) to a Date object
+            const slotDate = new Date(selectedSlot.fromTime);
+
+            // Get the current time (convert to UTC for accuracy)
+            const now = new Date();
+            const utcNow = new Date(now.toISOString());
+
+            // Check time difference
+            const timeDifference = slotDate.getTime() - utcNow.getTime();
+            const hoursDifference = timeDifference / (1000 * 60 * 60); // Convert ms to hours
+
+            console.log("Slot Date:", slotDate.toISOString());
+            console.log("Current Time:", utcNow.toISOString());
+            console.log("Hours Difference:", hoursDifference);
+            console.log("Slot Price:", selectedSlot.price);
+
+            // Deduct 25% if cancellation is within 24 hours
+            const refundAmount = hoursDifference < 24
+                ? Math.round(selectedSlot.price * 0.75)
+                : selectedSlot.price; 0
+            if (booking.totalAmount <= 0) {
+                booking.totalAmount = 0;
+            }
             booking.selectedSlots = booking.selectedSlots.map((selectedSlot: any) => {
                 if (selectedSlot._id === slotId) {
                     selectedSlot.isCancelled = true;
@@ -632,7 +645,6 @@ export class MongoUserRepository implements IUserRepository {
         }
     }
 
-
     async messageDeleteEveryOne(messageId: string): Promise<Message> {
         try {
             const findMessage = await MessageModel.findByIdAndUpdate(
@@ -696,6 +708,48 @@ export class MongoUserRepository implements IUserRepository {
                 await chatRoom.save();
             }
             return findMessage
+        } catch (error: unknown) {
+            throw new ErrorResponse((error as Error).message, StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async topTurfs(): Promise<Turf[]> {
+        try {
+            const topTurfs = await BookingModel.aggregate([
+                {
+                    "$group": {
+                        "_id": "$turfId",
+                        "totalEarnings": { "$sum": "$totalAmount" }
+                    }
+                },
+                { "$sort": { "totalEarnings": -1 } },
+                { "$limit": 4 }
+            ]);
+
+            const turfIds = topTurfs.map(item => item._id);
+
+            const turfs = await TurfModel.find({ _id: { $in: turfIds } })
+                .select("turfName images workingSlots turfSize turfType price");
+
+            const result = topTurfs.map(turfData => {
+                const turf = turfs.find(t => t._id.toString() === turfData._id.toString());
+                return {
+                    turfId: turfData._id,
+                    totalEarnings: turfData.totalEarnings,
+                    turfName: turf ? turf.turfName : "Unknown",
+                    images: turf ? turf.images : [],
+                    workingSlots: turf ? turf.workingSlots : [],
+                    turfSize: turf ? turf.turfSize : "Unknown",
+                    turfType: turf ? turf.turfType : "Unknown",
+                    price: turf ? turf.price : "Unknown"
+                };
+            });
+
+            // console.log(result);
+            // console.log("TIPPPS :", turfs);
+
+            return result as unknown as Turf[]
+
         } catch (error: unknown) {
             throw new ErrorResponse((error as Error).message, StatusCode.INTERNAL_SERVER_ERROR);
         }

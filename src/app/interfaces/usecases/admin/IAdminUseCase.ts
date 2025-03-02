@@ -1,6 +1,7 @@
 import { Company } from "../../../../domain/entities/Company";
 import { User } from "../../../../domain/entities/User";
 import { SubscriptionPlan } from "../../../../domain/entities/SubscriptionPlan";
+import { Booking } from "../../../../domain/entities/Booking";
 
 
 export interface IAdminUseCase {
@@ -25,6 +26,12 @@ export interface IAdminUseCase {
 
     //Subscription
     addSubscriptionPlan(plan: SubscriptionPlan): Promise<SubscriptionPlan>
+
+    // /Sales Report/ //
+    getLastMonthRevenue(page: number, limit: number): Promise<{ revenues: Booking[] | null, totalRevenues: number }>
+    getRevenuesByDateRange(fromDate: Date, toDate: Date, page: number, limit: number): Promise<{ revenues: Booking[], totalRevenues: number }>
+
+
 }
 
 

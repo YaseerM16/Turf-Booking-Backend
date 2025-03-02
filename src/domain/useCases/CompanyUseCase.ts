@@ -185,7 +185,6 @@ export class CompanyUseCase implements ICompanyUseCase {
         }
     }
 
-
     ///   <-   Turf    ->   ///
 
     async registerTurf(turfDetails: any): Promise<Turf | null> {
@@ -233,8 +232,6 @@ export class CompanyUseCase implements ICompanyUseCase {
             throw new ErrorResponse(error.message, error.status);
         }
     }
-
-
 
     async editTurf(turfDetails: any): Promise<Turf | null> {
         try {
@@ -305,11 +302,11 @@ export class CompanyUseCase implements ICompanyUseCase {
         }
     }
 
-    async getTurfById(turfId: string): Promise<Turf | null> {
+    async getTurfById(companyId: string, turfId: string): Promise<Turf | null> {
         try {
-            if (!turfId) throw new ErrorResponse("TurfId is not Provided :", 500);
+            if (!turfId || !companyId) throw new ErrorResponse("TurfId or companyID were not Provided :", 500);
 
-            const turfObject = await this.companyRepository.getTurfById(turfId)
+            const turfObject = await this.companyRepository.getTurfById(companyId, turfId)
 
             return turfObject as unknown as Turf
 

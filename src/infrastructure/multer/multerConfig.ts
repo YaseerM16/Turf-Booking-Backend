@@ -45,7 +45,7 @@ if (!region || !accessKeyId || !secretAccessKey) {
     throw new Error("AWS S3 credentials or region are missing in configuration.");
 }
 
-const s3 = new S3Client({
+export const s3 = new S3Client({
     region, // Non-null assertion
     credentials: {
         accessKeyId, // Non-null assertion

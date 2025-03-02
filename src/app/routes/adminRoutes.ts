@@ -10,6 +10,7 @@ import { validateAddSubscription } from "../../infrastructure/middleware/validat
 import { SubscriptionPlanController } from "../controllers/SubscriptionPlanController";
 import { SubscriptionPlan } from "../../infrastructure/database/models/SubscriptionPlan";
 import { Subscription } from "../../infrastructure/database/models/Subscription";
+import UserModel from "../../infrastructure/database/models/UserModel";
 
 
 const router: Router = express.Router()
@@ -19,7 +20,7 @@ const adminRepository = new AdminRepository()
 const adminUseCase = new AdminUseCase(adminRepository)
 const adminController = new AdminController(adminUseCase, authService)
 
-const subscriptionRepo = new SubscriptionPlanRepository(SubscriptionPlan, Subscription)
+const subscriptionRepo = new SubscriptionPlanRepository(SubscriptionPlan, Subscription, UserModel)
 const subscriptionUseCase = new SubscriptionPlanUseCase(subscriptionRepo)
 const subscriptionController = new SubscriptionPlanController(subscriptionUseCase)
 
@@ -29,7 +30,7 @@ router.get("/logout", (req: Request, res: Response) => adminController.logout(re
 
 // User - Management
 router.get("/get-users", Authenticator.adminAuthenticator, (req: Request, res: Response) => adminController.getUsers(req, res))
-router.get("/user-toggle-block", Authenticator.adminAuthenticator, (req: Request, res: Response) => adminController.userToggleBlock(req, res))
+router.get("/user-toggle-block/:userId/:email", Authenticator.adminAuthenticator, (req: Request, res: Response) => adminController.userToggleBlock(req, res))
 
 // Company - Management
 router.patch("/approve-company", Authenticator.adminAuthenticator, (req: Request, res: Response) => adminController.approveCompany(req, res))
@@ -49,5 +50,9 @@ router.patch("/edit-subscription-plan/:id", Authenticator.adminAuthenticator, va
 router.delete("/delete-subscription-plan/:id", Authenticator.adminAuthenticator, (req: Request, res: Response) => subscriptionController.deletePlan(req, res))
 
 // router.get("/")
+// /Sales Report/ //
+router.get("/get-lastMonth-revenues", Authenticator.adminAuthenticator, (req: Request, res: Response) => adminController.getLastMonthRevenues(req, res))
+router.get("/get-revenues-by-date-range", Authenticator.adminAuthenticator, (req: Request, res: Response) => adminController.getRevenuesByDateRage(req, res))
+
 
 export { router as adminRoute }
