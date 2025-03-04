@@ -299,6 +299,7 @@ class UserController {
     getTurfs(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
+                console.log("THSE ENteredddd :");
                 const query = req.query;
                 // console.log("Queries in getTurfsofUser :", query);
                 const turfs = yield this.userUseCase.getAllTurfs(query);
@@ -306,6 +307,7 @@ class UserController {
                 // res.status(200).json({ success: true, turfs: turfs.turfs, totalTurfs: turfs.totalTurfs, message: "Turfs Fetched successfully :" });
             }
             catch (error) {
+                console.log("Erreo Etched   :", error);
                 (0, responseUtil_1.sendResponse)(res, false, error.message, StatusCode_1.StatusCode.INTERNAL_SERVER_ERROR);
                 // res.status(500).json({ message: error?.message });
             }

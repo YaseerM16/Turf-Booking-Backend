@@ -312,6 +312,8 @@ export class UserController {
 
     async getTurfs(req: Request, res: Response) {
         try {
+            console.log("THSE ENteredddd :");
+
             const query = req.query
             // console.log("Queries in getTurfsofUser :", query);
 
@@ -320,6 +322,8 @@ export class UserController {
             // res.status(200).json({ success: true, turfs: turfs.turfs, totalTurfs: turfs.totalTurfs, message: "Turfs Fetched successfully :" });
 
         } catch (error: unknown) {
+            console.log("Erreo Etched   :", error);
+
             sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
             // res.status(500).json({ message: error?.message });
         }
