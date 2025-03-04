@@ -1,24 +1,25 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.User = void 0;
-class User {
-    constructor(_id, googleId, name, email, phone, password, role, isActive, isVerified, isDelete, profilePicture, subscriptionPlan, verifyToken, verifyTokenExpiry, forgotPasswordToken, forgotPasswordTokenExpiry) {
+exports.Company = void 0;
+class Company {
+    constructor(_id, googleId, companyname, companyemail, phone, password, isActive, isVerified, isBlocked, isApproved, profilePicture, verifyToken, verifyTokenExpiry, forgotPasswordToken, forgotPasswordTokenExpiry, location, address) {
         this._id = _id;
         this.googleId = googleId;
-        this.name = name;
-        this.email = email;
+        this.companyname = companyname;
+        this.companyemail = companyemail;
         this.phone = phone;
         this.password = password;
-        this.role = role;
         this.isActive = isActive;
         this.isVerified = isVerified;
-        this.isDelete = isDelete;
+        this.isBlocked = isBlocked;
+        this.isApproved = isApproved;
         this.profilePicture = profilePicture;
-        this.subscriptionPlan = subscriptionPlan;
         this.verifyToken = verifyToken;
         this.verifyTokenExpiry = verifyTokenExpiry;
         this.forgotPasswordToken = forgotPasswordToken;
         this.forgotPasswordTokenExpiry = forgotPasswordTokenExpiry;
+        this.location = location;
+        this.address = address;
     }
 }
-exports.User = User;
+exports.Company = Company;

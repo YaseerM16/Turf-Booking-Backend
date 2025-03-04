@@ -35,7 +35,8 @@ app.use((req, res, next) => {
 
 app.use(
     cors({
-        origin: ['http://localhost:3000', "http://127.0.0.1:3000"],
+        origin: ['http://localhost:3000', "http://127.0.0.1:3000", "https://turf-booking-frontend.vercel.app"],
+        methods: ["GET", "POST", "PUT", "DELETE"], // Allowed methods
         credentials: true,
     })
 );

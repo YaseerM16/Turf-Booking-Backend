@@ -68,13 +68,13 @@ export class UserController {
             res.cookie("refreshToken", refreshToken, {
                 httpOnly: true,
                 secure: config.MODE !== "development",
-                sameSite: "lax"
+                sameSite: "none"
             });
 
             res.cookie("token", token, {
                 httpOnly: false,
                 secure: false,
-                sameSite: "lax",
+                sameSite: "none",
             });
 
             sendResponse(res, true, "Logged In Successfully ✅", StatusCode.SUCCESS, { user: userData, loggedIn: true })
