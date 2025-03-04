@@ -25,7 +25,7 @@ export class MongoUserRepository implements IUserRepository {
 
     async findById(userId: string): Promise<User | null> {
         try {
-            const userDoc = await UserModel.findById(userId)
+            const userDoc = await UserModel.findById(userId).populate("subscriptionPlan");
             return userDoc ? userDoc : null
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);

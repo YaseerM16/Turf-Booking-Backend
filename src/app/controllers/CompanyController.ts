@@ -33,7 +33,7 @@ export class CompanyController {
             sendResponse(res, true, "Company Registered Sccessfully :", StatusCode.SUCCESS, { user: newCompany })
 
         } catch (error) {
-            sendResponse(res, false, "Error While Register the Company :!", StatusCode.BAD_REQUEST)
+            sendResponse(res, false, (error as Error).message || "Error While Register the Company :!", StatusCode.BAD_REQUEST)
             // res.status(400).json({ message: (error as Error).message });
         }
 
@@ -291,7 +291,7 @@ export class CompanyController {
             sendResponse(res, true, "Turf Fetched successfully :)", StatusCode.SUCCESS, { turf: getTurf })
 
         } catch (error) {
-            console.error('Error during getting Turf Details :', error);
+            console.log('Error during getting Turf Details :', error);
             sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
         }
     }

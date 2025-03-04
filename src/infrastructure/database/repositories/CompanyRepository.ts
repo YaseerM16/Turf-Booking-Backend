@@ -24,9 +24,8 @@ export class CompanyRepository implements ICompanyRepository {
     async findByEmail(email: string): Promise<Company | null> {
         try {
             const companyDoc = await CompanyModel.findOne({ companyemail: email })
-            if (!companyDoc) throw new ErrorResponse("Company can't found :", 500);
-
-            return companyDoc ? companyDoc : null
+            if (companyDoc) return companyDoc
+            return null
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);
         }

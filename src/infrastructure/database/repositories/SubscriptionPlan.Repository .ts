@@ -52,7 +52,6 @@ export class SubscriptionPlanRepository implements ISubscriptionPlanRepository {
         }
     }
 
-
     async getSubscriptionPlanById(id: string): Promise<PlanEntity | null> {
         try {
             const plan = await this.subscriptionPlanModel.findById(id).lean();
@@ -149,7 +148,7 @@ export class SubscriptionPlanRepository implements ISubscriptionPlanRepository {
                     transactionDate: new Date(), // Include the missing required field
                     transactionAmount: plan.price,
                     transactionType: "debit",
-                    transactionMethod: "wallet",
+                    transactionMethod: "subscription",
                 });
                 await wallet.save({ session });
                 // Calculate subscription end date
@@ -274,6 +273,4 @@ export class SubscriptionPlanRepository implements ISubscriptionPlanRepository {
             throw new Error((error as Error).message || "Failed to check subscription.");
         }
     }
-
-
 }

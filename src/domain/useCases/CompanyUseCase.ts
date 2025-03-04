@@ -20,7 +20,7 @@ export class CompanyUseCase implements ICompanyUseCase {
         try {
             const existingCompany = await this.companyRepository.findByEmail(company.companyemail)
 
-            if (existingCompany) throw new ErrorResponse("user aldready registered", 400);
+            if (existingCompany) throw new ErrorResponse("Company aldready registered", 400);
 
             if (company.password) {
                 const hashedPassword = await generateHashPassword(company.password);
