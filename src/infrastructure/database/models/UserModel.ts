@@ -49,7 +49,7 @@ const UserSchema = new Schema<User>({
         type: String,
     },
     subscriptionPlan: {
-        type: Schema.Types.ObjectId, ref: 'SubscriptionPlan', required: true
+        type: Schema.Types.ObjectId, ref: 'SubscriptionPlan'
     }
 
 })
