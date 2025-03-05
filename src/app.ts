@@ -23,36 +23,29 @@ app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 app.use(cookieParser());
 
-app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "*"); // Allows all origins
-    res.header("Access-Control-Allow-Credentials", "true");
-    res.header(
-        "Access-Control-Allow-Headers",
-        "*"
-    );
-    res.header("Access-Control-Allow-Methods", "*"); // Allows all HTTP methods
-    next();
-});
 
+const allowedOrigins = [
+    // "http://localhost:3000",
+    "http://localhost:5000",
+    "https://www.turfbooking.online",
+    "https://api.turfbooking.online",
+];
 
-app.use(
-    cors({
-        origin: "*",
-        methods: ["GET", "POST", "PUT", "DELETE"], // Allowed methods
-        allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
-        credentials: true,
-    })
-);
+const corsOptions = {
+    origin: (origin: any, callback: any) => {
 
-// app.use(
-//     cors({
-//         origin: ["https://turfbooking.online", "https://api.turfbooking.online"], // Allow main domain & subdomain
-//         credentials: true, // Allow cookies & authentication headers
-//         methods: ["GET", "POST", "PUT", "DELETE"], // Allowed request methods
-//         allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
-//     })
-// );
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            console.error(`Blocked by CORS: ${origin}`);
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+    credentials: true
+};
 
+app.use(cors(corsOptions));
 
 app.use("/api/v1/user", userRoute)
 app.use("/api/v1/company", companyRoute)

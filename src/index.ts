@@ -19,7 +19,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
     cors: {
-        origin: "*", // Allow frontend
+        origin: "https://www.turfbooking.online", // Allow frontend
         methods: ["GET", "POST", "PUT", "DELETE"], // Allowed methods
         credentials: true, // Allow credentials like cookies
     },
