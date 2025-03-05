@@ -31,10 +31,19 @@ app.use((req, res, next) => {
     next();
 });
 app.use((0, cors_1.default)({
-    origin: ['http://localhost:3000', "http://127.0.0.1:3000", "https://turf-booking-frontend.vercel.app"],
+    origin: ['http://localhost:3000', "http://127.0.0.1:3000", "https://turf-booking-frontend.vercel.app", "https://turfbooking.online", "https://api.turfbooking.online"],
     methods: ["GET", "POST", "PUT", "DELETE"], // Allowed methods
+    allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
     credentials: true,
 }));
+// app.use(
+//     cors({
+//         origin: ["https://turfbooking.online", "https://api.turfbooking.online"], // Allow main domain & subdomain
+//         credentials: true, // Allow cookies & authentication headers
+//         methods: ["GET", "POST", "PUT", "DELETE"], // Allowed request methods
+//         allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
+//     })
+// );
 app.use("/api/v1/user", userRoutes_1.userRoute);
 app.use("/api/v1/company", companyRoutes_1.companyRoute);
 app.use("/api/v1/admin", adminRoutes_1.adminRoute);
