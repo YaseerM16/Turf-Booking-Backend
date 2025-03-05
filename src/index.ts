@@ -19,7 +19,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
     cors: {
-        origin: ['http://localhost:3000', "http://127.0.0.1:3000", "https://turf-booking-frontend.vercel.app"], // Allow frontend
+        origin: ['http://localhost:3000', "http://127.0.0.1:3000", "https://turf-booking-frontend.vercel.app", "https://www.turfbooking.online"], // Allow frontend
         methods: ["GET", "POST", "PUT", "DELETE"], // Allowed methods
         credentials: true, // Allow credentials like cookies
     },
