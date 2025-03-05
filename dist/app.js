@@ -25,13 +25,14 @@ app.use(express_1.default.json({ limit: '10mb' }));
 app.use(express_1.default.urlencoded({ extended: true, limit: '10mb' }));
 app.use((0, cookie_parser_1.default)());
 app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "http://localhost:5000");
+    res.header("Access-Control-Allow-Origin", "*"); // Allows all origins
     res.header("Access-Control-Allow-Credentials", "true");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+    res.header("Access-Control-Allow-Headers", "*");
+    res.header("Access-Control-Allow-Methods", "*"); // Allows all HTTP methods
     next();
 });
 app.use((0, cors_1.default)({
-    origin: "https://api.turfbooking.online",
+    origin: "*",
     methods: ["GET", "POST", "PUT", "DELETE"], // Allowed methods
     allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
     credentials: true,
