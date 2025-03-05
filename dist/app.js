@@ -31,7 +31,7 @@ app.use((req, res, next) => {
     next();
 });
 app.use((0, cors_1.default)({
-    origin: ['http://localhost:3000', "http://127.0.0.1:3000", "https://turf-booking-frontend.vercel.app", "https://turfbooking.online", "https://api.turfbooking.online"],
+    origin: "*",
     methods: ["GET", "POST", "PUT", "DELETE"], // Allowed methods
     allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
     credentials: true,
