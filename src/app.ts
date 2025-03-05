@@ -35,7 +35,7 @@ app.use((req, res, next) => {
 
 app.use(
     cors({
-        origin: "*",
+        origin: "https://api.turfbooking.online",
         methods: ["GET", "POST", "PUT", "DELETE"], // Allowed methods
         allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
         credentials: true,
