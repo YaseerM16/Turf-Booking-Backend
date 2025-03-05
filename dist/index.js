@@ -16,7 +16,7 @@ const port = process.env.PORT || 5000;
 const server = http_1.default.createServer(app_1.default);
 const io = new socket_io_1.Server(server, {
     cors: {
-        origin: "https://www.turfbooking.online", // Allow frontend
+        origin: ["https://www.turfbooking.online", "https://api.turfbooking.online"], // Allow frontend
         methods: ["GET", "POST", "PUT", "DELETE"], // Allowed methods
         credentials: true, // Allow credentials like cookies
     },
