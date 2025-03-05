@@ -5,7 +5,7 @@ import { config } from "../../config/config";
 import { validationResult } from "express-validator"
 import { IUserUseCase } from "../interfaces/usecases/user/IUserUseCase";
 import { User } from "../../domain/entities/User";
-import { generatePaymentHash } from "../../../src/infrastructure/services/BookingService"
+import { generatePaymentHash } from "../../infrastructure/services/BookingService";
 import { StatusCode } from "../../shared/enums/StatusCode";
 import { sendResponse } from "../../shared/utils/responseUtil";
 

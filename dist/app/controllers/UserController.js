@@ -13,7 +13,7 @@ exports.UserController = void 0;
 const errors_1 = require("../../shared/utils/errors");
 const config_1 = require("../../config/config");
 const express_validator_1 = require("express-validator");
-const BookingService_1 = require("../../../src/infrastructure/services/BookingService");
+const BookingService_1 = require("../../infrastructure/services/BookingService");
 const StatusCode_1 = require("../../shared/enums/StatusCode");
 const responseUtil_1 = require("../../shared/utils/responseUtil");
 class UserController {
