@@ -68,13 +68,15 @@ export class UserController {
             res.cookie("refreshToken", refreshToken, {
                 httpOnly: true,
                 secure: true,
-                sameSite: "none"
+                sameSite: "none",
+                domain: 'turfbooking.online'
             });
 
             res.cookie("token", token, {
                 httpOnly: false,
                 secure: false,
                 sameSite: "none",
+                domain: 'turfbooking.online'
             });
 
             sendResponse(res, true, "Logged In Successfully ✅", StatusCode.SUCCESS, { user: userData, loggedIn: true })
@@ -107,13 +109,15 @@ export class UserController {
             res.cookie("refreshToken", refreshToken, {
                 httpOnly: true,
                 secure: true,
-                sameSite: "lax"
+                sameSite: "none",
+                domain: 'turfbooking.online'
             });
 
             res.cookie("token", token, {
                 httpOnly: false,
                 secure: false,
-                sameSite: "lax",
+                sameSite: "none",
+                domain: 'turfbooking.online'
             });
 
             sendResponse(res, true, "Registered Successfully ..!✅", StatusCode.SUCCESS, { user: newUser })
@@ -143,13 +147,15 @@ export class UserController {
             res.cookie("refreshToken", refreshToken, {
                 httpOnly: true,
                 secure: true,
-                sameSite: "lax"
+                sameSite: "none",
+                domain: 'turfbooking.online'
             });
 
             res.cookie("token", token, {
                 httpOnly: false,
                 secure: false,
-                sameSite: "lax",
+                sameSite: "none",
+                domain: 'turfbooking.online'
             });
 
             sendResponse(res, true, "Logged In Successfully ..!", StatusCode.SUCCESS, { user: newUser })
@@ -184,13 +190,15 @@ export class UserController {
                         res.cookie("refreshToken", refreshToken, {
                             httpOnly: true,
                             secure: true,
-                            sameSite: "lax"
+                            sameSite: "none",
+                            domain: 'turfbooking.online'
                         });
 
                         res.cookie("token", token, {
                             httpOnly: false,
                             secure: false,
-                            sameSite: "lax",
+                            sameSite: "none",
+                            domain: 'turfbooking.online'
                         });
 
                         res
