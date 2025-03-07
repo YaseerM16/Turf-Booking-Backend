@@ -67,7 +67,7 @@ export class UserController {
 
             res.cookie("refreshToken", refreshToken, {
                 httpOnly: true,
-                secure: config.MODE !== "development",
+                secure: true,
                 sameSite: "none"
             });
 
@@ -106,7 +106,7 @@ export class UserController {
 
             res.cookie("refreshToken", refreshToken, {
                 httpOnly: true,
-                secure: config.MODE !== "development",
+                secure: true,
                 sameSite: "lax"
             });
 
@@ -142,7 +142,7 @@ export class UserController {
 
             res.cookie("refreshToken", refreshToken, {
                 httpOnly: true,
-                secure: config.MODE !== "development",
+                secure: true,
                 sameSite: "lax"
             });
 
@@ -183,7 +183,7 @@ export class UserController {
 
                         res.cookie("refreshToken", refreshToken, {
                             httpOnly: true,
-                            secure: config.MODE !== "development",
+                            secure: true,
                             sameSite: "lax"
                         });
 
