@@ -74,7 +74,7 @@ export class UserController {
 
             res.cookie("token", token, {
                 httpOnly: false,
-                secure: false,
+                secure: true,
                 sameSite: "none",
                 domain: 'turfbooking.online'
             });
@@ -115,7 +115,7 @@ export class UserController {
 
             res.cookie("token", token, {
                 httpOnly: false,
-                secure: false,
+                secure: true,
                 sameSite: "none",
                 domain: 'turfbooking.online'
             });
@@ -153,7 +153,7 @@ export class UserController {
 
             res.cookie("token", token, {
                 httpOnly: false,
-                secure: false,
+                secure: true,
                 sameSite: "none",
                 domain: 'turfbooking.online'
             });
@@ -196,7 +196,7 @@ export class UserController {
 
                         res.cookie("token", token, {
                             httpOnly: false,
-                            secure: false,
+                            secure: true,
                             sameSite: "none",
                             domain: 'turfbooking.online'
                         });

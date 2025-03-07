@@ -75,7 +75,7 @@ class UserController {
                 });
                 res.cookie("token", token, {
                     httpOnly: false,
-                    secure: false,
+                    secure: true,
                     sameSite: "none",
                     domain: 'turfbooking.online'
                 });
@@ -109,7 +109,7 @@ class UserController {
                 });
                 res.cookie("token", token, {
                     httpOnly: false,
-                    secure: false,
+                    secure: true,
                     sameSite: "none",
                     domain: 'turfbooking.online'
                 });
@@ -142,7 +142,7 @@ class UserController {
                 });
                 res.cookie("token", token, {
                     httpOnly: false,
-                    secure: false,
+                    secure: true,
                     sameSite: "none",
                     domain: 'turfbooking.online'
                 });
@@ -178,7 +178,7 @@ class UserController {
                             });
                             res.cookie("token", token, {
                                 httpOnly: false,
-                                secure: false,
+                                secure: true,
                                 sameSite: "none",
                                 domain: 'turfbooking.online'
                             });
