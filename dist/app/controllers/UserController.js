@@ -11,7 +11,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserController = void 0;
 const errors_1 = require("../../shared/utils/errors");
-const config_1 = require("../../config/config");
 const express_validator_1 = require("express-validator");
 const BookingService_1 = require("../../infrastructure/services/BookingService");
 const StatusCode_1 = require("../../shared/enums/StatusCode");
@@ -70,13 +69,15 @@ class UserController {
                 const refreshToken = this.authService.generateRefreshToken(det);
                 res.cookie("refreshToken", refreshToken, {
                     httpOnly: true,
-                    secure: config_1.config.MODE !== "development",
-                    sameSite: "none"
+                    secure: true,
+                    sameSite: "none",
+                    domain: 'turfbooking.online'
                 });
                 res.cookie("token", token, {
                     httpOnly: false,
                     secure: false,
                     sameSite: "none",
+                    domain: 'turfbooking.online'
                 });
                 (0, responseUtil_1.sendResponse)(res, true, "Logged In Successfully ✅", StatusCode_1.StatusCode.SUCCESS, { user: userData, loggedIn: true });
             }
@@ -102,13 +103,15 @@ class UserController {
                 const refreshToken = this.authService.generateRefreshToken(det);
                 res.cookie("refreshToken", refreshToken, {
                     httpOnly: true,
-                    secure: config_1.config.MODE !== "development",
-                    sameSite: "lax"
+                    secure: true,
+                    sameSite: "none",
+                    domain: 'turfbooking.online'
                 });
                 res.cookie("token", token, {
                     httpOnly: false,
                     secure: false,
-                    sameSite: "lax",
+                    sameSite: "none",
+                    domain: 'turfbooking.online'
                 });
                 (0, responseUtil_1.sendResponse)(res, true, "Registered Successfully ..!✅", StatusCode_1.StatusCode.SUCCESS, { user: newUser });
             }
@@ -133,13 +136,15 @@ class UserController {
                 const refreshToken = this.authService.generateRefreshToken(det);
                 res.cookie("refreshToken", refreshToken, {
                     httpOnly: true,
-                    secure: config_1.config.MODE !== "development",
-                    sameSite: "lax"
+                    secure: true,
+                    sameSite: "none",
+                    domain: 'turfbooking.online'
                 });
                 res.cookie("token", token, {
                     httpOnly: false,
                     secure: false,
-                    sameSite: "lax",
+                    sameSite: "none",
+                    domain: 'turfbooking.online'
                 });
                 (0, responseUtil_1.sendResponse)(res, true, "Logged In Successfully ..!", StatusCode_1.StatusCode.SUCCESS, { user: newUser });
             }
@@ -167,13 +172,15 @@ class UserController {
                             const refreshToken = this.authService.generateRefreshToken(det);
                             res.cookie("refreshToken", refreshToken, {
                                 httpOnly: true,
-                                secure: config_1.config.MODE !== "development",
-                                sameSite: "lax"
+                                secure: true,
+                                sameSite: "none",
+                                domain: 'turfbooking.online'
                             });
                             res.cookie("token", token, {
                                 httpOnly: false,
                                 secure: false,
-                                sameSite: "lax",
+                                sameSite: "none",
+                                domain: 'turfbooking.online'
                             });
                             res
                                 .status(200)
