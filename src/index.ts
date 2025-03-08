@@ -19,11 +19,21 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
     cors: {
-        origin: ["https://www.turfbooking.online", "https://api.turfbooking.online", "http://localhost:5000"], // Allow frontend
-        methods: ["GET", "POST", "PUT", "DELETE"], // Allowed methods
-        credentials: true, // Allow credentials like cookies
-    },
+        // origin: "http://localhost:3000",
+        origin: "https://www.turfbooking.online",
+        methods: ["GET", "POST", 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'Role'],
+        credentials: true
+    }
 });
+
+// const io = new Server(server, {
+//     cors: {
+//         origin: ["https://www.turfbooking.online", "https://api.turfbooking.online", "http://localhost:5000"], // Allow frontend
+//         methods: ["GET", "POST", "PUT", "DELETE"], // Allowed methods
+//         credentials: true, // Allow credentials like cookies
+//     },
+// });
 
 socketHandler(io);
 
