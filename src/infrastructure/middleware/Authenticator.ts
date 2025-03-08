@@ -42,8 +42,9 @@ class Authenticator {
                         res.clearCookie("token");
                         res.cookie("token", newAccessToken, {
                             httpOnly: false,
-                            secure: false,
-                            sameSite: "lax",
+                            secure: true,
+                            sameSite: "none",
+                            domain: 'turfbooking.online'
                         });
 
                         req.user = { id: _id, role: userRole };
@@ -108,8 +109,9 @@ class Authenticator {
                         res.clearCookie("CompanyToken");
                         res.cookie("CompanyToken", newAccessToken, {
                             httpOnly: false,
-                            secure: false,
-                            sameSite: "lax",
+                            secure: true,
+                            sameSite: "none",
+                            domain: 'turfbooking.online'
                         });
 
                         req.user = { id: _id, role: userRole };
@@ -177,8 +179,9 @@ class Authenticator {
                         res.clearCookie("AdminToken");
                         res.cookie("AdminToken", newAccessToken, {
                             httpOnly: false,
-                            secure: false,
-                            sameSite: "lax",
+                            secure: true,
+                            sameSite: "none",
+                            domain: 'turfbooking.online'
                         });
 
                         req.user = { id: _id, role: userRole };
