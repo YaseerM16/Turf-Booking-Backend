@@ -16,11 +16,20 @@ const port = process.env.PORT || 5000;
 const server = http_1.default.createServer(app_1.default);
 const io = new socket_io_1.Server(server, {
     cors: {
-        origin: ["https://www.turfbooking.online", "https://api.turfbooking.online", "http://localhost:5000"], // Allow frontend
-        methods: ["GET", "POST", "PUT", "DELETE"], // Allowed methods
-        credentials: true, // Allow credentials like cookies
-    },
+        // origin: "http://localhost:3000",
+        origin: "https://www.turfbooking.online",
+        methods: ["GET", "POST", 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'Role'],
+        credentials: true
+    }
 });
+// const io = new Server(server, {
+//     cors: {
+//         origin: ["https://www.turfbooking.online", "https://api.turfbooking.online", "http://localhost:5000"], // Allow frontend
+//         methods: ["GET", "POST", "PUT", "DELETE"], // Allowed methods
+//         credentials: true, // Allow credentials like cookies
+//     },
+// });
 (0, SocketService_1.socketHandler)(io);
 server.listen(port, () => {
     console.log("Server listening on port 5000");
