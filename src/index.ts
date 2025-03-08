@@ -17,16 +17,23 @@ const port = process.env.PORT || 5000
 
 const server = http.createServer(app);
 
+// const io = new Server(server, {
+//     cors: {
+//         // origin: "http://localhost:3000",
+//         origin: "https://www.turfbooking.online",
+//         methods: ["GET", "POST", 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
+//         allowedHeaders: ['Content-Type', 'Authorization', 'Role'],
+//         credentials: true
+//     }
+// });
 const io = new Server(server, {
     cors: {
-        // origin: "http://localhost:3000",
         origin: "https://www.turfbooking.online",
-        methods: ["GET", "POST", 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
-        allowedHeaders: ['Content-Type', 'Authorization', 'Role'],
-        credentials: true
-    }
+        methods: ["GET", "POST"],
+        credentials: true,
+    },
+    path: "/socket.io/",
 });
-
 // const io = new Server(server, {
 //     cors: {
 //         origin: ["https://www.turfbooking.online", "https://api.turfbooking.online", "http://localhost:5000"], // Allow frontend
