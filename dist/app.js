@@ -25,7 +25,7 @@ app.use(express_1.default.json({ limit: '10mb' }));
 app.use(express_1.default.urlencoded({ extended: true, limit: '10mb' }));
 app.use((0, cookie_parser_1.default)());
 const allowedOrigins = [
-    // "http://localhost:3000",
+    "http://localhost:3000",
     "http://localhost:5000",
     "https://www.turfbooking.online",
     "https://api.turfbooking.online",

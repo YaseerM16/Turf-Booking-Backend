@@ -25,7 +25,7 @@ const server = http_1.default.createServer(app_1.default);
 // });
 const io = new socket_io_1.Server(server, {
     cors: {
-        origin: "https://www.turfbooking.online",
+        origin: ["https://www.turfbooking.online", "http://localhost:3000",],
         methods: ["GET", "POST", 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
         allowedHeaders: ['Content-Type', 'Authorization', 'Role'],
         credentials: true
