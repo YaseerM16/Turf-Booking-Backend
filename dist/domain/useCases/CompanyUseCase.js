@@ -525,12 +525,12 @@ class CompanyUseCase {
             }
         });
     }
-    getRevenuesByInterval(companyId, fromDate, toDate) {
+    getRevenuesByInterval(companyId, fromDate, toDate, page, limit) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 if (!companyId || !fromDate || !toDate)
                     throw new errors_1.ErrorResponse("companyId or turfId were not getting for the Turf Revenue fectching.. !!", StatusCode_1.StatusCode.BAD_REQUEST);
-                const revenues = yield this.companyRepository.getRevenuesByInterval(companyId, fromDate, toDate);
+                const revenues = yield this.companyRepository.getRevenuesByInterval(companyId, fromDate, toDate, page, limit);
                 return revenues;
             }
             catch (error) {

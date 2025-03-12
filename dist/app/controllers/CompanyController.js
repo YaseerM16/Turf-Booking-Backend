@@ -546,8 +546,8 @@ class CompanyController {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const { companyId } = req.params;
-                const { fromDate, toDate } = req.query;
-                const revenues = yield this.companyUseCase.getRevenuesByInterval(companyId, fromDate, toDate);
+                const { fromDate, toDate, page, limit } = req.query;
+                const revenues = yield this.companyUseCase.getRevenuesByInterval(companyId, fromDate, toDate, page, limit);
                 (0, responseUtil_1.sendResponse)(res, true, "Revenues by the Intervals got successful :", StatusCode_1.StatusCode.SUCCESS, { revenues });
             }
             catch (error) {

@@ -13,6 +13,7 @@ const companyRoutes_1 = require("./app/routes/companyRoutes");
 const adminRoutes_1 = require("./app/routes/adminRoutes");
 const notification_Routes_1 = require("./app/routes/notification.Routes");
 const morgan_1 = __importDefault(require("morgan"));
+const logger_1 = __importDefault(require("./shared/utils/logger"));
 mongoose_1.default;
 userRoutes_1.userRoute;
 dotenv_1.default.config();
@@ -44,6 +45,7 @@ const corsOptions = {
     credentials: true
 };
 app.use((0, cors_1.default)(corsOptions));
+app.use(logger_1.default);
 app.use("/api/v1/user", userRoutes_1.userRoute);
 app.use("/api/v1/company", companyRoutes_1.companyRoute);
 app.use("/api/v1/admin", adminRoutes_1.adminRoute);

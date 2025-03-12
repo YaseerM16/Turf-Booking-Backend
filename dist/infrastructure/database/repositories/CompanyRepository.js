@@ -775,6 +775,32 @@ class CompanyRepository {
                         }
                     }
                 ]);
+                const totalTurfCountQry = yield BookingModel_1.default.aggregate([
+                    {
+                        $match: {
+                            companyId: new mongoose_1.default.Types.ObjectId(companyId),
+                            totalAmount: { $gt: 0 }
+                        }
+                    },
+                    { $unwind: "$selectedSlots" }, // Step 2: Expand selectedSlots array
+                    {
+                        $match: {
+                            "selectedSlots.date": { $gte: last30DaysStart, $lt: currentDate },
+                            "selectedSlots.isCancelled": false
+                        }
+                    },
+                    {
+                        $group: {
+                            _id: "$selectedSlots.turfId" // Step 4: Group by turfId
+                        }
+                    },
+                    {
+                        $group: {
+                            _id: null,
+                            totalTurfs: { $sum: 1 } // Step 5: Count unique turfs
+                        }
+                    }
+                ]);
                 // Step 2: Apply pagination using skip and limit
                 const revenueData = yield BookingModel_1.default.aggregate([
                     {
@@ -818,9 +844,15 @@ class CompanyRepository {
                         images: turf ? turf.images : []
                     };
                 });
+                // Compute total revenue and bookings
+                const totalRevenue = totalRevenues.reduce((sum, entry) => sum + entry.revenue, 0);
+                const totalTurfCount = totalTurfCountQry.length > 0 ? totalTurfCountQry[0] : { totalTurfs: 0 };
+                // console.log(JSON.stringify(generateBookings(50), null, 2));
                 return {
                     result,
-                    totalRevenues: totalRevenues.length, // Total count before pagination
+                    totalTurfCount,
+                    totalRevenue,
+                    totalBookings: totalRevenues.length, // Total count before pagination
                     currentPage: page
                 };
             }
@@ -829,7 +861,7 @@ class CompanyRepository {
             }
         });
     }
-    getRevenuesByInterval(companyId, fromDate, toDate) {
+    getRevenuesByInterval(companyId, fromDate, toDate, page, limit) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 if (!companyId || !fromDate || !toDate) {
@@ -839,6 +871,57 @@ class CompanyRepository {
                 const from = new Date(fromDate);
                 const to = new Date(toDate);
                 to.setHours(23, 59, 59, 999); // Include the full day of 'toDate'
+                const skip = (page - 1) * limit;
+                const totalRevenues = yield BookingModel_1.default.aggregate([
+                    {
+                        $match: {
+                            companyId: new mongoose_1.default.Types.ObjectId(companyId),
+                            totalAmount: { $gt: 0 }
+                        }
+                    },
+                    { $unwind: "$selectedSlots" },
+                    {
+                        $match: {
+                            "selectedSlots.date": { $gte: from, $lt: to },
+                            "selectedSlots.isCancelled": false
+                        }
+                    },
+                    {
+                        $group: {
+                            _id: {
+                                date: { $dateToString: { format: "%Y-%m-%d", date: "$selectedSlots.date" } },
+                                turfId: "$selectedSlots.turfId"
+                            },
+                            revenue: { $sum: "$selectedSlots.price" }
+                        }
+                    }
+                ]);
+                const totalTurfCountQry = yield BookingModel_1.default.aggregate([
+                    {
+                        $match: {
+                            companyId: new mongoose_1.default.Types.ObjectId(companyId),
+                            totalAmount: { $gt: 0 }
+                        }
+                    },
+                    { $unwind: "$selectedSlots" }, // Step 2: Expand selectedSlots array
+                    {
+                        $match: {
+                            "selectedSlots.date": { $gte: from, $lt: to },
+                            "selectedSlots.isCancelled": false
+                        }
+                    },
+                    {
+                        $group: {
+                            _id: "$selectedSlots.turfId" // Step 4: Group by turfId
+                        }
+                    },
+                    {
+                        $group: {
+                            _id: null,
+                            totalTurfs: { $sum: 1 } // Step 5: Count unique turfs
+                        }
+                    }
+                ]);
                 const revenueData = yield BookingModel_1.default.aggregate([
                     {
                         $match: {
@@ -861,19 +944,28 @@ class CompanyRepository {
                                 date: { $dateToString: { format: "%Y-%m-%d", date: "$selectedSlots.date" } },
                                 turfId: "$selectedSlots.turfId"
                             },
-                            revenue: { $sum: "$selectedSlots.price" }
+                            revenue: { $sum: "$selectedSlots.price" },
                         }
                     },
                     {
+                        $unset: "data._id" // Remove unnecessary _id field from nested objects
+                    },
+                    {
                         $sort: { "_id.date": -1 } // Sort by date descending
-                    }
+                    },
+                    { $skip: skip },
+                    { $limit: Number(limit) }
                 ]);
-                // Extract unique turfIds
-                const turfIds = [...new Set(revenueData.map(item => item._id.turfId))];
+                if (!revenueData.length) {
+                    return [];
+                }
+                // Filter out invalid turfId values
+                const validRevenueData = revenueData.filter(item => item._id && item._id.turfId);
+                const turfIds = [...new Set(validRevenueData.map(item => item._id.turfId))];
                 // Fetch Turf details
                 const turfs = yield TurfModel_1.default.find({ _id: { $in: turfIds } }).select("turfName location images");
                 // Merge revenue data with Turf details
-                const result = revenueData.map(revenue => {
+                const formattedRevenue = validRevenueData.map(revenue => {
                     const turf = turfs.find(turf => turf._id.toString() === revenue._id.turfId.toString());
                     return {
                         date: revenue._id.date,
@@ -883,9 +975,19 @@ class CompanyRepository {
                         images: turf ? turf.images : []
                     };
                 });
-                return result;
+                // Compute total revenue and bookings
+                const totalRevenue = formattedRevenue.reduce((sum, entry) => sum + entry.revenue, 0);
+                const totalTurfCount = totalTurfCountQry.length > 0 ? totalTurfCountQry[0] : { totalTurfs: 0 };
+                return {
+                    totalTurfCount,
+                    totalRevenue,
+                    totalBookings: totalRevenues.length,
+                    details: formattedRevenue
+                };
+                // return result;
             }
             catch (error) {
+                console.log("THis is the Error of getRevenuByIntervAK :", error);
                 throw new errors_1.ErrorResponse(error.message, StatusCode_1.StatusCode.INTERNAL_SERVER_ERROR);
             }
         });
