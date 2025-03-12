@@ -33,6 +33,7 @@ export interface IUserRepository {
     getSlotByDay(turfId: string, day: string, date: string): Promise<{ slots: Slot[]; price: number | null }>
     bookTheSlots(bookingDets: object): Promise<object>;
     bookSlotsByWallet(userId: string, selectedSlots: any): Promise<object>
+    confirmSlotAvail(slots: Slot[]): Promise<boolean>
 
     /// <- Chat -> ///
     createChatRoom(userId: string, companyId: string): Promise<ChatRoom>;

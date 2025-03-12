@@ -105,6 +105,10 @@ router.get("/my-booking",
     (req: Request, res: Response) => userController.getBookings(req, res))
 router.delete("/booking/cancel/:userId/:slotId/:bookingId",
     (req: Request, res: Response) => userController.cancelSlot(req, res))
+router.post("/check-slots-availability",
+    Authenticator.userAuthenticator,
+    AccessControl.isUserBlocked,
+    (req: Request, res: Response) => userController.confirmSlotAvail(req, res))
 
 
 // router.put("/gen-slots")

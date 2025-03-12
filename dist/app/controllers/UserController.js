@@ -11,6 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserController = void 0;
 const errors_1 = require("../../shared/utils/errors");
+const config_1 = require("../../config/config");
 const express_validator_1 = require("express-validator");
 const BookingService_1 = require("../../infrastructure/services/BookingService");
 const StatusCode_1 = require("../../shared/enums/StatusCode");
@@ -69,15 +70,15 @@ class UserController {
                 const refreshToken = this.authService.generateRefreshToken(det);
                 res.cookie("refreshToken", refreshToken, {
                     httpOnly: true,
-                    secure: true,
-                    sameSite: "none",
-                    domain: 'turfbooking.online'
+                    secure: config_1.config.MODE === "production" ? true : false,
+                    sameSite: config_1.config.MODE === "production" ? "none" : "lax",
+                    domain: config_1.config.MODE === "production" ? 'turfbooking.online' : 'localhost'
                 });
                 res.cookie("token", token, {
                     httpOnly: false,
-                    secure: true,
-                    sameSite: "none",
-                    domain: 'turfbooking.online'
+                    secure: config_1.config.MODE === "production" ? true : false,
+                    sameSite: config_1.config.MODE === "production" ? "none" : "lax",
+                    domain: config_1.config.MODE === "production" ? 'turfbooking.online' : 'localhost'
                 });
                 (0, responseUtil_1.sendResponse)(res, true, "Logged In Successfully ✅", StatusCode_1.StatusCode.SUCCESS, { user: userData, loggedIn: true });
             }
@@ -103,15 +104,15 @@ class UserController {
                 const refreshToken = this.authService.generateRefreshToken(det);
                 res.cookie("refreshToken", refreshToken, {
                     httpOnly: true,
-                    secure: true,
-                    sameSite: "none",
-                    domain: 'turfbooking.online'
+                    secure: config_1.config.MODE === "production" ? true : false,
+                    sameSite: config_1.config.MODE === "production" ? "none" : "lax",
+                    domain: config_1.config.MODE === "production" ? 'turfbooking.online' : 'localhost'
                 });
                 res.cookie("token", token, {
                     httpOnly: false,
-                    secure: true,
-                    sameSite: "none",
-                    domain: 'turfbooking.online'
+                    secure: config_1.config.MODE === "production" ? true : false,
+                    sameSite: config_1.config.MODE === "production" ? "none" : "lax",
+                    domain: config_1.config.MODE === "production" ? 'turfbooking.online' : 'localhost'
                 });
                 (0, responseUtil_1.sendResponse)(res, true, "Registered Successfully ..!✅", StatusCode_1.StatusCode.SUCCESS, { user: newUser });
             }
@@ -136,15 +137,15 @@ class UserController {
                 const refreshToken = this.authService.generateRefreshToken(det);
                 res.cookie("refreshToken", refreshToken, {
                     httpOnly: true,
-                    secure: true,
-                    sameSite: "none",
-                    domain: 'turfbooking.online'
+                    secure: config_1.config.MODE === "production" ? true : false,
+                    sameSite: config_1.config.MODE === "production" ? "none" : "lax",
+                    domain: config_1.config.MODE === "production" ? 'turfbooking.online' : 'localhost'
                 });
                 res.cookie("token", token, {
                     httpOnly: false,
-                    secure: true,
-                    sameSite: "none",
-                    domain: 'turfbooking.online'
+                    secure: config_1.config.MODE === "production" ? true : false,
+                    sameSite: config_1.config.MODE === "production" ? "none" : "lax",
+                    domain: config_1.config.MODE === "production" ? 'turfbooking.online' : 'localhost'
                 });
                 (0, responseUtil_1.sendResponse)(res, true, "Logged In Successfully ..!", StatusCode_1.StatusCode.SUCCESS, { user: newUser });
             }
@@ -172,15 +173,15 @@ class UserController {
                             const refreshToken = this.authService.generateRefreshToken(det);
                             res.cookie("refreshToken", refreshToken, {
                                 httpOnly: true,
-                                secure: true,
-                                sameSite: "none",
-                                domain: 'turfbooking.online'
+                                secure: config_1.config.MODE === "production" ? true : false,
+                                sameSite: config_1.config.MODE === "production" ? "none" : "lax",
+                                domain: config_1.config.MODE === "production" ? 'turfbooking.online' : 'localhost'
                             });
                             res.cookie("token", token, {
                                 httpOnly: false,
-                                secure: true,
-                                sameSite: "none",
-                                domain: 'turfbooking.online'
+                                secure: config_1.config.MODE === "production" ? true : false,
+                                sameSite: config_1.config.MODE === "production" ? "none" : "lax",
+                                domain: config_1.config.MODE === "production" ? 'turfbooking.online' : 'localhost'
                             });
                             res
                                 .status(200)
@@ -375,6 +376,22 @@ class UserController {
             }
             catch (error) {
                 res.status(500).json({ message: error === null || error === void 0 ? void 0 : error.message });
+            }
+        });
+    }
+    confirmSlotAvail(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const isSlotsAvail = yield this.userUseCase.confirmSlotAvail(req.body);
+                if (isSlotsAvail) {
+                    return (0, responseUtil_1.sendResponse)(res, true, "Slots are available", StatusCode_1.StatusCode.SUCCESS);
+                }
+                else {
+                    return (0, responseUtil_1.sendResponse)(res, false, "One or more slots are unavailable", StatusCode_1.StatusCode.BAD_REQUEST);
+                }
+            }
+            catch (error) {
+                (0, responseUtil_1.sendResponse)(res, false, error.message, StatusCode_1.StatusCode.INTERNAL_SERVER_ERROR);
             }
         });
     }

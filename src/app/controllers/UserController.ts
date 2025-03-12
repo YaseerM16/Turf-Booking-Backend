@@ -67,16 +67,16 @@ export class UserController {
 
             res.cookie("refreshToken", refreshToken, {
                 httpOnly: true,
-                secure: true,
-                sameSite: "none",
-                domain: 'turfbooking.online'
+                secure: config.MODE === "production" ? true : false,
+                sameSite: config.MODE === "production" ? "none" : "lax",
+                domain: config.MODE === "production" ? 'turfbooking.online' : 'localhost'
             });
 
             res.cookie("token", token, {
                 httpOnly: false,
-                secure: true,
-                sameSite: "none",
-                domain: 'turfbooking.online'
+                secure: config.MODE === "production" ? true : false,
+                sameSite: config.MODE === "production" ? "none" : "lax",
+                domain: config.MODE === "production" ? 'turfbooking.online' : 'localhost'
             });
 
             sendResponse(res, true, "Logged In Successfully ✅", StatusCode.SUCCESS, { user: userData, loggedIn: true })
@@ -108,16 +108,16 @@ export class UserController {
 
             res.cookie("refreshToken", refreshToken, {
                 httpOnly: true,
-                secure: true,
-                sameSite: "none",
-                domain: 'turfbooking.online'
+                secure: config.MODE === "production" ? true : false,
+                sameSite: config.MODE === "production" ? "none" : "lax",
+                domain: config.MODE === "production" ? 'turfbooking.online' : 'localhost'
             });
 
             res.cookie("token", token, {
                 httpOnly: false,
-                secure: true,
-                sameSite: "none",
-                domain: 'turfbooking.online'
+                secure: config.MODE === "production" ? true : false,
+                sameSite: config.MODE === "production" ? "none" : "lax",
+                domain: config.MODE === "production" ? 'turfbooking.online' : 'localhost'
             });
 
             sendResponse(res, true, "Registered Successfully ..!✅", StatusCode.SUCCESS, { user: newUser })
@@ -146,16 +146,16 @@ export class UserController {
 
             res.cookie("refreshToken", refreshToken, {
                 httpOnly: true,
-                secure: true,
-                sameSite: "none",
-                domain: 'turfbooking.online'
+                secure: config.MODE === "production" ? true : false,
+                sameSite: config.MODE === "production" ? "none" : "lax",
+                domain: config.MODE === "production" ? 'turfbooking.online' : 'localhost'
             });
 
             res.cookie("token", token, {
                 httpOnly: false,
-                secure: true,
-                sameSite: "none",
-                domain: 'turfbooking.online'
+                secure: config.MODE === "production" ? true : false,
+                sameSite: config.MODE === "production" ? "none" : "lax",
+                domain: config.MODE === "production" ? 'turfbooking.online' : 'localhost'
             });
 
             sendResponse(res, true, "Logged In Successfully ..!", StatusCode.SUCCESS, { user: newUser })
@@ -189,16 +189,16 @@ export class UserController {
 
                         res.cookie("refreshToken", refreshToken, {
                             httpOnly: true,
-                            secure: true,
-                            sameSite: "none",
-                            domain: 'turfbooking.online'
+                            secure: config.MODE === "production" ? true : false,
+                            sameSite: config.MODE === "production" ? "none" : "lax",
+                            domain: config.MODE === "production" ? 'turfbooking.online' : 'localhost'
                         });
 
                         res.cookie("token", token, {
                             httpOnly: false,
-                            secure: true,
-                            sameSite: "none",
-                            domain: 'turfbooking.online'
+                            secure: config.MODE === "production" ? true : false,
+                            sameSite: config.MODE === "production" ? "none" : "lax",
+                            domain: config.MODE === "production" ? 'turfbooking.online' : 'localhost'
                         });
 
                         res
@@ -393,6 +393,19 @@ export class UserController {
 
         } catch (error: any) {
             res.status(500).json({ message: error?.message });
+        }
+    }
+
+    async confirmSlotAvail(req: Request, res: Response) {
+        try {
+            const isSlotsAvail = await this.userUseCase.confirmSlotAvail(req.body)
+            if (isSlotsAvail) {
+                return sendResponse(res, true, "Slots are available", StatusCode.SUCCESS);
+            } else {
+                return sendResponse(res, false, "One or more slots are unavailable", StatusCode.BAD_REQUEST);
+            }
+        } catch (error) {
+            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
         }
     }
 

@@ -287,6 +287,15 @@ export class UserUseCase implements IUserUseCase {
         }
     }
 
+    async confirmSlotAvail(slots: Slot[]): Promise<boolean> {
+        try {
+            const isSlotsAvail = await this.userRepository.confirmSlotAvail(slots)
+            return isSlotsAvail
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message, StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     async bookTheSlots(fullDetails: any): Promise<object> {
         try {
             const { udf1, udf2, udf3, udf4, amount, slots, addedon, status, txnid, mode } = fullDetails

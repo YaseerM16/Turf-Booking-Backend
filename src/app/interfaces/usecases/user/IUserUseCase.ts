@@ -45,6 +45,7 @@ export interface IUserUseCase {
     bookTheSlots(fullDetails: any): Promise<object>;
     cancelTheSlot(userId: string, slotId: string, bookingId: string): Promise<object>;
     bookSlotByWallet(userId: string, bookingDets: object): Promise<object>;
+    confirmSlotAvail(slots: Slot[]): Promise<boolean>;
 
     /// <- Chat -> ///
     createChatRoom(userId: string, companyId: string): Promise<ChatRoom>;

@@ -277,6 +277,17 @@ class UserUseCase {
             }
         });
     }
+    confirmSlotAvail(slots) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const isSlotsAvail = yield this.userRepository.confirmSlotAvail(slots);
+                return isSlotsAvail;
+            }
+            catch (error) {
+                throw new errors_1.ErrorResponse(error.message, StatusCode_1.StatusCode.INTERNAL_SERVER_ERROR);
+            }
+        });
+    }
     bookTheSlots(fullDetails) {
         return __awaiter(this, void 0, void 0, function* () {
             try {

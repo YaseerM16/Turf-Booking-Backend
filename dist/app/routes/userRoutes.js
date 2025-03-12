@@ -64,6 +64,7 @@ router.post("/payment/hashing", Authenticator_1.default.userAuthenticator, Acces
 router.post("/payment/save-booking", Authenticator_1.default.userAuthenticator, AccessControl_1.default.isUserBlocked, (req, res) => userController.saveBooking(req, res));
 router.get("/my-booking", Authenticator_1.default.userAuthenticator, AccessControl_1.default.isUserBlocked, (req, res) => userController.getBookings(req, res));
 router.delete("/booking/cancel/:userId/:slotId/:bookingId", (req, res) => userController.cancelSlot(req, res));
+router.post("/check-slots-availability", Authenticator_1.default.userAuthenticator, AccessControl_1.default.isUserBlocked, (req, res) => userController.confirmSlotAvail(req, res));
 // router.put("/gen-slots")
 ///   Wallet   ///
 router.get("/my-wallet/:userId", Authenticator_1.default.userAuthenticator, AccessControl_1.default.isUserBlocked, (req, res) => userController.myWallet(req, res));

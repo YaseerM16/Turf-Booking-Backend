@@ -180,6 +180,22 @@ class MongoUserRepository {
             }
         });
     }
+    confirmSlotAvail(slots) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const slotIds = slots.map(slot => slot._id); // Extract slot IDs
+                // Fetch slots from the database
+                const bookedSlots = yield SlotModel_1.SlotModel.find({
+                    _id: { $in: slotIds },
+                    $or: [{ isBooked: true }, { isUnavail: true }, { isExpired: true }]
+                });
+                return bookedSlots.length === 0; // Return true if all slots are available
+            }
+            catch (error) {
+                throw new errors_1.ErrorResponse(error.message, StatusCode_1.StatusCode.INTERNAL_SERVER_ERROR);
+            }
+        });
+    }
     bookTheSlots(bookingDets) {
         return __awaiter(this, void 0, void 0, function* () {
             try {

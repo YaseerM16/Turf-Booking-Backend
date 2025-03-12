@@ -181,6 +181,22 @@ export class MongoUserRepository implements IUserRepository {
         }
     }
 
+    async confirmSlotAvail(slots: Slot[]): Promise<boolean> {
+        try {
+            const slotIds = slots.map(slot => slot._id); // Extract slot IDs
+
+            // Fetch slots from the database
+            const bookedSlots = await SlotModel.find({
+                _id: { $in: slotIds },
+                $or: [{ isBooked: true }, { isUnavail: true }, { isExpired: true }]
+            });
+
+            return bookedSlots.length === 0; // Return true if all slots are available
+        } catch (error) {
+            throw new ErrorResponse((error as Error).message, StatusCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     async bookTheSlots(bookingDets: any): Promise<object> {
         try {
 
@@ -314,7 +330,6 @@ export class MongoUserRepository implements IUserRepository {
             throw new Error("Error fetching bookings. Please try again later.");
         }
     }
-
 
     async getWalletById(userId: string): Promise<Wallet | null> {
         try {
