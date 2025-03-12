@@ -824,6 +824,34 @@ export class CompanyRepository implements ICompanyRepository {
                 }
             ]);
 
+            const totalTurfCountQry: any = await BookingModel.aggregate([
+                {
+                    $match: {
+                        companyId: new mongoose.Types.ObjectId(companyId),
+                        totalAmount: { $gt: 0 }
+                    }
+                },
+                { $unwind: "$selectedSlots" }, // Step 2: Expand selectedSlots array
+                {
+                    $match: {
+                        "selectedSlots.date": { $gte: last30DaysStart, $lt: currentDate },
+                        "selectedSlots.isCancelled": false
+                    }
+                },
+                {
+                    $group: {
+                        _id: "$selectedSlots.turfId" // Step 4: Group by turfId
+                    }
+                },
+                {
+                    $group: {
+                        _id: null,
+                        totalTurfs: { $sum: 1 } // Step 5: Count unique turfs
+                    }
+                }
+            ]);
+
+
             // Step 2: Apply pagination using skip and limit
             const revenueData = await BookingModel.aggregate([
                 {
@@ -870,10 +898,19 @@ export class CompanyRepository implements ICompanyRepository {
                     images: turf ? turf.images : []
                 };
             });
+            // Compute total revenue and bookings
+            const totalRevenue = totalRevenues.reduce((sum, entry) => sum + entry.revenue, 0);
+
+            const totalTurfCount = totalTurfCountQry.length > 0 ? totalTurfCountQry[0] : { totalTurfs: 0 };
+
+
+            // console.log(JSON.stringify(generateBookings(50), null, 2));
 
             return {
                 result,
-                totalRevenues: totalRevenues.length, // Total count before pagination
+                totalTurfCount,
+                totalRevenue,
+                totalBookings: totalRevenues.length, // Total count before pagination
                 currentPage: page
             };
         } catch (error) {
@@ -882,7 +919,7 @@ export class CompanyRepository implements ICompanyRepository {
     }
 
 
-    async getRevenuesByInterval(companyId: string, fromDate: Date, toDate: Date): Promise<any> {
+    async getRevenuesByInterval(companyId: string, fromDate: Date, toDate: Date, page: number, limit: number): Promise<any> {
         try {
             if (!companyId || !fromDate || !toDate) {
                 throw new ErrorResponse("Company ID, From Date, and To Date are required!", StatusCode.BAD_REQUEST);
@@ -892,6 +929,61 @@ export class CompanyRepository implements ICompanyRepository {
             const from = new Date(fromDate);
             const to = new Date(toDate);
             to.setHours(23, 59, 59, 999); // Include the full day of 'toDate'
+
+            const skip = (page - 1) * limit;
+
+            const totalRevenues = await BookingModel.aggregate([
+                {
+                    $match: {
+                        companyId: new mongoose.Types.ObjectId(companyId),
+                        totalAmount: { $gt: 0 }
+                    }
+                },
+                { $unwind: "$selectedSlots" },
+                {
+                    $match: {
+                        "selectedSlots.date": { $gte: from, $lt: to },
+                        "selectedSlots.isCancelled": false
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            date: { $dateToString: { format: "%Y-%m-%d", date: "$selectedSlots.date" } },
+                            turfId: "$selectedSlots.turfId"
+                        },
+                        revenue: { $sum: "$selectedSlots.price" }
+                    }
+                }
+            ]);
+
+            const totalTurfCountQry: any = await BookingModel.aggregate([
+                {
+                    $match: {
+                        companyId: new mongoose.Types.ObjectId(companyId),
+                        totalAmount: { $gt: 0 }
+                    }
+                },
+                { $unwind: "$selectedSlots" }, // Step 2: Expand selectedSlots array
+                {
+                    $match: {
+                        "selectedSlots.date": { $gte: from, $lt: to },
+                        "selectedSlots.isCancelled": false
+                    }
+                },
+                {
+                    $group: {
+                        _id: "$selectedSlots.turfId" // Step 4: Group by turfId
+                    }
+                },
+                {
+                    $group: {
+                        _id: null,
+                        totalTurfs: { $sum: 1 } // Step 5: Count unique turfs
+                    }
+                }
+            ]);
+
 
             const revenueData = await BookingModel.aggregate([
                 {
@@ -915,22 +1007,32 @@ export class CompanyRepository implements ICompanyRepository {
                             date: { $dateToString: { format: "%Y-%m-%d", date: "$selectedSlots.date" } },
                             turfId: "$selectedSlots.turfId"
                         },
-                        revenue: { $sum: "$selectedSlots.price" }
+                        revenue: { $sum: "$selectedSlots.price" },
                     }
                 },
                 {
+                    $unset: "data._id" // Remove unnecessary _id field from nested objects
+                },
+                {
                     $sort: { "_id.date": -1 } // Sort by date descending
-                }
+                },
+                { $skip: skip },
+                { $limit: Number(limit) }
             ]);
 
-            // Extract unique turfIds
-            const turfIds = [...new Set(revenueData.map(item => item._id.turfId))];
+            if (!revenueData.length) {
+                return [];
+            }
+
+            // Filter out invalid turfId values
+            const validRevenueData = revenueData.filter(item => item._id && item._id.turfId);
+            const turfIds = [...new Set(validRevenueData.map(item => item._id.turfId))];
 
             // Fetch Turf details
             const turfs = await TurfModel.find({ _id: { $in: turfIds } }).select("turfName location images");
 
             // Merge revenue data with Turf details
-            const result = revenueData.map(revenue => {
+            const formattedRevenue = validRevenueData.map(revenue => {
                 const turf = turfs.find(turf => turf._id.toString() === revenue._id.turfId.toString());
                 return {
                     date: revenue._id.date,
@@ -941,12 +1043,25 @@ export class CompanyRepository implements ICompanyRepository {
                 };
             });
 
-            return result;
+            // Compute total revenue and bookings
+            const totalRevenue = formattedRevenue.reduce((sum, entry) => sum + entry.revenue, 0);
+            const totalTurfCount = totalTurfCountQry.length > 0 ? totalTurfCountQry[0] : { totalTurfs: 0 };
+
+            return {
+                totalTurfCount,
+                totalRevenue,
+                totalBookings: totalRevenues.length,
+                details: formattedRevenue
+            };
+
+
+            // return result;
         } catch (error) {
+            console.log("THis is the Error of getRevenuByIntervAK :", error);
+
             throw new ErrorResponse((error as Error).message, StatusCode.INTERNAL_SERVER_ERROR);
         }
     }
-
 
 
 }

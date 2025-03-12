@@ -50,7 +50,7 @@ export interface ICompanyUseCase {
 
     // Sales-Report
     getLastMonthRevenue(companyId: string, page: number, limit: number): Promise<any>;
-    getRevenuesByInterval(companyId: string, fromDate: Date, toDate: Date): Promise<any>;
+    getRevenuesByInterval(companyId: string, fromDate: Date, toDate: Date, page: number, limit: number): Promise<any>;
 
 
 }

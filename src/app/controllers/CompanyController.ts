@@ -539,8 +539,8 @@ export class CompanyController {
     async getRevenuesByInterval(req: Request, res: Response) {
         try {
             const { companyId } = req.params
-            const { fromDate, toDate } = req.query
-            const revenues = await this.companyUseCase.getRevenuesByInterval(companyId, fromDate as unknown as Date, toDate as unknown as Date)
+            const { fromDate, toDate, page, limit } = req.query
+            const revenues = await this.companyUseCase.getRevenuesByInterval(companyId, fromDate as unknown as Date, toDate as unknown as Date, page as unknown as number, limit as unknown as number)
             sendResponse(res, true, "Revenues by the Intervals got successful :", StatusCode.SUCCESS, { revenues })
         } catch (error) {
             sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)

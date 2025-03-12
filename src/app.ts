@@ -8,6 +8,7 @@ import { companyRoute } from "./app/routes/companyRoutes"
 import { adminRoute } from "./app/routes/adminRoutes"
 import { notificationRoute } from "./app/routes/notification.Routes"
 import morgan from "morgan"
+import logger from "./shared/utils/logger"
 
 mongoose
 userRoute
@@ -47,6 +48,7 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+app.use(logger)
 app.use("/api/v1/user", userRoute)
 app.use("/api/v1/company", companyRoute)
 app.use("/api/v1/admin", adminRoute)

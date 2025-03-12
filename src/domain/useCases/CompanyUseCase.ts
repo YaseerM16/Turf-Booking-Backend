@@ -520,10 +520,10 @@ export class CompanyUseCase implements ICompanyUseCase {
         }
     }
 
-    async getRevenuesByInterval(companyId: string, fromDate: Date, toDate: Date): Promise<any> {
+    async getRevenuesByInterval(companyId: string, fromDate: Date, toDate: Date, page: number, limit: number): Promise<any> {
         try {
             if (!companyId || !fromDate || !toDate) throw new ErrorResponse("companyId or turfId were not getting for the Turf Revenue fectching.. !!", StatusCode.BAD_REQUEST);
-            const revenues = await this.companyRepository.getRevenuesByInterval(companyId, fromDate, toDate)
+            const revenues = await this.companyRepository.getRevenuesByInterval(companyId, fromDate, toDate, page, limit)
             return revenues
         } catch (error) {
             throw new ErrorResponse((error as Error).message || "Error While Fetching the 30 days revenues for sales report data ...!!", StatusCode.INTERNAL_SERVER_ERROR);
