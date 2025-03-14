@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserController = void 0;
+const config_1 = require("../../config/config");
 const BookingService_1 = require("../../infrastructure/services/BookingService");
 const StatusCode_1 = require("../../shared/enums/StatusCode");
 const responseUtil_1 = require("../../shared/utils/responseUtil");
@@ -207,9 +208,20 @@ class UserController {
     logout(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                res.clearCookie('token');
-                res.clearCookie('refreshToken');
-                res.status(200).json({ message: 'Logged out successfully', loggedOut: true });
+                const isProduction = config_1.config.MODE === "production";
+                res.clearCookie("refreshToken", {
+                    httpOnly: true,
+                    secure: isProduction ? true : false,
+                    sameSite: isProduction ? "none" : "lax",
+                    domain: isProduction ? ".turfbooking.online" : "localhost",
+                });
+                res.clearCookie("token", {
+                    httpOnly: false, // Same as how it was set
+                    secure: isProduction ? true : false,
+                    sameSite: isProduction ? "none" : "lax",
+                    domain: isProduction ? ".turfbooking.online" : "localhost",
+                });
+                res.status(200).json({ message: "Logged out successfully", loggedOut: true });
             }
             catch (error) {
                 console.error('Error during logout:', error);

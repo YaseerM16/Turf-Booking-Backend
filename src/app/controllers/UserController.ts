@@ -214,12 +214,25 @@ export class UserController {
         }
     }
 
-    async logout(req: Request, res: Response) {
+    async logout(req: Request, res: Response): Promise<void> {
         try {
-            res.clearCookie('token');
-            res.clearCookie('refreshToken');
+            const isProduction = config.MODE === "production";
 
-            res.status(200).json({ message: 'Logged out successfully', loggedOut: true });
+            res.clearCookie("refreshToken", {
+                httpOnly: true,
+                secure: isProduction ? true : false,
+                sameSite: isProduction ? "none" : "lax",
+                domain: isProduction ? ".turfbooking.online" : "localhost",
+            });
+
+            res.clearCookie("token", {
+                httpOnly: false, // Same as how it was set
+                secure: isProduction ? true : false,
+                sameSite: isProduction ? "none" : "lax",
+                domain: isProduction ? ".turfbooking.online" : "localhost",
+            });
+
+            res.status(200).json({ message: "Logged out successfully", loggedOut: true });
 
         } catch (error) {
             console.error('Error during logout:', error);
