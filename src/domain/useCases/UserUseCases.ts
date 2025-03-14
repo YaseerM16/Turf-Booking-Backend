@@ -218,7 +218,13 @@ export class UserUseCase implements IUserUseCase {
             if (!user) {
                 throw new ErrorResponse("User not found", 404);
             }
-            await this.mailService.accountVerifyMail(user, "forgotPassword");
+            const plainUser = {
+                id: user._id,
+                email: user.email,
+                name: user.name,
+                role: "user"
+            };
+            await this.mailService.accountVerifyMail(plainUser, "forgotPassword");
             return;
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);

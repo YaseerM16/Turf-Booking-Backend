@@ -201,7 +201,13 @@ class UserUseCase {
                 if (!user) {
                     throw new errors_1.ErrorResponse("User not found", 404);
                 }
-                yield this.mailService.accountVerifyMail(user, "forgotPassword");
+                const plainUser = {
+                    id: user._id,
+                    email: user.email,
+                    name: user.name,
+                    role: "user"
+                };
+                yield this.mailService.accountVerifyMail(plainUser, "forgotPassword");
                 return;
             }
             catch (error) {
