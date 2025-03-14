@@ -140,6 +140,7 @@ export class MongoUserRepository implements IUserRepository {
             const totalTurfs = await TurfModel.countDocuments(query);
 
             const turfs = await TurfModel.find(query)
+                .sort({ createdAt: -1 })
                 .skip(options.skip || 0)
                 .limit(options.limit || 0);
 

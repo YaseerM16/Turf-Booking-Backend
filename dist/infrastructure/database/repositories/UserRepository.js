@@ -140,6 +140,7 @@ class MongoUserRepository {
                 };
                 const totalTurfs = yield TurfModel_1.default.countDocuments(query);
                 const turfs = yield TurfModel_1.default.find(query)
+                    .sort({ createdAt: -1 })
                     .skip(options.skip || 0)
                     .limit(options.limit || 0);
                 return { turfs: turfs, totalTurfs };

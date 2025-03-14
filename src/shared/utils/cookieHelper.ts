@@ -9,13 +9,13 @@ export const setUserCookies = (res: Response, token: string, refreshToken: strin
         httpOnly: true,
         secure: isProduction ? true : false,
         sameSite: isProduction ? "none" : "lax",
-        domain: isProduction ? 'turfbooking.online' : 'localhost'
+        domain: isProduction ? ".turfbooking.online" : 'localhost'
     });
 
     res.cookie("token", token, {
         httpOnly: false,
         secure: isProduction ? true : false,
         sameSite: isProduction ? "none" : "lax",
-        domain: isProduction ? 'turfbooking.online' : 'localhost'
+        domain: isProduction ? ".turfbooking.online" : 'localhost'
     });
 };
