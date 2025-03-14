@@ -8,6 +8,7 @@ import { User } from "../../domain/entities/User";
 import { generatePaymentHash } from "../../infrastructure/services/BookingService";
 import { StatusCode } from "../../shared/enums/StatusCode";
 import { sendResponse } from "../../shared/utils/responseUtil";
+import { setUserCookies } from "../../shared/utils/cookieHelper";
 
 export class UserController {
 
@@ -53,19 +54,7 @@ export class UserController {
             const token = this.authService.generateToken(det);
             const refreshToken = this.authService.generateRefreshToken(det)
 
-            res.cookie("refreshToken", refreshToken, {
-                httpOnly: true,
-                secure: config.MODE === "production" ? true : false,
-                sameSite: config.MODE === "production" ? "none" : "lax",
-                domain: config.MODE === "production" ? 'turfbooking.online' : 'localhost'
-            });
-
-            res.cookie("token", token, {
-                httpOnly: false,
-                secure: config.MODE === "production" ? true : false,
-                sameSite: config.MODE === "production" ? "none" : "lax",
-                domain: config.MODE === "production" ? 'turfbooking.online' : 'localhost'
-            });
+            setUserCookies(res, token, refreshToken as string)
 
             sendResponse(res, true, "Logged In Successfully ✅", StatusCode.SUCCESS, { user: userData, loggedIn: true })
 
@@ -85,7 +74,6 @@ export class UserController {
                 ...JSON.parse(JSON.stringify(user)),
                 password: undefined,
             };
-            // console.log("Google supg ", req.body);
             const det: any = {
                 _id: user?._id,
                 email: user?.email,
@@ -94,19 +82,7 @@ export class UserController {
             const token = this.authService.generateToken(det);
             const refreshToken = this.authService.generateRefreshToken(det)
 
-            res.cookie("refreshToken", refreshToken, {
-                httpOnly: true,
-                secure: config.MODE === "production" ? true : false,
-                sameSite: config.MODE === "production" ? "none" : "lax",
-                domain: config.MODE === "production" ? 'turfbooking.online' : 'localhost'
-            });
-
-            res.cookie("token", token, {
-                httpOnly: false,
-                secure: config.MODE === "production" ? true : false,
-                sameSite: config.MODE === "production" ? "none" : "lax",
-                domain: config.MODE === "production" ? 'turfbooking.online' : 'localhost'
-            });
+            setUserCookies(res, token, refreshToken as string)
 
             sendResponse(res, true, "Registered Successfully ..!✅", StatusCode.SUCCESS, { user: newUser })
 
@@ -132,19 +108,7 @@ export class UserController {
             const token = this.authService.generateToken(det);
             const refreshToken = this.authService.generateRefreshToken(det)
 
-            res.cookie("refreshToken", refreshToken, {
-                httpOnly: true,
-                secure: config.MODE === "production" ? true : false,
-                sameSite: config.MODE === "production" ? "none" : "lax",
-                domain: config.MODE === "production" ? 'turfbooking.online' : 'localhost'
-            });
-
-            res.cookie("token", token, {
-                httpOnly: false,
-                secure: config.MODE === "production" ? true : false,
-                sameSite: config.MODE === "production" ? "none" : "lax",
-                domain: config.MODE === "production" ? 'turfbooking.online' : 'localhost'
-            });
+            setUserCookies(res, token, refreshToken as string)
 
             sendResponse(res, true, "Logged In Successfully ..!", StatusCode.SUCCESS, { user: newUser })
 
@@ -175,20 +139,7 @@ export class UserController {
                         const token = this.authService.generateToken(det);
                         const refreshToken = this.authService.generateRefreshToken(det)
 
-                        res.cookie("refreshToken", refreshToken, {
-                            httpOnly: true,
-                            secure: config.MODE === "production" ? true : false,
-                            sameSite: config.MODE === "production" ? "none" : "lax",
-                            domain: config.MODE === "production" ? 'turfbooking.online' : 'localhost'
-                        });
-
-                        res.cookie("token", token, {
-                            httpOnly: false,
-                            secure: config.MODE === "production" ? true : false,
-                            sameSite: config.MODE === "production" ? "none" : "lax",
-                            domain: config.MODE === "production" ? 'turfbooking.online' : 'localhost'
-                        });
-
+                        setUserCookies(res, token, refreshToken as string)
                         res
                             .status(200)
                             .json({ success: true, message: "account verified", user, token });

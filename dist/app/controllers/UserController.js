@@ -10,10 +10,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserController = void 0;
-const config_1 = require("../../config/config");
 const BookingService_1 = require("../../infrastructure/services/BookingService");
 const StatusCode_1 = require("../../shared/enums/StatusCode");
 const responseUtil_1 = require("../../shared/utils/responseUtil");
+const cookieHelper_1 = require("../../shared/utils/cookieHelper");
 class UserController {
     constructor(userUseCase, authService) {
         this.userUseCase = userUseCase;
@@ -56,18 +56,7 @@ class UserController {
                 };
                 const token = this.authService.generateToken(det);
                 const refreshToken = this.authService.generateRefreshToken(det);
-                res.cookie("refreshToken", refreshToken, {
-                    httpOnly: true,
-                    secure: config_1.config.MODE === "production" ? true : false,
-                    sameSite: config_1.config.MODE === "production" ? "none" : "lax",
-                    domain: config_1.config.MODE === "production" ? 'turfbooking.online' : 'localhost'
-                });
-                res.cookie("token", token, {
-                    httpOnly: false,
-                    secure: config_1.config.MODE === "production" ? true : false,
-                    sameSite: config_1.config.MODE === "production" ? "none" : "lax",
-                    domain: config_1.config.MODE === "production" ? 'turfbooking.online' : 'localhost'
-                });
+                (0, cookieHelper_1.setUserCookies)(res, token, refreshToken);
                 (0, responseUtil_1.sendResponse)(res, true, "Logged In Successfully ✅", StatusCode_1.StatusCode.SUCCESS, { user: userData, loggedIn: true });
             }
             catch (error) {
@@ -82,7 +71,6 @@ class UserController {
                 const { email, displayName } = req.body;
                 const user = yield this.userUseCase.googleRegister(email, displayName);
                 const newUser = Object.assign(Object.assign({}, JSON.parse(JSON.stringify(user))), { password: undefined });
-                // console.log("Google supg ", req.body);
                 const det = {
                     _id: user === null || user === void 0 ? void 0 : user._id,
                     email: user === null || user === void 0 ? void 0 : user.email,
@@ -90,18 +78,7 @@ class UserController {
                 };
                 const token = this.authService.generateToken(det);
                 const refreshToken = this.authService.generateRefreshToken(det);
-                res.cookie("refreshToken", refreshToken, {
-                    httpOnly: true,
-                    secure: config_1.config.MODE === "production" ? true : false,
-                    sameSite: config_1.config.MODE === "production" ? "none" : "lax",
-                    domain: config_1.config.MODE === "production" ? 'turfbooking.online' : 'localhost'
-                });
-                res.cookie("token", token, {
-                    httpOnly: false,
-                    secure: config_1.config.MODE === "production" ? true : false,
-                    sameSite: config_1.config.MODE === "production" ? "none" : "lax",
-                    domain: config_1.config.MODE === "production" ? 'turfbooking.online' : 'localhost'
-                });
+                (0, cookieHelper_1.setUserCookies)(res, token, refreshToken);
                 (0, responseUtil_1.sendResponse)(res, true, "Registered Successfully ..!✅", StatusCode_1.StatusCode.SUCCESS, { user: newUser });
             }
             catch (error) {
@@ -123,18 +100,7 @@ class UserController {
                 };
                 const token = this.authService.generateToken(det);
                 const refreshToken = this.authService.generateRefreshToken(det);
-                res.cookie("refreshToken", refreshToken, {
-                    httpOnly: true,
-                    secure: config_1.config.MODE === "production" ? true : false,
-                    sameSite: config_1.config.MODE === "production" ? "none" : "lax",
-                    domain: config_1.config.MODE === "production" ? 'turfbooking.online' : 'localhost'
-                });
-                res.cookie("token", token, {
-                    httpOnly: false,
-                    secure: config_1.config.MODE === "production" ? true : false,
-                    sameSite: config_1.config.MODE === "production" ? "none" : "lax",
-                    domain: config_1.config.MODE === "production" ? 'turfbooking.online' : 'localhost'
-                });
+                (0, cookieHelper_1.setUserCookies)(res, token, refreshToken);
                 (0, responseUtil_1.sendResponse)(res, true, "Logged In Successfully ..!", StatusCode_1.StatusCode.SUCCESS, { user: newUser });
             }
             catch (error) {
@@ -159,18 +125,7 @@ class UserController {
                             };
                             const token = this.authService.generateToken(det);
                             const refreshToken = this.authService.generateRefreshToken(det);
-                            res.cookie("refreshToken", refreshToken, {
-                                httpOnly: true,
-                                secure: config_1.config.MODE === "production" ? true : false,
-                                sameSite: config_1.config.MODE === "production" ? "none" : "lax",
-                                domain: config_1.config.MODE === "production" ? 'turfbooking.online' : 'localhost'
-                            });
-                            res.cookie("token", token, {
-                                httpOnly: false,
-                                secure: config_1.config.MODE === "production" ? true : false,
-                                sameSite: config_1.config.MODE === "production" ? "none" : "lax",
-                                domain: config_1.config.MODE === "production" ? 'turfbooking.online' : 'localhost'
-                            });
+                            (0, cookieHelper_1.setUserCookies)(res, token, refreshToken);
                             res
                                 .status(200)
                                 .json({ success: true, message: "account verified", user, token });
