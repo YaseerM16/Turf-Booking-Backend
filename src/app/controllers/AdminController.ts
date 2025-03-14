@@ -77,10 +77,10 @@ export class AdminController {
     async userToggleBlock(req: Request, res: Response) {
         try {
             const { userId, email } = req.params
-            console.log("EMail nd UserID in TOGGLEBlock :", email, userId);
+            // console.log("EMail nd UserID in TOGGLEBlock :", email, userId);
 
-            if (!email) {
-                throw new Error("Email is required but was not provided.");
+            if (!email || !userId) {
+                throw new Error("Email or user Id is required but was not provided.");
             }
 
             const user = await this.adminUseCase.isBlocked(email as string, userId as string)
@@ -100,17 +100,19 @@ export class AdminController {
                 throw new Error("Email or companyId was not provided.");
             }
 
-            const response: any = await this.adminUseCase.companyBlockToggle(email as string, companyId as string)
+            const company = await this.adminUseCase.companyBlockToggle(email as string, companyId as string)
+            sendResponse(res, true, "Company Block Status Toggled Successfully", StatusCode.SUCCESS, { company })
 
-            if (!response.success) {
-                res.status(500).json({ success: false, message: "something went wrong while toggle the company status :(" });
-                return
-            }
+            // if (!response.success) {
+            //     res.status(500).json({ success: false, message: "something went wrong while toggle the company status :(" });
+            //     return
+            // }
 
-            res.status(200).json({ success: true, message: "Company Block Status Toggled Successfully" });
+            // res.status(200).json({ success: true, message: "Company Block Status Toggled Successfully" });
 
         } catch (error) {
-            res.status(400).json({ message: (error as Error).message });
+            sendResponse(res, false, (error as Error).message, StatusCode.INTERNAL_SERVER_ERROR)
+            // res.status(400).json({ message: (error as Error).message });
         }
     }
 

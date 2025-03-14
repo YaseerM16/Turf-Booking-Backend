@@ -144,9 +144,10 @@ class AdminRepository {
                     throw new Error("company not found");
                 }
                 const updatedBlockStatus = !company.isActive;
-                const updateResult = yield CompanyModel_1.default.updateOne({ _id: companyId }, { $set: { isActive: updatedBlockStatus } });
-                if (updateResult.modifiedCount > 0) {
-                    return { success: true };
+                const updatedCompany = yield CompanyModel_1.default.findOneAndUpdate({ _id: companyId }, { $set: { isActive: updatedBlockStatus } }, { new: true } // Returns the updated document
+                );
+                if (updatedCompany) {
+                    return updatedCompany;
                 }
                 else {
                     return { success: false, message: "Failed to update block status" };

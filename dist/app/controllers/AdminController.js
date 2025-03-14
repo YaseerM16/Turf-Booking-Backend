@@ -80,9 +80,9 @@ class AdminController {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const { userId, email } = req.params;
-                console.log("EMail nd UserID in TOGGLEBlock :", email, userId);
-                if (!email) {
-                    throw new Error("Email is required but was not provided.");
+                // console.log("EMail nd UserID in TOGGLEBlock :", email, userId);
+                if (!email || !userId) {
+                    throw new Error("Email or user Id is required but was not provided.");
                 }
                 const user = yield this.adminUseCase.isBlocked(email, userId);
                 (0, responseUtil_1.sendResponse)(res, true, "User Block Toggled Successfully", StatusCode_1.StatusCode.SUCCESS, { user });
@@ -101,15 +101,17 @@ class AdminController {
                 if (!email || !companyId) {
                     throw new Error("Email or companyId was not provided.");
                 }
-                const response = yield this.adminUseCase.companyBlockToggle(email, companyId);
-                if (!response.success) {
-                    res.status(500).json({ success: false, message: "something went wrong while toggle the company status :(" });
-                    return;
-                }
-                res.status(200).json({ success: true, message: "Company Block Status Toggled Successfully" });
+                const company = yield this.adminUseCase.companyBlockToggle(email, companyId);
+                (0, responseUtil_1.sendResponse)(res, true, "Company Block Status Toggled Successfully", StatusCode_1.StatusCode.SUCCESS, { company });
+                // if (!response.success) {
+                //     res.status(500).json({ success: false, message: "something went wrong while toggle the company status :(" });
+                //     return
+                // }
+                // res.status(200).json({ success: true, message: "Company Block Status Toggled Successfully" });
             }
             catch (error) {
-                res.status(400).json({ message: error.message });
+                (0, responseUtil_1.sendResponse)(res, false, error.message, StatusCode_1.StatusCode.INTERNAL_SERVER_ERROR);
+                // res.status(400).json({ message: (error as Error).message });
             }
         });
     }

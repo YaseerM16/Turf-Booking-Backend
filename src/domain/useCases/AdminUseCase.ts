@@ -87,12 +87,11 @@ export class AdminUseCase implements IAdminUseCase {
                 throw new Error("Email or companyId is required but was not provided.");
             }
 
-
-            const response: any = await this.adminRepository.companyBlockToggle(companyId, email);
-            if (!response.success) {
+            const company = await this.adminRepository.companyBlockToggle(companyId, email);
+            if (!company) {
                 return { success: false, message: "Company not found or error fetching data" };
             }
-            return { success: true, message: "Company block status Toggled successfully" };
+            return company
 
         } catch (error: any) {
             throw new ErrorResponse(error.message, error.status);

@@ -161,10 +161,14 @@ export class AdminRepository implements IAdminRepository {
 
             const updatedBlockStatus = !company.isActive
 
-            const updateResult = await CompanyModel.updateOne({ _id: companyId }, { $set: { isActive: updatedBlockStatus } });
+            const updatedCompany = await CompanyModel.findOneAndUpdate(
+                { _id: companyId },
+                { $set: { isActive: updatedBlockStatus } },
+                { new: true } // Returns the updated document
+            );
 
-            if (updateResult.modifiedCount > 0) {
-                return { success: true };
+            if (updatedCompany) {
+                return updatedCompany
             } else {
                 return { success: false, message: "Failed to update block status" };
             }

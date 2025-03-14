@@ -96,11 +96,11 @@ class AdminUseCase {
                 if (!email || !companyId) {
                     throw new Error("Email or companyId is required but was not provided.");
                 }
-                const response = yield this.adminRepository.companyBlockToggle(companyId, email);
-                if (!response.success) {
+                const company = yield this.adminRepository.companyBlockToggle(companyId, email);
+                if (!company) {
                     return { success: false, message: "Company not found or error fetching data" };
                 }
-                return { success: true, message: "Company block status Toggled successfully" };
+                return company;
             }
             catch (error) {
                 throw new errors_1.ErrorResponse(error.message, error.status);
