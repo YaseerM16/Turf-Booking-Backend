@@ -53,8 +53,6 @@ export class UserUseCase implements IUserUseCase {
 
     async RegisterUser(data: User): Promise<User> {
         try {
-            console.log("2222");
-
             const existingUser = await this.userRepository.findByEmail(data.email)
 
             if (existingUser) throw new ErrorResponse("user aldready registered", 400);
@@ -90,7 +88,14 @@ export class UserUseCase implements IUserUseCase {
 
             if (!user) throw new ErrorResponse("User not found for creating the Wallet.", 404);
 
-            await this.mailService.accountVerifyMail(user, "verifyEmail");
+            const plainUser = {
+                id: user._id,
+                email: user.email,
+                name: user.name,
+                role: "user"
+            };
+
+            await this.mailService.accountVerifyMail(plainUser, "verifyEmail");
 
         } catch (error: any) {
             console.error("Failed to send verification email:", error.message);

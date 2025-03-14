@@ -52,7 +52,6 @@ class UserUseCase {
     RegisterUser(data) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                console.log("2222");
                 const existingUser = yield this.userRepository.findByEmail(data.email);
                 if (existingUser)
                     throw new errors_1.ErrorResponse("user aldready registered", 400);
@@ -83,7 +82,13 @@ class UserUseCase {
                 const user = yield this.userRepository.findById(userId);
                 if (!user)
                     throw new errors_1.ErrorResponse("User not found for creating the Wallet.", 404);
-                yield this.mailService.accountVerifyMail(user, "verifyEmail");
+                const plainUser = {
+                    id: user._id,
+                    email: user.email,
+                    name: user.name,
+                    role: "user"
+                };
+                yield this.mailService.accountVerifyMail(plainUser, "verifyEmail");
             }
             catch (error) {
                 console.error("Failed to send verification email:", error.message);
