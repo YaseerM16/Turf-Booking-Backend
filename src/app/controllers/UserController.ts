@@ -19,8 +19,6 @@ export class UserController {
     async registersUser(req: Request, res: Response): Promise<void> {
         try {
 
-            console.log("1111");
-
             const user = await this.userUseCase.RegisterUser(req.body)
 
             const newUser = {
@@ -28,30 +26,20 @@ export class UserController {
                 password: undefined,
             };
 
-            // const response = new ResponseModel(true, "User Registered Successfully :)", { user: newUser })
-            // res.status(StatusCode.SUCCESS).json(response)
             sendResponse(res, true, "User Registered Successfully ✅", StatusCode.SUCCESS, { user: newUser })
 
         } catch (error) {
-            // const response = new ResponseModel(false, (error as Error).message)
-            // res.status(StatusCode.BAD_REQUEST).json(response)
             sendResponse(res, false, (error as Error).message, StatusCode.BAD_REQUEST)
         }
     }
 
     async userLogin(req: Request, res: Response): Promise<void> {
         try {
-            console.log("LOGin by the Controooolllller is Called");
-
-            const errors = validationResult(req);
-
-            if (!errors.isEmpty()) {
-                throw new ErrorResponse("Invalid email or password", 401);
-            }
 
             const { email, password } = req.body
 
             const user: User | null = await this.userUseCase.userLogin(email, password)
+
             const userData = {
                 ...JSON.parse(JSON.stringify(user)),
                 password: undefined,
@@ -221,6 +209,8 @@ export class UserController {
     async getVerificationMail(req: Request, res: Response) {
         try {
             const { userId } = req.params
+            res.clearCookie('token');
+            res.clearCookie('refreshToken');
             await this.userUseCase.sendVerificationMail(userId)
             res.status(200).json({ success: true, message: "Email was sent successfully :)" });
         } catch (error) {

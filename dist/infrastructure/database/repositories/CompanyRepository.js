@@ -976,7 +976,7 @@ class CompanyRepository {
                     };
                 });
                 // Compute total revenue and bookings
-                const totalRevenue = formattedRevenue.reduce((sum, entry) => sum + entry.revenue, 0);
+                const totalRevenue = totalRevenues.reduce((sum, entry) => sum + entry.revenue, 0);
                 const totalTurfCount = totalTurfCountQry.length > 0 ? totalTurfCountQry[0] : { totalTurfs: 0 };
                 return {
                     totalTurfCount,

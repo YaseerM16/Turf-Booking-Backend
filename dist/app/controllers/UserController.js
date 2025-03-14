@@ -10,9 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserController = void 0;
-const errors_1 = require("../../shared/utils/errors");
 const config_1 = require("../../config/config");
-const express_validator_1 = require("express-validator");
 const BookingService_1 = require("../../infrastructure/services/BookingService");
 const StatusCode_1 = require("../../shared/enums/StatusCode");
 const responseUtil_1 = require("../../shared/utils/responseUtil");
@@ -36,16 +34,11 @@ class UserController {
     registersUser(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                console.log("1111");
                 const user = yield this.userUseCase.RegisterUser(req.body);
                 const newUser = Object.assign(Object.assign({}, JSON.parse(JSON.stringify(user))), { password: undefined });
-                // const response = new ResponseModel(true, "User Registered Successfully :)", { user: newUser })
-                // res.status(StatusCode.SUCCESS).json(response)
                 (0, responseUtil_1.sendResponse)(res, true, "User Registered Successfully ✅", StatusCode_1.StatusCode.SUCCESS, { user: newUser });
             }
             catch (error) {
-                // const response = new ResponseModel(false, (error as Error).message)
-                // res.status(StatusCode.BAD_REQUEST).json(response)
                 (0, responseUtil_1.sendResponse)(res, false, error.message, StatusCode_1.StatusCode.BAD_REQUEST);
             }
         });
@@ -53,11 +46,6 @@ class UserController {
     userLogin(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                console.log("LOGin by the Controooolllller is Called");
-                const errors = (0, express_validator_1.validationResult)(req);
-                if (!errors.isEmpty()) {
-                    throw new errors_1.ErrorResponse("Invalid email or password", 401);
-                }
                 const { email, password } = req.body;
                 const user = yield this.userUseCase.userLogin(email, password);
                 const userData = Object.assign(Object.assign({}, JSON.parse(JSON.stringify(user))), { password: undefined });
@@ -207,6 +195,8 @@ class UserController {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const { userId } = req.params;
+                res.clearCookie('token');
+                res.clearCookie('refreshToken');
                 yield this.userUseCase.sendVerificationMail(userId);
                 res.status(200).json({ success: true, message: "Email was sent successfully :)" });
             }
