@@ -151,9 +151,20 @@ class UserController {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const { userId } = req.params;
-                res.clearCookie('token');
-                res.clearCookie('refreshToken');
+                const isProduction = config_1.config.MODE === "production";
                 yield this.userUseCase.sendVerificationMail(userId);
+                res.clearCookie("refreshToken", {
+                    httpOnly: true,
+                    secure: isProduction ? true : false,
+                    sameSite: isProduction ? "none" : "lax",
+                    domain: isProduction ? ".turfbooking.online" : "localhost",
+                });
+                res.clearCookie("token", {
+                    httpOnly: false, // Same as how it was set
+                    secure: isProduction ? true : false,
+                    sameSite: isProduction ? "none" : "lax",
+                    domain: isProduction ? ".turfbooking.online" : "localhost",
+                });
                 res.status(200).json({ success: true, message: "Email was sent successfully :)" });
             }
             catch (error) {

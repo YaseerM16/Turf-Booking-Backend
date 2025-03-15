@@ -160,9 +160,22 @@ export class UserController {
     async getVerificationMail(req: Request, res: Response) {
         try {
             const { userId } = req.params
-            res.clearCookie('token');
-            res.clearCookie('refreshToken');
+            const isProduction = config.MODE === "production";
+
             await this.userUseCase.sendVerificationMail(userId)
+            res.clearCookie("refreshToken", {
+                httpOnly: true,
+                secure: isProduction ? true : false,
+                sameSite: isProduction ? "none" : "lax",
+                domain: isProduction ? ".turfbooking.online" : "localhost",
+            });
+
+            res.clearCookie("token", {
+                httpOnly: false, // Same as how it was set
+                secure: isProduction ? true : false,
+                sameSite: isProduction ? "none" : "lax",
+                domain: isProduction ? ".turfbooking.online" : "localhost",
+            });
             res.status(200).json({ success: true, message: "Email was sent successfully :)" });
         } catch (error) {
             res.status(500).json({ message: "Internal server error while try to send the verification mail :", error });
