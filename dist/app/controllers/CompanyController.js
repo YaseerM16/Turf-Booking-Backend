@@ -19,6 +19,7 @@ const config_1 = require("../../config/config");
 const TurfService_1 = __importDefault(require("../../infrastructure/services/TurfService"));
 const responseUtil_1 = require("../../shared/utils/responseUtil");
 const StatusCode_1 = require("../../shared/enums/StatusCode");
+const cookieHelper_1 = require("../../shared/utils/cookieHelper");
 class CompanyController {
     constructor(companyUseCase, authService) {
         this.companyUseCase = companyUseCase;
@@ -59,16 +60,7 @@ class CompanyController {
                         };
                         const token = this.authService.generateToken(det);
                         const refreshToken = this.authService.generateRefreshToken(det);
-                        res.cookie("CompanyRefreshToken", refreshToken, {
-                            httpOnly: true,
-                            secure: config_1.config.MODE !== "development",
-                            sameSite: "lax"
-                        });
-                        res.cookie("CompanyToken", token, {
-                            httpOnly: false,
-                            secure: false,
-                            sameSite: "lax",
-                        });
+                        (0, cookieHelper_1.setCompanyCookies)(res, token, refreshToken);
                         (0, responseUtil_1.sendResponse)(res, true, "account verified", StatusCode_1.StatusCode.SUCCESS, { company, token, success: true });
                     }
                     else if (type == "forgotPassword") {
@@ -99,16 +91,7 @@ class CompanyController {
                 };
                 const token = this.authService.generateToken(det);
                 const refreshToken = this.authService.generateRefreshToken(det);
-                res.cookie("CompanyRefreshToken", refreshToken, {
-                    httpOnly: true,
-                    secure: config_1.config.MODE !== "development",
-                    sameSite: "lax"
-                });
-                res.cookie("CompanyToken", token, {
-                    httpOnly: false,
-                    secure: false,
-                    sameSite: "lax",
-                });
+                (0, cookieHelper_1.setCompanyCookies)(res, token, refreshToken);
                 (0, responseUtil_1.sendResponse)(res, true, "Logged In successfully", StatusCode_1.StatusCode.SUCCESS, { company: companyData, loggedIn: true });
             }
             catch (error) {
@@ -136,8 +119,19 @@ class CompanyController {
                 console.log("Email : ", email);
                 console.log("Password : ", newPassword);
                 const user = yield this.companyUseCase.updatePassword(email, newPassword);
-                res.clearCookie('token');
-                res.clearCookie('refreshToken');
+                const isProduction = config_1.config.MODE === "production";
+                res.clearCookie("CompanyRefreshToken", {
+                    httpOnly: true,
+                    secure: isProduction ? true : false,
+                    sameSite: isProduction ? "none" : "lax",
+                    domain: isProduction ? ".turfbooking.online" : "localhost",
+                });
+                res.clearCookie("CompanyToken", {
+                    httpOnly: false, // Same as how it was set
+                    secure: isProduction ? true : false,
+                    sameSite: isProduction ? "none" : "lax",
+                    domain: isProduction ? ".turfbooking.online" : "localhost",
+                });
                 (0, responseUtil_1.sendResponse)(res, true, "Password Updated Successfully :)", StatusCode_1.StatusCode.SUCCESS);
             }
             catch (error) {
@@ -148,8 +142,19 @@ class CompanyController {
     logout(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                res.clearCookie('CompanyToken');
-                res.clearCookie('CompanyRefreshToken');
+                const isProduction = config_1.config.MODE === "production";
+                res.clearCookie("CompanyRefreshToken", {
+                    httpOnly: true,
+                    secure: isProduction ? true : false,
+                    sameSite: isProduction ? "none" : "lax",
+                    domain: isProduction ? ".turfbooking.online" : "localhost",
+                });
+                res.clearCookie("CompanyToken", {
+                    httpOnly: false, // Same as how it was set
+                    secure: isProduction ? true : false,
+                    sameSite: isProduction ? "none" : "lax",
+                    domain: isProduction ? ".turfbooking.online" : "localhost",
+                });
                 // res.status(200).json({ message: 'Logged out successfully', loggedOut: true });
                 (0, responseUtil_1.sendResponse)(res, true, 'Logged out successfully', StatusCode_1.StatusCode.SUCCESS, { loggedOut: true });
             }

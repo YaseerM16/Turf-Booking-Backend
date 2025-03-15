@@ -261,10 +261,22 @@ export class UserController {
             const { email, newPassword } = req.body;
             console.log("Email : ", email);
             console.log("Password : ", newPassword);
+            const isProduction = config.MODE === "production";
 
             const user = await this.userUseCase.updatePassword(email, newPassword);
-            res.clearCookie('token');
-            res.clearCookie('refreshToken');
+            res.clearCookie("refreshToken", {
+                httpOnly: true,
+                secure: isProduction ? true : false,
+                sameSite: isProduction ? "none" : "lax",
+                domain: isProduction ? ".turfbooking.online" : "localhost",
+            });
+
+            res.clearCookie("token", {
+                httpOnly: false, // Same as how it was set
+                secure: isProduction ? true : false,
+                sameSite: isProduction ? "none" : "lax",
+                domain: isProduction ? ".turfbooking.online" : "localhost",
+            });
 
             res.status(200).json({ success: true });
         } catch (error: any) {

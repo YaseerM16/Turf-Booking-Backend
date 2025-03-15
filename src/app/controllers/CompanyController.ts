@@ -9,6 +9,8 @@ import { Company } from "../../domain/entities/Company";
 import TurfService from "../../infrastructure/services/TurfService";
 import { sendResponse } from "../../shared/utils/responseUtil";
 import { StatusCode } from "../../shared/enums/StatusCode";
+import { setCompanyCookies } from "../../shared/utils/cookieHelper";
+
 
 
 export class CompanyController {
@@ -63,17 +65,7 @@ export class CompanyController {
                     const token = this.authService.generateToken(det);
                     const refreshToken = this.authService.generateRefreshToken(det)
 
-                    res.cookie("CompanyRefreshToken", refreshToken, {
-                        httpOnly: true,
-                        secure: config.MODE !== "development",
-                        sameSite: "lax"
-                    });
-
-                    res.cookie("CompanyToken", token, {
-                        httpOnly: false,
-                        secure: false,
-                        sameSite: "lax",
-                    });
+                    setCompanyCookies(res, token, refreshToken as string)
 
                     sendResponse(res, true, "account verified", StatusCode.SUCCESS, { company, token, success: true })
                 } else if (type == "forgotPassword") {
@@ -109,17 +101,7 @@ export class CompanyController {
             const token = this.authService.generateToken(det);
             const refreshToken = this.authService.generateRefreshToken(det)
 
-            res.cookie("CompanyRefreshToken", refreshToken, {
-                httpOnly: true,
-                secure: config.MODE !== "development",
-                sameSite: "lax"
-            });
-
-            res.cookie("CompanyToken", token, {
-                httpOnly: false,
-                secure: false,
-                sameSite: "lax",
-            });
+            setCompanyCookies(res, token, refreshToken as string)
 
             sendResponse(res, true, "Logged In successfully", StatusCode.SUCCESS, { company: companyData, loggedIn: true })
 
@@ -150,8 +132,21 @@ export class CompanyController {
             console.log("Password : ", newPassword);
 
             const user = await this.companyUseCase.updatePassword(email, newPassword);
-            res.clearCookie('token');
-            res.clearCookie('refreshToken');
+            const isProduction = config.MODE === "production";
+
+            res.clearCookie("CompanyRefreshToken", {
+                httpOnly: true,
+                secure: isProduction ? true : false,
+                sameSite: isProduction ? "none" : "lax",
+                domain: isProduction ? ".turfbooking.online" : "localhost",
+            });
+
+            res.clearCookie("CompanyToken", {
+                httpOnly: false, // Same as how it was set
+                secure: isProduction ? true : false,
+                sameSite: isProduction ? "none" : "lax",
+                domain: isProduction ? ".turfbooking.online" : "localhost",
+            });
 
             sendResponse(res, true, "Password Updated Successfully :)", StatusCode.SUCCESS)
         } catch (error: unknown) {
@@ -161,8 +156,21 @@ export class CompanyController {
 
     async logout(req: Request, res: Response) {
         try {
-            res.clearCookie('CompanyToken');
-            res.clearCookie('CompanyRefreshToken');
+            const isProduction = config.MODE === "production";
+
+            res.clearCookie("CompanyRefreshToken", {
+                httpOnly: true,
+                secure: isProduction ? true : false,
+                sameSite: isProduction ? "none" : "lax",
+                domain: isProduction ? ".turfbooking.online" : "localhost",
+            });
+
+            res.clearCookie("CompanyToken", {
+                httpOnly: false, // Same as how it was set
+                secure: isProduction ? true : false,
+                sameSite: isProduction ? "none" : "lax",
+                domain: isProduction ? ".turfbooking.online" : "localhost",
+            });
 
             // res.status(200).json({ message: 'Logged out successfully', loggedOut: true });
             sendResponse(res, true, 'Logged out successfully', StatusCode.SUCCESS, { loggedOut: true })

@@ -7,6 +7,7 @@ import { IAuthService } from "../interfaces/services/IAuthService";
 import { config } from "../../config/config";
 import { sendResponse } from "../../shared/utils/responseUtil";
 import { StatusCode } from "../../shared/enums/StatusCode";
+import { setAdminCookies } from "../../shared/utils/cookieHelper";
 
 
 export class AdminController {
@@ -31,17 +32,7 @@ export class AdminController {
                 const token = this.authService.generateToken(det);
                 const refreshToken = this.authService.generateRefreshToken(det)
 
-                res.cookie("AdminRefreshToken", refreshToken, {
-                    httpOnly: true,
-                    secure: config.MODE !== "development",
-                    sameSite: "lax"
-                });
-
-                res.cookie("AdminToken", token, {
-                    httpOnly: false,
-                    secure: false,
-                    sameSite: "lax",
-                });
+                setAdminCookies(res, token, refreshToken as string)
 
                 res
                     .status(200)
@@ -166,8 +157,21 @@ export class AdminController {
 
     async logout(req: Request, res: Response) {
         try {
-            res.clearCookie('AdminToken');
-            res.clearCookie('AdminRefreshToken');
+            const isProduction = config.MODE === "production";
+
+            res.clearCookie("AdminRefreshToken", {
+                httpOnly: true,
+                secure: isProduction ? true : false,
+                sameSite: isProduction ? "none" : "lax",
+                domain: isProduction ? ".turfbooking.online" : "localhost",
+            });
+
+            res.clearCookie("AdminToken", {
+                httpOnly: false, // Same as how it was set
+                secure: isProduction ? true : false,
+                sameSite: isProduction ? "none" : "lax",
+                domain: isProduction ? ".turfbooking.online" : "localhost",
+            });
 
             res.status(200).json({ message: 'Logged out successfully', loggedOut: true });
 

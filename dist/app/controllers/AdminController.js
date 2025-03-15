@@ -15,6 +15,7 @@ const errors_1 = require("../../shared/utils/errors");
 const config_1 = require("../../config/config");
 const responseUtil_1 = require("../../shared/utils/responseUtil");
 const StatusCode_1 = require("../../shared/enums/StatusCode");
+const cookieHelper_1 = require("../../shared/utils/cookieHelper");
 class AdminController {
     constructor(adminUseCase, authService) {
         this.adminUseCase = adminUseCase;
@@ -36,16 +37,7 @@ class AdminController {
                     };
                     const token = this.authService.generateToken(det);
                     const refreshToken = this.authService.generateRefreshToken(det);
-                    res.cookie("AdminRefreshToken", refreshToken, {
-                        httpOnly: true,
-                        secure: config_1.config.MODE !== "development",
-                        sameSite: "lax"
-                    });
-                    res.cookie("AdminToken", token, {
-                        httpOnly: false,
-                        secure: false,
-                        sameSite: "lax",
-                    });
+                    (0, cookieHelper_1.setAdminCookies)(res, token, refreshToken);
                     res
                         .status(200)
                         .json({ success: true, message: "Logged In successfully", loggedIn: true });
@@ -161,8 +153,19 @@ class AdminController {
     logout(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                res.clearCookie('AdminToken');
-                res.clearCookie('AdminRefreshToken');
+                const isProduction = config_1.config.MODE === "production";
+                res.clearCookie("AdminRefreshToken", {
+                    httpOnly: true,
+                    secure: isProduction ? true : false,
+                    sameSite: isProduction ? "none" : "lax",
+                    domain: isProduction ? ".turfbooking.online" : "localhost",
+                });
+                res.clearCookie("AdminToken", {
+                    httpOnly: false, // Same as how it was set
+                    secure: isProduction ? true : false,
+                    sameSite: isProduction ? "none" : "lax",
+                    domain: isProduction ? ".turfbooking.online" : "localhost",
+                });
                 res.status(200).json({ message: 'Logged out successfully', loggedOut: true });
             }
             catch (error) {
