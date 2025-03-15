@@ -412,6 +412,7 @@ class UserController {
                 }
             }
             catch (error) {
+                console.log("Erro WIle Cancel SLOT :", error);
                 res.status(500).json({ message: error === null || error === void 0 ? void 0 : error.message, error });
             }
         });

@@ -104,6 +104,8 @@ router.get("/my-booking",
     AccessControl.isUserBlocked,
     (req: Request, res: Response) => userController.getBookings(req, res))
 router.delete("/booking/cancel/:userId/:slotId/:bookingId",
+    Authenticator.userAuthenticator,
+    AccessControl.isUserBlocked,
     (req: Request, res: Response) => userController.cancelSlot(req, res))
 router.post("/check-slots-availability",
     Authenticator.userAuthenticator,

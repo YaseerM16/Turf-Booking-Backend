@@ -399,7 +399,7 @@ export class MongoUserRepository implements IUserRepository {
             }
 
             // Convert fromTime (start time of the slot) to a Date object
-            const slotDate = new Date(selectedSlot.fromTime);
+            const slotDate = new Date(selectedSlot.date);
 
             // Get the current time (convert to UTC for accuracy)
             const now = new Date();

@@ -368,7 +368,7 @@ class MongoUserRepository {
                     throw new errors_1.ErrorResponse("Slot not found in the booking.", 404);
                 }
                 // Convert fromTime (start time of the slot) to a Date object
-                const slotDate = new Date(selectedSlot.fromTime);
+                const slotDate = new Date(selectedSlot.date);
                 // Get the current time (convert to UTC for accuracy)
                 const now = new Date();
                 const utcNow = new Date(now.toISOString());
